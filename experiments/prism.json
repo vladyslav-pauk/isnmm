@@ -1,0 +1,41 @@
+{
+  "project": "vansca",
+  "experiment": "prism",
+  "model": "PRISM",
+  "dataset": "SLS",
+  "train":
+  {
+    "log": "parameters",
+    "accelerator": "cpu",
+    "epochs": 10,
+    "batch_size": 100,
+    "lr": {
+      "th": 0.001,
+      "ph": 0.01
+    },
+    "seed": 0,
+    "mc_samples": 1000,
+    "tolerance": 1e-4
+  },
+  "encoder": {
+    "hidden_dim": {
+      "h1":  32,
+      "h2":  32,
+      "h3":  16,
+      "h4":  8
+    }
+  },
+  "decoder": {
+    "hidden_dim": {
+      "h1":  64,
+      "h2":  32
+    },
+    "output_activation": "ReLU"
+  },
+  "data": {
+    "latent_dim": 3,
+    "observed_dim": 2,
+    "size": 10000,
+    "SNR": 25
+  }
+}

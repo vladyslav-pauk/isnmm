@@ -1,0 +1,32 @@
+{
+  "project": "vansca",
+  "experiment": "aevb",
+  "model": "AEVB",
+  "dataset": "MNIST",
+  "train":
+  {
+    "log": "parameters",
+    "accelerator": "cpu",
+    "epochs": 10,
+    "batch_size": 100,
+    "lr": 0.001,
+    "seed": 0
+  },
+  "encoder": {
+    "hidden_dim": {
+      "h1":  200
+    }
+  },
+  "decoder": {
+    "hidden_dim": {
+      "h1":  400
+    },
+    "output_activation": "sigmoid"
+  },
+  "data": {
+    "latent_dim": 200,
+    "observed_dim": 784,
+    "size": 10000,
+    "SNR": 30
+  }
+}
