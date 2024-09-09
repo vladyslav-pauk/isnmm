@@ -7,25 +7,20 @@ import src.model as model_package
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
 
-def run_training(model_name, lr_th=None, lr_ph=None, snr=None, seed=None):
+def run_training(model_name, experiment=None, **kwargs):
     config = load_config(model_name)
 
-    # Update config with passed hyperparameters
-    if lr_th is not None:
-        config['train']['lr']['th'] = lr_th
-    if lr_ph is not None:
-        config['train']['lr']['ph'] = lr_ph
-    if snr is not None:
-        config['data']['SNR'] = snr
+    for key, value in kwargs.items():
+        if key in config['train']:
+            config['train'][key] = value
+        elif key in config['data']:
+            config['data'][key] = value
+        else:
+            config[key] = value
 
-    if seed is not None:
-        config['train']['seed'] = seed
     if config["train"]["seed"] is not None:
         torch.manual_seed(config["train"]["seed"])
 
-    # todo: make it implicit, above and name_id
-
-    # Dynamically load model and network
     module = getattr(model_package, model_name)
     network = getattr(network_package, model_name)
     datamodule = DataModule(config)
@@ -51,29 +46,31 @@ def run_training(model_name, lr_th=None, lr_ph=None, snr=None, seed=None):
         lr=config['train']['lr']
     )
 
-    # Initialize logger
-    run_id = f"seed_{seed}-snr_{snr}-lr_th_{lr_th}-lr_ph_{lr_ph}"
-    logger = init_logger(project=config['project'], experiment=config['experiment'], run_id=run_id)
+    if any(value is not None for value in kwargs.values()):
+        run_id = "-".join([f"{key}_{value}" for key, value in kwargs.items() if value is not None])
+    else:
+        run_id = None
+    logger = init_logger(
+        project=config['project'],
+        experiment=config['experiment'] if not experiment else experiment,
+        run_id=run_id)
     logger.log_hyperparams(config)
     logger.watch(model, log=config['train']['log'])
 
-    # Early stopping callback
     early_stopping_callback = EarlyStopping(
         monitor='validation_loss',
         min_delta=config['train']['tolerance'],
         patience=config['train']['patience']
     )
 
-    # Model checkpoint callback to save the best model based on R-squared
     checkpoint_callback = ModelCheckpoint(
-        monitor=config["train"]["metric"],  # Monitor R-squared
-        mode='max',  # We want to maximize R-squared
-        save_top_k=1,  # Only save the best model
-        filename='best-model-{epoch:02d}-{val_r_squared:.2f}',  # File name format
-        verbose=True  # Print info on save
+        monitor=config["train"]["metric"],  # Monitor the desired metric
+        mode='max',
+        save_top_k=1,
+        filename='best-model-{epoch:02d}-{val_r_squared:.2f}',
+        verbose=True
     )
 
-    # Initialize Trainer
     trainer = Trainer(
         max_epochs=config['train']["epochs"],
         logger=logger,
@@ -83,10 +80,7 @@ def run_training(model_name, lr_th=None, lr_ph=None, snr=None, seed=None):
         callbacks=[early_stopping_callback, checkpoint_callback]
     )
 
-    # Start training
     trainer.fit(model, datamodule)
-    import wandb
-    wandb.finish()
 
     # Log the true and estimated transformation matrices
     # true_nonlinearity = datamodule.dataset.lin_transform.detach().cpu().numpy()

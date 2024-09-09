@@ -1,48 +1,65 @@
-import wandb
-import argparse
+import torch
+import src.network as network_package
+import src.model as model_package
+from src.utils import load_config
+
+from src.data_module import DataModule
 
 
-def init_wandb(api_key):
-    wandb.login(key=api_key)
+def load_best_model(best_model_path, model_name):
+    config = load_config(model_name)
+    module = getattr(model_package, model_name)
+    network = getattr(network_package, model_name)
 
+    encoder = network.Encoder(
+        input_dim=config['data']['observed_dim'],
+        latent_dim=config['data']['latent_dim'],
+        hidden_layers=config['encoder']['hidden_dim'],
+    )
+    decoder = network.Decoder(
+        latent_dim=config['data']['latent_dim'],
+        output_dim=config['data']['observed_dim'],
+        hidden_layers=config['decoder']['hidden_dim'],
+        activation=config['decoder']['activation'],
+    )
 
-def download_best_model(run_id, project_name, model_filename="model.ckpt"):
-    # Initialize wandb API
-    api = wandb.Api()
+    model = module.Model.load_from_checkpoint(
+        checkpoint_path=best_model_path,
+        encoder=encoder,
+        data_model=datamodule,
+        decoder=decoder,
+        lr=config['train']['lr'],
+    )
 
-    # Fetch the run
-    run = api.run(f"{project_name}/{run_id}")
-
-    # Download the model checkpoint
-    run.file(model_filename).download(replace=True)
-
-    print(f"Best model downloaded to {model_filename}")
-    return model_filename
+    model.eval()
+    return model
 
 
 if __name__ == "__main__":
-    # Parse arguments for API key
-    # parser = argparse.ArgumentParser(description="Download the best model using Wandb API.")
-    # parser.add_argument("--api_key", type=str, required=True, help="Wandb API Key")
-    # args = parser.parse_args()
+    seed = None
+    best_model_path = "models/vansca/seed_None-snr_None-lr_th_None-lr_ph_None/checkpoints/best-model-epoch=00-val_r_squared=0.00.ckpt"
 
-    # Initialize Weights & Biases with the API key
-    import os
-    os.environ["WANDB_API_KEY"] = "fcf64607eeb9e076d3cbfdfe0ea3532621753d78"
-    wandb.login()
+    config = load_config('vansca')
+    datamodule = DataModule(config)
+    datamodule.setup()
+    x_data, z_data = next(iter(datamodule.test_dataloader()))
 
-    run_id = "run-20240908_153536-seed_29-snr_20-lr_th_0.001-lr_ph_0.005"
-    project_name = "vansca/vansca"
-    model_filename = "best-model-epoch=00-val_r_squared=0.00.ckpt"
+    model = load_best_model(best_model_path, model_name='vansca')
 
-    checkpoint_path = download_best_model(run_id, project_name, model_filename)
+    with torch.no_grad():
+        predictions = model.decoder.nonlinear_transform(x_data)
+
+    print("Predictions:", predictions)
 
 
-# fixme: evaluate.py
-# fixme: subspace metric
 # fixme: check data model plots and inverses and expressiveness, choose seeds
 # fixme: check neural network architecture and expressiveness, initialization
 # fixme: adapt prism to new code
 # fixme: run with only reconstruction term, check convergence, compare with prism, play with those
-# fixme: clean and upload to github
+# fixme: clean and squash github commits
 # fixme: run schedule
+
+# todo: subspace metric
+# todo: evaluate.py with wandb loader;
+#  Download the best model file from a sweep. This snippet downloads the model file with the highest validation accuracy from a sweep with runs that saved model files to model.h5. see history in gpt
+# todo: load config from the loaded model snapshot wandb

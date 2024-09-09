@@ -15,11 +15,13 @@ class VAE(pl.LightningModule):
         self.lr_ph = lr["ph"]
 
     def forward(self, x):
-        posterior_params = self.encoder(x.view(-1, x[0].numel()))
+        # posterior_params = self.encoder(x.view(-1, x[0].numel()))
+        posterior_params = self.encoder(x)
         z_samples = self.reparameterize(posterior_params)
         x_recon_samples, likelihood_params = self.decoder(z_samples)
 
         return x_recon_samples, z_samples, posterior_params, likelihood_params
+    # todo: include A into likelihood_params, as well as nonlinearity
 
     def training_step(self, batch, batch_idx):
         x, z = batch

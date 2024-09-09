@@ -12,6 +12,7 @@ class DataModule(pl.LightningDataModule):
 
         self.data_train = None
         self.data_val = None
+        self.data_test = None
         self.setup()
 
     def setup(self, stage=None):
@@ -25,10 +26,13 @@ class DataModule(pl.LightningDataModule):
             case _:
                 from src.data_model import SyntheticDataset
                 self.dataset = SyntheticDataset(self.config)
-                self.data_train, self.data_val, _ = random_split(self.dataset, [0.8, 0.1, 0.1])
+                self.data_train, self.data_val, self.data_test = random_split(self.dataset, [0.8, 0.1, 0.1])
 
     def train_dataloader(self):
         return DataLoader(self.data_train, batch_size=self.batch_size, num_workers=0, persistent_workers=False)
 
     def val_dataloader(self):
+        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=0, persistent_workers=False)
+
+    def test_dataloader(self):
         return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=0, persistent_workers=False)
