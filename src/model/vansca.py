@@ -66,11 +66,35 @@ class Model(VAE):
         y_true = z @ true_mixing_A.T
 
         fitter = LineFitter()
-        # r_squared = fitter.fit(residual_nonlinearity, y_true).unsqueeze(0)
-        r_squared = torch.tensor([0.0])
+        fitter.fit(residual_nonlinearity, y_true).unsqueeze(0)
+        wandb.define_metric("r-squared", summary="max")
 
-        z_recon = (torch.linalg.pinv(true_mixing_A) @ residual_nonlinearity((model_mixing_A @ z.T).T).T).T
-        reconstruction_subspace_distance = subspace_distance(z, z_recon)
+        nonlinearity_plot = plot_components_wrapped(
+            y_true,
+            true_nonlinearity=true_nonlinearity,
+            inferred_nonlinearity=model_nonlinearity,
+        )
+        residual_nonlinearity_plot = plot_components_wrapped(
+            y_true,
+            residual_nonlinearity=residual_nonlinearity,
+            fitter=fitter,
+            labels=fitter.rsquared
+        )
+        nonlinearity_plot.show()
+        residual_nonlinearity_plot.show()
+        # wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
+        # nonlinearity_plot.close()
+        # sys.exit()
+
+        return {
+            "r-squared": fitter.rsquared.mean(),
+            # "subspace_distance": reconstruction_subspace_distance,
+        }
+        # wandb.define_metric("subspace_distance", summary="min")
+        # r_squared = torch.tensor([0.0])
+
+        # z_recon = (torch.linalg.pinv(true_mixing_A) @ residual_nonlinearity((model_mixing_A @ z.T).T).T).T
+        # reconstruction_subspace_distance = subspace_distance(z, z_recon)
         # reconstruction_subspace_distance = torch.norm(z - z_recon, dim=-1).mean()
 
         # print(residual_nonlinearity(y_true), fitter(y_true))
@@ -91,16 +115,6 @@ class Model(VAE):
         #         [fitter.slopes[i] * x[:, i:i + 1] + fitter.intercepts[i] for i in range(x.shape[-1])], dim=-1
         #     )
         # )
-
-        # nonlinearity_plot = plot_components_wrapped(
-        #     y_true,
-        #     labels=fitter.rsquared,
-        #     # true_nonlinearity=true_nonlinearity,
-        #     # inferred_nonlinearity=model_nonlinearity,
-        #     residual_nonlinearity=residual_nonlinearity,
-        #     fitter=fitter
-        # )
-        # nonlinearity_plot.show()
 
         # print(reconstruction_subspace_distance)
 
@@ -136,16 +150,5 @@ class Model(VAE):
         # print(torch.linalg.det(R))
 
         # ssd = subspace_distance(z @ A0.T, z @ A0.T @ R.T)
-
-        wandb.define_metric("r-squared", summary="max")
-        # wandb.define_metric("subspace_distance", summary="min")
-
-        # wandb.log({"image": nonlinearity_plot})
-        # nonlinearity_plot.close()
-
-        return {
-            # "subspace_distance": reconstruction_subspace_distance,
-            "r-squared": r_squared.mean(),
-        }
 
 # todo: test independently subspace distance and find similar probabilistic measure and use IS expectation.

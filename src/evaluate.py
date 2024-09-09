@@ -52,14 +52,14 @@ if __name__ == "__main__":
     print("Predictions:", predictions)
 
 
-# fixme: check data model plots and inverses and expressiveness, choose seeds
-# fixme: check neural network architecture and expressiveness, initialization
 # fixme: adapt prism to new code
 # fixme: run with only reconstruction term, check convergence, compare with prism, play with those
 # fixme: clean and squash github commits
 # fixme: run schedule
 
-# todo: subspace metric
+# todo: extend neural network architecture and expressiveness (batch, other methods), ask gpt
+# todo: check inverse stability when the residual is discontinuous todo: subspace metric
 # todo: evaluate.py with wandb loader;
-#  Download the best model file from a sweep. This snippet downloads the model file with the highest validation accuracy from a sweep with runs that saved model files to model.h5. see history in gpt
-# todo: load config from the loaded model snapshot wandb
+#  Download the best model file from a sweep. This snippet downloads the model file with the highest
+#  validation accuracy from a sweep with runs that saved model files to model.h5. see history in gpt
+#  todo: load config from the loaded model snapshot wandb

@@ -67,7 +67,9 @@ import matplotlib.pyplot as plt
 import math
 
 
-def plot_components_wrapped(x, labels, **kwargs):
+def plot_components_wrapped(x, labels=None, **kwargs):
+    # todo: rescale each curve so that it fits in the plot (fitter has to refit exactly as original)
+    # todo: make it a line instead of scatter
     import warnings
     warnings.filterwarnings("ignore", message=".*path .*")
     plt.rcParams.update({
@@ -102,7 +104,8 @@ def plot_components_wrapped(x, labels, **kwargs):
 
             axes[i].scatter(x_component, y_component, label=k.replace('_', ' ').capitalize())
 
-        axes[i].text(0.5, 0.1, f"R-squared: {labels[i]:.4f}", horizontalalignment='center', verticalalignment='center',
+        if labels is not None:
+            axes[i].text(0.5, 0.1, f"R-squared: {labels[i]:.4f}", horizontalalignment='center', verticalalignment='center',
                      transform=axes[i].transAxes)
         # axes[i].set_title(f'Component {i + 1} Nonlinearity')
 

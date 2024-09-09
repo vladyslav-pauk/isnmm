@@ -68,7 +68,7 @@ class NonlinearTransform(nn.Module):
             self._build_component_wise_net(hidden_layers, activation)
             for _ in range(output_dim)
         ])
-        self._initialize_weights()
+        self._initialize_weights(activation)
 
     def _build_component_wise_net(self, hidden_layers, activation):
         layers = []
@@ -82,12 +82,12 @@ class NonlinearTransform(nn.Module):
         layers.append(nn.Linear(input_size, 1))
         return nn.Sequential(*layers)
 
-    def _initialize_weights(self):
+    def _initialize_weights(self, activation):
         """ Initialize weights for the linear layers using normal distribution """
         for net in self.component_wise_nets:
             for layer in net:
                 if isinstance(layer, nn.Linear):
-                    nn.init.kaiming_normal_(layer.weight, nonlinearity='relu')  # Kaiming initialization for ReLU
+                    nn.init.kaiming_normal_(layer.weight, nonlinearity=activation.lower())
                     if layer.bias is not None:
                         nn.init.zeros_(layer.bias)
 
