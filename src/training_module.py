@@ -41,6 +41,8 @@ class VAE(pl.LightningModule):
             loss = self.loss_function(x, x_recon_samples, z_samples, posterior_params, likelihood_params)
             metric = self.metric(posterior_params, likelihood_params, x, z, x_recon_samples)
 
+            wandb.log({"validation_loss": sum(loss.values())})
+            wandb.log({k: v for k, v in metric.items()})
             self.log_dict({"validation_loss": sum(loss.values())})
             self.log_dict({k: v for k, v in metric.items()})
         else:

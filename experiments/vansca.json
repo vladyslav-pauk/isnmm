@@ -7,10 +7,10 @@
   {
     "log": "parameters",
     "accelerator": "cpu",
-    "epochs": 30,
+    "epochs": 10,
     "metric": "r-squared",
     "patience": 3,
-    "tolerance": 1e-4,
+    "tolerance": 1e-2,
     "batch_size": 100,
     "lr": {
       "th": 0.001,
@@ -23,7 +23,7 @@
     "model": "polynomial",
     "degree": 10,
     "latent_dim": 3,
-    "observed_dim": 3,
+    "observed_dim": 4,
     "size": 10000,
     "SNR": 25
   },

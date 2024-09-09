@@ -56,6 +56,8 @@ if __name__ == "__main__":
 # fixme: run with only reconstruction term, check convergence, compare with prism, play with those
 # fixme: clean and squash github commits
 # fixme: run schedule
+# fixme: training seed should be different from the data seed. when doing repeting runs in schedule should be random
+# fixme: repeated runs for every hyperparameter in scheduler (number of runs in config)
 
 # todo: extend neural network architecture and expressiveness (batch, other methods), ask gpt
 # todo: check inverse stability when the residual is discontinuous todo: subspace metric

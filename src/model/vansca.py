@@ -80,10 +80,11 @@ class Model(VAE):
             fitter=fitter,
             labels=fitter.rsquared
         )
-        nonlinearity_plot.show()
-        residual_nonlinearity_plot.show()
-        # wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
-        # nonlinearity_plot.close()
+        # nonlinearity_plot.show()
+        # residual_nonlinearity_plot.show()
+        wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
+        nonlinearity_plot.close()
+        residual_nonlinearity_plot.close()
         # sys.exit()
 
         return {
