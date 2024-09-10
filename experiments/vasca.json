@@ -1,0 +1,47 @@
+{
+  "project": "vansca",
+  "experiment": "vansca",
+  "model": "VANSCA",
+  "dataset": "SLS",
+  "train":
+  {
+    "log": "parameters",
+    "accelerator": "cpu",
+    "epochs": 10,
+    "metric": "r-squared",
+    "patience": 3,
+    "tolerance": 1e-2,
+    "batch_size": 100,
+    "lr": {
+      "th": 0.001,
+      "ph": 0.01
+    },
+    "seed": null,
+    "mc_samples": 1000
+  },
+  "data": {
+    "model": "polynomial",
+    "degree": 10,
+    "latent_dim": 3,
+    "observed_dim": 4,
+    "size": 10000,
+    "SNR": 25
+  },
+  "encoder": {
+    "hidden_dim": {
+      "h1":  64,
+      "h2":  32,
+      "h3":  16,
+      "h4":  8
+    }
+  },
+  "decoder": {
+    "hidden_dim": {
+      "h1":  128,
+      "h2":  64,
+      "h3":  64,
+      "h4":  32
+    },
+    "activation": "Sigmoid"
+  }
+}

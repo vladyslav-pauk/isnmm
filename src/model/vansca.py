@@ -10,7 +10,7 @@ import wandb
 from torch.distributions import Dirichlet, LogNormal, Normal
 
 from src.training_module import VAE
-from src.utils import subspace_distance, plot_components, LineFitter, plot_components_wrapped
+from src.utils import subspace_distance, plot_components, LineFitter, plot_components_wrapped, mse_matrix_db
 
 
 class Model(VAE):
@@ -37,9 +37,11 @@ class Model(VAE):
         z = F.softmax(samples, dim=-1)
         return z
 
-    def loss_function(self, x, recon_x_samples, z_samples, encoder_params, decoder_params):
+    def loss_function(self, x, mc_samples, model_parameters):
+        encoder_params, decoder_params = model_parameters
         mu, log_var = encoder_params
         sigma = decoder_params
+        recon_x_samples, z_samples = mc_samples
         R = recon_x_samples.size(0)
 
         recon_loss = (recon_x_samples - x.unsqueeze(0).expand_as(recon_x_samples)).pow(2)
@@ -53,21 +55,24 @@ class Model(VAE):
 
         return {"reconstruction": recon_loss, "entropy": -h_z}
 
+    def metric(self, model_parameters, data, mc_sample):
 
-    def metric(self, posterior_params, likelihood_params, x, z, x_recon_samples):
+        x, z = data
+        # x_recon_samples, z_samples = mc_sample
+        # _, decoder_params = model_parameters
 
         true_mixing_A = self.data_model.dataset.lin_transform.to(x.device)
         model_mixing_A = self.decoder.lin_transform.matrix.to(x.device)
 
+        A_mse_dB = mse_matrix_db(true_mixing_A, model_mixing_A)
+
         true_nonlinearity = self.data_model.dataset.nonlinear_transform
         model_nonlinearity = self.decoder.nonlinear_transform
+
         residual_nonlinearity = lambda x: true_nonlinearity.inverse(model_nonlinearity(x))
-
         y_true = z @ true_mixing_A.T
-
         fitter = LineFitter()
         fitter.fit(residual_nonlinearity, y_true).unsqueeze(0)
-        wandb.define_metric("r-squared", summary="max")
 
         nonlinearity_plot = plot_components_wrapped(
             y_true,
@@ -80,16 +85,19 @@ class Model(VAE):
             fitter=fitter,
             labels=fitter.rsquared
         )
-        # nonlinearity_plot.show()
-        # residual_nonlinearity_plot.show()
-        wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
-        nonlinearity_plot.close()
+        nonlinearity_plot.show()
+        residual_nonlinearity_plot.show()
+        # wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
+        # nonlinearity_plot.close()
         residual_nonlinearity_plot.close()
+        # fixme: neural network output is horizontal!!! (nearly constant)  something is wrong
         # sys.exit()
 
+        wandb.define_metric("h_r-squared", summary="max")
         return {
-            "r-squared": fitter.rsquared.mean(),
-            # "subspace_distance": reconstruction_subspace_distance,
+            "h_r-squared": fitter.rsquared.mean(),
+            # "z_subspace_distance": reconstruction_subspace_distance,
+            # "A_mse_dB": A_mse_dB,
         }
         # wandb.define_metric("subspace_distance", summary="min")
         # r_squared = torch.tensor([0.0])

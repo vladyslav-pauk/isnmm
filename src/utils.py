@@ -3,6 +3,7 @@ import sys
 import json
 import math
 import matplotlib.pyplot as plt
+import itertools
 
 import wandb
 from pytorch_lightning.loggers import WandbLogger
@@ -271,3 +272,16 @@ class LineFitter(nn.Module):
         ]
 
         return torch.cat(transformed_components, dim=-1)
+
+
+def mse_matrix_db(A0, A_hat):
+    min_mse = float('inf')
+    perms = itertools.permutations(range(A0.shape[0]))
+    for perm in perms:
+        A_hat_permuted = A_hat[list(perm), :]
+        mse = torch.mean(torch.sum((A0 - A_hat_permuted) ** 2, dim=1))
+        if mse < min_mse:
+            min_mse = mse
+
+    mse_dB = 10 * torch.log10(min_mse)
+    return mse_dB

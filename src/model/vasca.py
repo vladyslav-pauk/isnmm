@@ -1,6 +1,5 @@
 import sys
 
-import itertools
 import torch
 import torch.nn.functional as F
 from torch.distributions import Dirichlet, LogNormal, Normal
@@ -120,37 +119,30 @@ class Model(VAE):
         A_hat = self.decoder.lin_transform.matrix
         A0 = self.data_model.dataset.lin_transform
 
-        min_mse = float('inf')
-        perms = itertools.permutations(range(A0.shape[0]))
-
-        for perm in perms:
-            A_hat_permuted = A_hat[list(perm), :]
-            mse = torch.mean(torch.sum((A0 - A_hat_permuted) ** 2, dim=1))
-            if mse < min_mse:
-                min_mse = mse
-
-        mse_dB = 10 * torch.log10(min_mse)
+        mse_dB = mse_dB(A_hat, A0)
 
         # W = torch.linalg.pinv(A0) @ A_hat
         # print(A0 @ torch.linalg.pinv(A0))
         # print(A0 @ W, A_hat)
 
-        print(torch.linalg.det(A0), torch.linalg.det(A_hat))
+        # print(torch.linalg.det(A0), torch.linalg.det(A_hat))
         Rr = torch.rand(self.latent_dim, self.latent_dim)
         # R = torch.linalg.pinv(A0) @ A_hat
         R = A_hat @ A_hat.T
         # print(W.T @ A0.T - A_hat.T)
         # z_true = (A0 @ z.T).T
         # z_recon = torch.linalg.pinv(A0) @ (A_hat @ z.T)
-        z_recon = (R @ z.T).T
-        z_reconr = (Rr @ z.T).T
 
-        ssd = subspace_distance(z, z_recon)
-        ssdr = subspace_distance(z, z_reconr)
+        # z_recon = (R @ z.T).T
+        # z_reconr = (Rr @ z.T).T
+        #
+        # ssd = subspace_distance(z, z_recon)
+        # ssdr = subspace_distance(z, z_reconr)
+
         # print(ssd, ssdr)
         # print(R)
         # print(torch.linalg.det(R))
-        sys.exit()
+        # sys.exit()
         # ssd = subspace_distance(z @ A0.T, z @ A0.T @ R.T)
 
         # import numpy as np
@@ -169,6 +161,6 @@ class Model(VAE):
         #
         # print(subspace_distance(S, U))
 
-        return {"mse_A_dB": mse_dB, "ssd": ssd}
+        return {"mse_A_dB": mse_dB}
 
 # todo: test independently subspace distance and find similar probabilistic measure and use IS expectation.

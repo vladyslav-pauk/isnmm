@@ -64,7 +64,7 @@ def run_training(model_name, experiment=None, **kwargs):
     )
 
     checkpoint_callback = ModelCheckpoint(
-        monitor=config["train"]["metric"],  # Monitor the desired metric
+        monitor=config["train"]["monitor"],  # Monitor the desired metric
         mode='max',
         save_top_k=1,
         filename='best-model-{epoch:02d}-{val_r_squared:.2f}',
