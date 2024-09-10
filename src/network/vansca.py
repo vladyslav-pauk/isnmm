@@ -54,7 +54,7 @@ class Decoder(nn.Module):
     def forward(self, z):
         y = self.lin_transform(z)
         x = self.nonlinear_transform(y)
-        return x, self.sigma
+        return x
 
 
 import torch

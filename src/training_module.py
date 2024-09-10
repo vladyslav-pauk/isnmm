@@ -14,28 +14,27 @@ class VAE(pl.LightningModule):
         self.lr_ph = lr["ph"]
 
     def forward(self, x):
-        encoder_parameters = self.encoder(x)
-        z_mc_sample = self.reparameterize(encoder_parameters)
-        x_mc_sample, decoder_parameters = self.decoder(z_mc_sample)
+        variational_parameters = self.encoder(x)
+        z_mc_sample = self.reparameterize(variational_parameters)
+        x_mc_sample = self.decoder(z_mc_sample)
 
-        return (x_mc_sample, z_mc_sample), (encoder_parameters, decoder_parameters)
+        return (x_mc_sample, z_mc_sample), variational_parameters
 
     def training_step(self, batch, batch_idx):
-        x, _ = batch
-        x_recon_samples, z_samples, encoder_parameters, decoder_parameters = self(x)
+        data, _ = batch if len(batch) == 2 else (batch, None)
+        mc_sample, variational_parameters = self(data)
 
-        loss = self.loss_function(x, x_recon_samples, z_samples, encoder_parameters, decoder_parameters)
+        loss = self.loss_function(data, mc_sample, variational_parameters)
         self.log_dict(loss)
-
         return sum(loss.values())
 
     def validation_step(self, batch, batch_idx):
         if batch_idx == 0:
-            data = batch
-            mc_sample, model_parameters = self(data[0])
+            data, latent = batch if len(batch) == 2 else (batch, None)
+            mc_sample, variational_parameters = self(data)
 
-            loss = self.loss_function(data[0], mc_sample, model_parameters)
-            metric = self.metric(model_parameters, data, mc_sample)
+            loss = self.loss_function(data, mc_sample, variational_parameters)
+            metric = self.metric(data, latent, mc_sample, variational_parameters)
 
             wandb.log({"validation_loss": sum(loss.values())})
             wandb.log({k: v for k, v in metric.items()})

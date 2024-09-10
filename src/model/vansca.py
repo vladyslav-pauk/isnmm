@@ -37,10 +37,10 @@ class Model(VAE):
         z = F.softmax(samples, dim=-1)
         return z
 
-    def loss_function(self, x, mc_samples, model_parameters):
-        encoder_params, decoder_params = model_parameters
-        mu, log_var = encoder_params
-        sigma = decoder_params
+    def loss_function(self, x, mc_samples, variational_parameters):
+        mu, log_var = variational_parameters
+        sigma = self.decoder.sigma
+
         recon_x_samples, z_samples = mc_samples
         R = recon_x_samples.size(0)
 
@@ -55,11 +55,9 @@ class Model(VAE):
 
         return {"reconstruction": recon_loss, "entropy": -h_z}
 
-    def metric(self, model_parameters, data, mc_sample):
+    def metric(self, x, z, mc_sample, variational_parameters=None):
 
-        x, z = data
         # x_recon_samples, z_samples = mc_sample
-        # _, decoder_params = model_parameters
 
         true_mixing_A = self.data_model.dataset.lin_transform.to(x.device)
         model_mixing_A = self.decoder.lin_transform.matrix.to(x.device)
