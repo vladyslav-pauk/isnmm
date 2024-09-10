@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 
-from src.training_module import VAE
+from src.modules.training_module import VAE
 from torch.distributions import MultivariateNormal
 
 

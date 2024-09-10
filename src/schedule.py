@@ -1,29 +1,14 @@
 import itertools
 import wandb
+
 from train import run_training
-from src.utils import load_config
+from src.modules.utils import load_config, get_parameter_combinations
 
 
-def get_parameter_combinations(config, prefix=""):
-    params = {}
-
-    for key, value in config.items():
-        new_key = f"{prefix}_{key}" if prefix else key
-
-        if isinstance(value, dict):
-            nested_params = get_parameter_combinations(value, new_key)
-            params.update(nested_params)
-        else:
-            params[new_key] = value
-
-    return params
-
-
-model = 'vansca'
+experiment = 'nnmm-vasca'
 schedule = 'schedule'
-# todo: run with configuration like train.py, argparse
 
-schedule_config = load_config(f'{model}-{schedule}')
+schedule_config = load_config(f'{experiment}-{schedule}')
 
 param_dict = get_parameter_combinations(schedule_config)
 
@@ -35,11 +20,16 @@ parameter_combinations = list(itertools.product(*param_values))
 for param_combination in parameter_combinations:
     kwargs = dict(zip(param_keys, param_combination))
 
-    print(f"Training '{model}' with parameters: {kwargs}")
+    print(f"Executing '{experiment}' with parameters: {kwargs}")
 
-    run_training(model, schedule, **kwargs)
+    for iter in range(schedule_config['repeats']):
+        run_training(experiment, **kwargs)
+
     wandb.finish()
 
+
+# todo: run with configuration like train.py, argparse
+# todo: group runs by same hyperparameter setting
 # todo: fix order of training, seed last
 # todo: make it display link to wandb even with wandb.finish() command
 # todo: Log or handle results

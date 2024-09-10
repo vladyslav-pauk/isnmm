@@ -1,14 +1,15 @@
 {
   "project": "vansca",
-  "experiment": "vansca",
-  "model": "VANSCA",
+  "experiment": "nlmm-vasca",
+  "model": "VASCA",
   "dataset": "SLS",
   "train":
   {
     "log": "parameters",
     "accelerator": "cpu",
     "epochs": 10,
-    "metric": "r-squared",
+    "metrics": ["A_MSE_dB", "A_SAN", "z_subspace", "z_MSE_dB"],
+    "monitor": "A_MSE_dB",
     "patience": 3,
     "tolerance": 1e-2,
     "batch_size": 100,
@@ -17,14 +18,14 @@
       "ph": 0.01
     },
     "seed": null,
-    "mc_samples": 1000
+    "mc_samples": 100
   },
   "data": {
     "model": "polynomial",
     "degree": 10,
     "latent_dim": 3,
     "observed_dim": 4,
-    "size": 10000,
+    "size": 100,
     "SNR": 25
   },
   "encoder": {
@@ -35,13 +36,9 @@
       "h4":  8
     }
   },
-  "decoder": {
-    "hidden_dim": {
-      "h1":  128,
-      "h2":  64,
-      "h3":  64,
-      "h4":  32
-    },
-    "activation": "Sigmoid"
-  }
+    "decoder": {
+        "hidden_dim": {
+        },
+        "activation": null
+    }
 }

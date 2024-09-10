@@ -24,7 +24,7 @@ class DataModule(pl.LightningDataModule):
                 self.data_val = MNIST('datasets', train=False, download=True, transform=transform)
 
             case _:
-                from src.data_model import SyntheticDataset
+                from src.modules.data_model import SyntheticDataset
                 self.dataset = SyntheticDataset(self.config)
                 self.data_train, self.data_val, self.data_test = random_split(self.dataset, [0.8, 0.1, 0.1])
 

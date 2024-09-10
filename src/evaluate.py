@@ -1,15 +1,16 @@
 import torch
 import src.network as network_package
 import src.model as model_package
-from src.utils import load_config
+from src.modules.utils import load_config
 
-from src.data_module import DataModule
+from src.modules.data_module import DataModule
 
 
-def load_best_model(best_model_path, model_name):
-    config = load_config(model_name)
-    module = getattr(model_package, model_name)
-    network = getattr(network_package, model_name)
+def load_best_model(best_model_path, experiment_name):
+    config = load_config(experiment_name)
+    module = getattr(model_package, config["model"])
+    network = getattr(network_package, config["model"])
+    # todo: load config with the model
 
     encoder = network.Encoder(
         input_dim=config['data']['observed_dim'],
@@ -39,12 +40,12 @@ if __name__ == "__main__":
     seed = None
     best_model_path = "models/vansca/seed_None-snr_None-lr_th_None-lr_ph_None/checkpoints/best-model-epoch=00-val_r_squared=0.00.ckpt"
 
-    config = load_config('vansca')
+    config = load_config('nnmm-vasca')
     datamodule = DataModule(config)
     datamodule.setup()
     x_data, z_data = next(iter(datamodule.test_dataloader()))
 
-    model = load_best_model(best_model_path, model_name='vansca')
+    model = load_best_model(best_model_path, experiment_name='nnmm-vasca')
 
     with torch.no_grad():
         predictions = model.decoder.nonlinear_transform(x_data)

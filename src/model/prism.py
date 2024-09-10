@@ -5,8 +5,8 @@ import torch
 import torch.nn.functional as F
 from torch.distributions import Dirichlet, LogNormal, Normal
 
-from src.training_module import VAE
-from src.utils import subspace_distance
+from src.modules.training_module import VAE
+from src.modules.metrics import subspace_distance
 
 
 class Model(VAE):

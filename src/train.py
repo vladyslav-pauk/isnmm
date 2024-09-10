@@ -1,14 +1,16 @@
-from pytorch_lightning import Trainer
 import torch
-from src.utils import init_logger, load_config
-from src.data_module import DataModule
-import src.network as network_package
-import src.model as model_package
+from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 
+from src.modules.utils import init_logger, load_config
+from src.modules.data_module import DataModule
+import src.network as network_package
+import src.model as model_package
 
-def run_training(model_name, experiment=None, **kwargs):
-    config = load_config(model_name)
+
+def run_training(experiment_name, **kwargs):
+    config = load_config(experiment_name)
+    model_name = config['model']
 
     for key, value in kwargs.items():
         if key in config['train']:
@@ -43,7 +45,9 @@ def run_training(model_name, experiment=None, **kwargs):
         decoder=decoder,
         data_model=datamodule,
         mc_samples=config['train']['mc_samples'],
-        lr=config['train']['lr']
+        lr=config['train']['lr'],
+        metrics=config['train']['metrics'],
+        monitor=config['train']['monitor']
     )
 
     if any(value is not None for value in kwargs.values()):
@@ -52,7 +56,7 @@ def run_training(model_name, experiment=None, **kwargs):
         run_id = None
     logger = init_logger(
         project=config['project'],
-        experiment=config['experiment'] if not experiment else experiment,
+        experiment=config['experiment'] if not experiment_name else experiment_name,
         run_id=run_id)
     logger.log_hyperparams(config)
     logger.watch(model, log=config['train']['log'])
@@ -64,7 +68,7 @@ def run_training(model_name, experiment=None, **kwargs):
     )
 
     checkpoint_callback = ModelCheckpoint(
-        monitor=config["train"]["monitor"],  # Monitor the desired metric
+        monitor=config["train"]["monitor"],
         mode='max',
         save_top_k=1,
         filename='best-model-{epoch:02d}-{val_r_squared:.2f}',
@@ -89,21 +93,19 @@ def run_training(model_name, experiment=None, **kwargs):
     # return true_nonlinearity, est_nonlinearity
 
 
-# Parse arguments and allow running as a standalone script
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description='Train a model with specified parameters')
-    parser.add_argument('model_name', type=str, help='Name of the model to train (e.g., vansca)')
+    parser.add_argument('experiment_name', type=str, help='Name of the experiment to run (e.g., nlmm-vasca)')
     parser.add_argument('--lr_th', type=float, default=None, help='Learning rate threshold (th)')
     parser.add_argument('--lr_ph', type=float, default=None, help='Learning rate phase (ph)')
     parser.add_argument('--snr', type=float, default=None, help='Signal-to-noise ratio (SNR)')
 
     args = parser.parse_args()
 
-    # Call the function with parsed arguments
     run_training(
-        model_name=args.model_name,
+        experiment_name=args.experiment_name,
         lr_th=args.lr_th,
         lr_ph=args.lr_ph,
         snr=args.snr

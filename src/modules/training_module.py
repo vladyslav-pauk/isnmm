@@ -1,4 +1,5 @@
 import wandb
+
 from torch.optim import Adam
 import pytorch_lightning as pl
 
@@ -18,7 +19,7 @@ class VAE(pl.LightningModule):
         z_mc_sample = self.reparameterize(variational_parameters)
         x_mc_sample = self.decoder(z_mc_sample)
 
-        return (x_mc_sample, z_mc_sample), variational_parameters
+        return x_mc_sample, z_mc_sample, variational_parameters
 
     def training_step(self, batch, batch_idx):
         data, _ = batch if len(batch) == 2 else (batch, None)

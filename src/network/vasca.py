@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -44,7 +43,7 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, latent_dim, output_dim, hidden_layers, activation=None, sigma=None, degree=3):
+    def __init__(self, latent_dim, output_dim, hidden_layers, activation=None, sigma=None):
         super(Decoder, self).__init__()
         self.sigma = sigma
 
@@ -54,7 +53,7 @@ class Decoder(nn.Module):
     def forward(self, z):
         y = self.lin_transform(z)
         x = self.nonlinear_transform(y)
-        return x, self.sigma
+        return x
 
 
 import torch
@@ -68,9 +67,11 @@ class NonlinearTransform(nn.Module):
             self._build_component_wise_net(hidden_layers, activation)
             for _ in range(output_dim)
         ])
-        self._initialize_weights(activation)
+        self._initialize_weights(activation) if len(hidden_layers) != 0 else None
 
     def _build_component_wise_net(self, hidden_layers, activation):
+        if len(hidden_layers) == 0:
+            return nn.Identity()
         layers = []
         input_size = 1  # Each component receives a scalar value
         for hidden_size in hidden_layers.values():

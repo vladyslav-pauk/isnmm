@@ -1,4 +1,5 @@
 {
+  "repeats": 5,
   "train":
   {
     "lr": {
