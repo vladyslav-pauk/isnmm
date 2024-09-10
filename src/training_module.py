@@ -22,19 +22,19 @@ class VAE(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         data, _ = batch if len(batch) == 2 else (batch, None)
-        mc_sample, variational_parameters = self(data)
+        x_mc_sample, z_mc_sample, variational_parameters = self(data)
 
-        loss = self.loss_function(data, mc_sample, variational_parameters)
+        loss = self.loss_function(data, x_mc_sample, z_mc_sample, variational_parameters)
         self.log_dict(loss)
         return sum(loss.values())
 
     def validation_step(self, batch, batch_idx):
         if batch_idx == 0:
-            data, latent = batch if len(batch) == 2 else (batch, None)
-            mc_sample, variational_parameters = self(data)
+            x, z = batch if len(batch) == 2 else (batch, None)
+            x_mc_sample, z_mc_sample, variational_parameters = self(x)
 
-            loss = self.loss_function(data, mc_sample, variational_parameters)
-            metric = self.metric(data, latent, mc_sample, variational_parameters)
+            loss = self.loss_function(x, x_mc_sample, z_mc_sample, variational_parameters)
+            metric = self.metric(x, z, x_mc_sample, z_mc_sample, variational_parameters)
 
             wandb.log({"validation_loss": sum(loss.values())})
             wandb.log({k: v for k, v in metric.items()})

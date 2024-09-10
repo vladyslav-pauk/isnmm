@@ -37,25 +37,24 @@ class Model(VAE):
         z = F.softmax(samples, dim=-1)
         return z
 
-    def loss_function(self, x, mc_samples, variational_parameters):
+    def loss_function(self, x, x_mc_sample, z_mc_sample, variational_parameters):
         mu, log_var = variational_parameters
         sigma = self.decoder.sigma
 
-        recon_x_samples, z_samples = mc_samples
-        R = recon_x_samples.size(0)
+        R = x_mc_sample.size(0)
 
-        recon_loss = (recon_x_samples - x.unsqueeze(0).expand_as(recon_x_samples)).pow(2)
+        recon_loss = (x_mc_sample - x.unsqueeze(0).expand_as(x_mc_sample)).pow(2)
         recon_loss = recon_loss.sum(dim=-1).mean() / 2 / sigma ** 2
 
-        tilde_z = torch.log(z_samples[:, :, :-1] / z_samples[:, :, -1:]) - mu.unsqueeze(0)
+        tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_mc_sample[:, :, -1:]) - mu.unsqueeze(0)
         sigma_diag_inv = torch.diag_embed(1.0 / torch.exp(0.5 * log_var)).unsqueeze(0).expand(R, -1, -1, -1)
         h_z = torch.sum(tilde_z.unsqueeze(-1).transpose(-1, -2) @ sigma_diag_inv @ tilde_z.unsqueeze(-1),
                         dim=-1).mean() / 2
-        h_z += log_var[:, :-1].sum(dim=-1).mean() / 2 + torch.log(z_samples).sum(dim=-1).mean()
+        h_z += log_var[:, :-1].sum(dim=-1).mean() / 2 + torch.log(z_mc_sample).sum(dim=-1).mean()
 
         return {"reconstruction": recon_loss, "entropy": -h_z}
 
-    def metric(self, x, z, mc_sample, variational_parameters=None):
+    def metric(self, x, z, x_mc_sample, z_mc_sample, variational_parameters=None):
 
         # x_recon_samples, z_samples = mc_sample
 
