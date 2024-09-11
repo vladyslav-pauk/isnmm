@@ -10,7 +10,7 @@ from src.modules.metrics import subspace_distance
 
 
 class Model(VAE):
-    def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None):
+    def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None, metrics=None, monitor=None):
         super().__init__(encoder=encoder, decoder=decoder, lr=lr)
 
         self.observed_dim = encoder.input_dim
@@ -74,9 +74,9 @@ class Model(VAE):
     #     KL_divergence = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp()) / x.size(0)
     #     return {"reconstruction": recon_loss, "kl_divergence": KL_divergence}
 
-    def loss_function(self, x, recon_x_samples, z_samples, encoder_params, decoder_params):
+    def loss_function(self, x, recon_x_samples, z_samples, encoder_params):
         mu, log_var = encoder_params
-        sigma = decoder_params
+        sigma = self.decoder.sigma
         R = recon_x_samples.size(0)
 
         recon_loss = (recon_x_samples - x.unsqueeze(0).expand_as(recon_x_samples)).pow(2)
@@ -116,7 +116,7 @@ class Model(VAE):
     #     # Final loss (negative ELBO)
     #     return {"recon_loss": (recon_loss / 2), "h_z": - (h_z / 2)}
 
-    def metric(self, posterior_params, likelihood_params, x, z, x_recon_samples):
+    def metric(self, x, z, x_recon_samples, z_samples, posterior_params):
         A_hat = self.decoder.lin_transform.matrix
         A0 = self.data_model.dataset.lin_transform
 

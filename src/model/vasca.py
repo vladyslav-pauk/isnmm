@@ -9,9 +9,9 @@ from src.modules.metrics import subspace_distance, mse_matrix_db, spectral_angle
 
 
 class Model(VAE):
-    def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None, metrics=None, monitor=None):
+    def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None, metrics=None, monitor=None, config=None, data_config=None):
         super().__init__(encoder=encoder, decoder=decoder, lr=lr)
-
+        # todo: refactor arguments, i should only path configs
         self.observed_dim = encoder.input_dim
         self.latent_dim = encoder.output_dim
 
@@ -61,6 +61,7 @@ class Model(VAE):
 
         metrics = {}
         for metric in self.metrics:
+
             if metric == "A_MSE_dB":
                 A_mse_dB = mse_matrix_db(true_mixing_A, model_mixing_A)
                 metrics["A_MSE_dB"] = A_mse_dB

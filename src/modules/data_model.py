@@ -1,3 +1,4 @@
+from numpy import random
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
@@ -7,7 +8,7 @@ class NonlinearTransform(nn.Module):
     def __init__(self, observed_dim, degree):
         super(NonlinearTransform, self).__init__()
         self.degree = degree
-        self.coefficients = torch.rand(observed_dim, degree + 1)
+        self.coefficients = torch.tensor(random.rand(observed_dim, degree + 1))
 
     def forward(self, x):
         """ Apply the transformation component-wise: tanh(x), tanh(2x), ..., tanh(nx) """
@@ -47,6 +48,8 @@ class NonlinearTransform(nn.Module):
 class DataModel:
     def __init__(self, config):
         super().__init__()
+        random.seed(config['data']["seed"])
+
         observed_dim = config['data']["observed_dim"]
         latent_dim = config['data']["latent_dim"]
 
@@ -74,7 +77,7 @@ class DataModel:
         return (observed_sample, latent_sample), self.sigma
 
     def _init_model(self, observed_dim, latent_dim):
-        lin_transform = torch.rand(observed_dim, latent_dim)
+        lin_transform = torch.tensor(random.rand(observed_dim, latent_dim)).float()
 
         if self.model == "linear":
             nonlin_transform = nn.Identity()

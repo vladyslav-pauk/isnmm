@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -47,17 +48,13 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         self.sigma = sigma
 
-        self.lin_transform = LinearP(latent_dim, output_dim)
+        self.lin_transform = LinearPositive(latent_dim, output_dim)
         self.nonlinear_transform = NonlinearTransform(output_dim, hidden_layers, activation)
 
     def forward(self, z):
         y = self.lin_transform(z)
         x = self.nonlinear_transform(y)
         return x
-
-
-import torch
-import torch.nn as nn
 
 
 class NonlinearTransform(nn.Module):
@@ -73,18 +70,17 @@ class NonlinearTransform(nn.Module):
         if len(hidden_layers) == 0:
             return nn.Identity()
         layers = []
-        input_size = 1  # Each component receives a scalar value
+        input_size = 1
         for hidden_size in hidden_layers.values():
             layers.append(nn.Linear(input_size, hidden_size))
             if activation:
                 layers.append(getattr(nn, activation)())  # Adding activation
             input_size = hidden_size
-        # Final layer
+
         layers.append(nn.Linear(input_size, 1))
         return nn.Sequential(*layers)
 
     def _initialize_weights(self, activation):
-        """ Initialize weights for the linear layers using normal distribution """
         for net in self.component_wise_nets:
             for layer in net:
                 if isinstance(layer, nn.Linear):
@@ -93,16 +89,15 @@ class NonlinearTransform(nn.Module):
                         nn.init.zeros_(layer.bias)
 
     def forward(self, x):
-        # Apply component-wise transformations to each part of x
         transformed_components = [
             self.component_wise_nets[i](x[..., i:i + 1]) for i in range(x.shape[-1])
         ]
         return torch.cat(transformed_components, dim=-1).abs()
 
 
-class LinearP(nn.Linear):
+class LinearPositive(nn.Linear):
     def __init__(self, input_dim, output_dim):
-        super(LinearP, self).__init__(input_dim, output_dim, bias=False)
+        super(LinearPositive, self).__init__(input_dim, output_dim, bias=False)
         nn.init.normal_(self.weight)
 
     @property

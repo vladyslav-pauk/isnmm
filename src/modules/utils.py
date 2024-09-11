@@ -11,22 +11,23 @@ from pytorch_lightning.loggers import WandbLogger
 #     with open(f'experiments/{experiment}.json', 'r') as f:
 #         return json.load(f)
 #
-def load_config(experiment):
-    with open(f'experiments/{experiment}.json', 'r') as f:
+def load_experiment_config(experiment, config_name):
+    with open(f'experiments/{experiment}/{config_name}.json', 'r') as f:
         return json.load(f)
 
 
-def init_logger(project=None, experiment=None, run_id=None):
+def init_logger(experiment=None, model=None, run_id=None):
     os.environ["WANDB_API_KEY"] = "fcf64607eeb9e076d3cbfdfe0ea3532621753d78"
     os.environ['WANDB_SILENT'] = 'true'
     wandb.require("core")
     wandb.login()
 
-    # todo: project=experiment_{some experiment name vansca_dsadsa}
+    project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0].split("/")[-2]
 
     logger = WandbLogger(
+        entity=project_root,
         project=experiment,
-        entity=project,
+        group=model,
         id=run_id,
         save_dir="models",
         log_model=True,

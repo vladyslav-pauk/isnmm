@@ -1,14 +1,17 @@
-from torch.utils.data import DataLoader, random_split
 import torchvision.transforms as transforms
 import pytorch_lightning as pl
+from torch.utils.data import DataLoader, random_split
+
+from src.modules.utils import load_experiment_config
 
 
 class DataModule(pl.LightningDataModule):
     def __init__(self, config):
         super().__init__()
-        self.config = config
+
         self.dataset = config['dataset']
         self.batch_size = config['train']['batch_size']
+        self.config = config
 
         self.data_train = None
         self.data_val = None
@@ -32,7 +35,7 @@ class DataModule(pl.LightningDataModule):
         return DataLoader(self.data_train, batch_size=self.batch_size, num_workers=0, persistent_workers=False)
 
     def val_dataloader(self):
-        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=0, persistent_workers=False)
+        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=10, persistent_workers=False)
 
     def test_dataloader(self):
-        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=0, persistent_workers=False)
+        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=10, persistent_workers=False)

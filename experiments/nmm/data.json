@@ -1,0 +1,16 @@
+{
+  "dataset": "nmm",
+  "data":
+  {
+    "model": "polynomial",
+    "degree": 10,
+    "latent_dim": 3,
+    "observed_dim": 4,
+    "size": 100,
+    "SNR": 25
+  },
+  "train":
+  {
+    "batch_size": 100
+  }
+}

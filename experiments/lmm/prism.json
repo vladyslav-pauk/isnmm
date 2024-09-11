@@ -1,14 +1,11 @@
 {
-  "project": "isnmm",
-  "experiment": "nlmm-vasca",
-  "model": "VASCA",
-  "dataset": "SLS",
+  "model": "prism",
   "train":
   {
     "log": "parameters",
     "accelerator": "cpu",
     "epochs": 10,
-    "metrics": ["A_MSE_dB", "A_SAN", "z_subspace", "z_MSE_dB"],
+    "metrics": ["A_MSE_dB", "A_SAM", "z_subspace", "z_MSE_dB"],
     "monitor": "A_MSE_dB",
     "patience": 3,
     "tolerance": 1e-2,
@@ -20,14 +17,6 @@
     "seed": null,
     "mc_samples": 100
   },
-  "data": {
-    "model": "polynomial",
-    "degree": 10,
-    "latent_dim": 3,
-    "observed_dim": 4,
-    "size": 100,
-    "SNR": 25
-  },
   "encoder": {
     "hidden_dim": {
       "h1":  64,
@@ -36,9 +25,23 @@
       "h4":  8
     }
   },
-    "decoder": {
-        "hidden_dim": {
-        },
-        "activation": null
+  "decoder": {
+      "hidden_dim": {
+      },
+      "activation": null
+  },
+  "schedule": {
+    "repeats": 5,
+    "train":
+    {
+      "lr": {
+        "th": [0.001, 0.01],
+        "ph": [0.01, 0.005]
+      },
+      "seed": [29, 0, 42, 1, 2]
+    },
+    "data": {
+      "SNR": [10, 20, 30]
     }
+  }
 }

@@ -1,31 +1,46 @@
 import itertools
 import wandb
+import argparse
 
-from train import run_training
-from src.modules.utils import load_config, get_parameter_combinations
+from train import train_model
+from src.modules.utils import load_experiment_config, get_parameter_combinations
+from src.modules.data_module import DataModule
 
+if __name__ == '__main__':
 
-experiment = 'nnmm-vasca'
-schedule = 'schedule'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--experiment', type=str, default='nmm', help='Experiment name  (e.g., nmm)')
+    parser.add_argument('--models', nargs='+', default='vasca', help='List of models separated by space (e.g., vasca)')
+    args = parser.parse_args()
 
-schedule_config = load_config(f'{experiment}-{schedule}')
+    experiment = args.experiment
+    models = args.models
 
-param_dict = get_parameter_combinations(schedule_config)
+    data_config = load_experiment_config(experiment, 'data')
+    datamodule = DataModule(data_config)
 
-param_keys = list(param_dict.keys())
-param_values = list(param_dict.values())
+    print(f"Starting experiment '{experiment}'")
 
-parameter_combinations = list(itertools.product(*param_values))
+    for model in models:
+        config = load_experiment_config(experiment, model)
+        schedule_config = config["schedule"]
 
-for param_combination in parameter_combinations:
-    kwargs = dict(zip(param_keys, param_combination))
+        param_dict = get_parameter_combinations(schedule_config)
 
-    print(f"Executing '{experiment}' with parameters: {kwargs}")
+        param_keys = list(param_dict.keys())
+        param_values = list(param_dict.values())
 
-    for iter in range(schedule_config['repeats']):
-        run_training(experiment, **kwargs)
+        parameter_combinations = list(itertools.product(*param_values))
 
-    wandb.finish()
+        for param_combination in parameter_combinations:
+            kwargs = dict(zip(param_keys, param_combination))
+
+            print(f"Training '{model}' with parameters: \n\t{kwargs}")
+
+            for iteration in range(schedule_config['repeats']):
+                train_model(experiment, config, datamodule, **kwargs)
+
+            wandb.finish()
 
 
 # todo: run with configuration like train.py, argparse

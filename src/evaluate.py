@@ -1,16 +1,25 @@
+import os
 import torch
 import src.network as network_package
 import src.model as model_package
-from src.modules.utils import load_config
-
+from src.modules.utils import load_experiment_config
+from src.train import train_model
 from src.modules.data_module import DataModule
+from src.modules.metrics import mse_matrix_db
 
 
-def load_best_model(best_model_path, experiment_name):
-    config = load_config(experiment_name)
-    module = getattr(model_package, config["model"])
-    network = getattr(network_package, config["model"])
-    # todo: load config with the model
+def load_best_model(run_id, model_name, experiment_name, datamodule):
+
+    module = getattr(model_package, model_name)
+    network = getattr(network_package, model_name)
+
+    checkpoints_dir = f"models/{experiment_name}/{run_id}/checkpoints/"
+    checkpoint_files = [f for f in os.listdir(checkpoints_dir) if f.endswith(".ckpt")]
+    best_model_path = os.path.join(checkpoints_dir, checkpoint_files[0])
+
+    checkpoint = torch.load(best_model_path)
+    config = checkpoint["hyper_parameters"]['config']
+    config['data'] = checkpoint["hyper_parameters"]['data_config']['data']
 
     encoder = network.Encoder(
         input_dim=config['data']['observed_dim'],
@@ -33,24 +42,37 @@ def load_best_model(best_model_path, experiment_name):
     )
 
     model.eval()
+
     return model
 
 
 if __name__ == "__main__":
-    seed = None
-    best_model_path = "models/vansca/seed_None-snr_None-lr_th_None-lr_ph_None/checkpoints/best-model-epoch=00-val_r_squared=0.00.ckpt"
+    experiment = "lmm"
+    model_name = "vasca"
 
-    config = load_config('nnmm-vasca')
-    datamodule = DataModule(config)
+    data_config = load_experiment_config(experiment, 'data')
+    training_config = load_experiment_config(experiment, model_name)
+
+    datamodule = DataModule(data_config)
     datamodule.setup()
-    x_data, z_data = next(iter(datamodule.test_dataloader()))
 
-    model = load_best_model(best_model_path, experiment_name='nnmm-vasca')
+    # run_id = train_model(
+    #     experiment_name=experiment,
+    #     config=training_config,
+    #     datamodule=datamodule
+    # )
+    run_id = 'w85y5w1i'
 
-    with torch.no_grad():
-        predictions = model.decoder.nonlinear_transform(x_data)
+    model = load_best_model(run_id=run_id, model_name=model_name, experiment_name='lmm', datamodule=datamodule)
+    print(model.decoder.lin_transform.matrix)
+    print(model.data_model.dataset.lin_transform)
+    print(mse_matrix_db(model.decoder.lin_transform.matrix, model.data_model.dataset.lin_transform))
 
-    print("Predictions:", predictions)
+    # x_data, z_data = next(iter(datamodule.test_dataloader()))
+    # x_data, z_data = datamodule.dataset.data
+    # with torch.no_grad():
+    #     predictions = model.decoder.nonlinear_transform(x_data)
+    # print("Predictions:", predictions)
 
 
 # fixme: adapt prism to new code

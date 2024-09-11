@@ -188,7 +188,7 @@ def plot_components(x, labels=None, **kwargs):
 
 
 def mse_matrix_db(A0, A_hat):
-    min_mse = float('inf')
+    min_mse = torch.tensor(float('inf'))
     perms = itertools.permutations(range(A0.shape[0]))
     for perm in perms:
         A_hat_permuted = A_hat[list(perm), :]
