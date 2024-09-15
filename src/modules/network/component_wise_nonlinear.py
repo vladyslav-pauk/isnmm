@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+# todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
 
 class Network(nn.Module):
     def __init__(self, output_dim, hidden_layers, activation=None, init_weights=None):

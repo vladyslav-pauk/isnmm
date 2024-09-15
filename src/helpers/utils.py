@@ -53,7 +53,7 @@ def init_logger(experiment_name=None, model=None, run_name=None):
     )
 
     return wandb_logger
-    # todo: update and add logging messages
+    # todo: add logging messages for the command line output
 
 
 def get_parameter_combinations(config, prefix="", sep="_"):

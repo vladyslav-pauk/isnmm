@@ -12,7 +12,7 @@ from src.modules.vae_module import VAE
 class Model(VAE):
     def __init__(self, encoder=None, decoder=None, mc_samples=1, lr=None, metrics=None, monitor=None, config=None, data_config=None):
         super().__init__(encoder=encoder, decoder=decoder, lr=lr)
-        # todo: refactor arguments, i should only pass configs (the arguments are saved as run config to wandb)
+
         self.observed_dim = encoder.input_dim
         self.latent_dim = encoder.output_dim
 
@@ -259,4 +259,4 @@ class Decoder(nn.Module):
 
 
 # fixme: clean up and test nisca model
-# fixme: neural network output is horizontal!!! (nearly constant)  something is wrong
+#  neural network output is horizontal!!! (nearly constant)  something is wrong

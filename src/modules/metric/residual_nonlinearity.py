@@ -255,3 +255,5 @@ class LineFitter(nn.Module):
 #
 #     return plt
 #     # todo: crop outliers
+        # todo: make ResNon not depend on the function, but rather on the values for z_true
+        #    i.e. pass not f_true and A_true, but the values for f_true(A_true @ z_true), and A_true @ z_true

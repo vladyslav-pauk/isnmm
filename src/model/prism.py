@@ -10,6 +10,8 @@ from src.modules.network import ComponentWiseNonlinear, LinearPositive
 from torch.distributions import Dirichlet, LogNormal, Normal
 from src.modules.vae_module import VAEModule
 
+# fixme: implement prism-vae
+
 
 class Model(VAEModule):
     def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None, metrics=None, monitor=None, config=None, data_config=None):

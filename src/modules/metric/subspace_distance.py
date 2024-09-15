@@ -2,7 +2,8 @@ import torch
 import torchmetrics
 
 
-# fixme: test independently subspace distance and find similar probabilistic measure and use IS expectation.
+# fixme: test independently subspace distance
+# todo: find similar probabilistic measure and use IS expectation.
 class SubspaceDistance(torchmetrics.Metric):
     def __init__(self, dist_sync_on_step=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)

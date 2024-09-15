@@ -57,12 +57,12 @@ if __name__ == '__main__':
                 wandb.finish()
 
 # todo: name of schedule on wandb to separate scheduled runs
-# todo: use double group wandb or some other grouping that will match scheduling and single runs (use tag?).
+# todo: implement wandb sweep
 # todo: run with configuration like train.py, argparse
 # todo: group runs by same hyperparameter setting
 # todo: fix order of training, seed last
 # todo: make it display link to wandb even with wandb.finish() command
-# todo: Log or handle results
+# todo: Log or handle (print) results
 # print(f"Training complete with true_A: {true_A}, est_A: {est_A}")
 # todo: https://pytorch-lightning.readthedocs.io/en/0.9.0/hyperparameters.html
 

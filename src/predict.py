@@ -80,13 +80,12 @@ if __name__ == "__main__":
     print("Predictions:", predictions)
 
 
-# fixme: adapt prism to new code
-# fixme: run with only reconstruction term, check convergence, compare with prism, play with those
+# todo: fix folder structure
+# todo: implement prism
 # todo: clean and squash github commits
-# fixme: run schedule
-
+# todo: run schedule
+# todo: reconsider the importing approach (getattr), ask google how to properly do it with modules
 # todo: use yaml for config
-# todo: extend neural network architecture and expressiveness (batch, other methods), ask gpt
 # todo: check inverse stability when the residual is discontinuous todo: subspace metric
 # todo: predict.py with wandb loader;
 #  Download the best model file from a sweep. This snippet downloads the model file with the highest

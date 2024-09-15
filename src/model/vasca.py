@@ -54,6 +54,7 @@ class Model(VAEModule):
     #     return z
 
     # fixme: verify loss function 5, 11, 18, 19
+    # fixme: run with only reconstruction term, check convergence, compare with prism, play with those
     def loss_function(self, data, model_output):
         x_mc_sample, z_mc_sample, variational_parameters = model_output
         mu, log_var = variational_parameters

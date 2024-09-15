@@ -1,14 +1,8 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader, random_split
 import pytorch_lightning as pl
-from torch.utils.data import DataLoader, random_split
 
 import src.data.model as data_model_package
-
-# todo: make a generative_model for mixture models (like vae), then lmm, nmm, pnlmm are in folder generative_models
-#  use them for synthetic data
-# fixme: rename linear transform when talking about A
-# fixme: fix folder structure
 
 
 class DataModule(pl.LightningDataModule):
@@ -88,6 +82,7 @@ class SyntheticDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.data[idx], tuple(l[idx] for l in self.labels)
+
     # todo: generate data on-the-fly in the __getitem__ method to save memory
     #  (in this case make sure splitting is handled, random_split won't work - "9. Handle Data Splitting Appropriately")
     # def __getitem__(self, idx):

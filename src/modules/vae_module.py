@@ -65,7 +65,7 @@ class VAEModule(pl.LightningModule):
         metrics = self.compute_metrics(data, self(data), labels, print_results=True)
         print(metrics)
 
-        # todo: A (independent on data) is different from the best value in the validation wandb
+        # todo: check if (independent on data) is the same as the best value in the validation wandb
         return metrics
 
     def configure_optimizers(self):

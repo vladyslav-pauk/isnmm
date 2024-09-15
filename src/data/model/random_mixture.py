@@ -28,15 +28,15 @@ class GenerativeModel:  # (Distribution)
         # todo: remove unnecessary attributes or arguments, e.g. model_name, or pass directly to _model_init functions
 
     def _init_model(self, linear_mixture_matrix):
-        lin_transform = LinearPositive(
+        linear_mixture = LinearPositive(
             mixing_matrix=linear_mixture_matrix,
             init_weights=self.mixing_matrix_init
         ).requires_grad_(False)
 
         if self.model == "linear":
-            nonlin_transform = nn.Identity()
+            nonlinear_transform = nn.Identity()
         else:
-            nonlin_transform = NonlinearTransform(
+            nonlinear_transform = NonlinearTransform(
                 self.observed_dim,
                 self.degree,
                 init_weights=self.nonlinear_transform_init
@@ -49,9 +49,11 @@ class GenerativeModel:  # (Distribution)
         noise_mat = torch.eye(self.observed_dim)
         noise_dist = torch.distributions.MultivariateNormal(noise_vec, noise_mat)
 
-        return latent_dist, noise_dist, lin_transform, nonlin_transform
+        return latent_dist, noise_dist, linear_mixture, nonlinear_transform
         # todo: define separate subclasses for each model type, inheriting from a base class.
         #  separate it into lmm, nmm, pnlmm subclasses (or just make Identity a part of nonlinear transform)
+        #  make a generative_model for mixture models (like vae), then lmm, nmm, pnlmm are in folder generative_models
+        #  use them for synthetic data
         # todo: inherit from Distribution and Dataset and add __len__ and __getitem__ methods
 
     def sample(self, sample_shape=None):
