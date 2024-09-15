@@ -1,0 +1,20 @@
+{
+  "module_name": "synthetic",
+  "seed": 1,
+  "data_model": {
+    "model_name": "random_mixture",
+    "model": "linear",
+    "mixing_matrix_init": "normal_",
+    "nonlinear_transform_init": "normal_",
+    "degree": 0,
+    "snr": 25
+  },
+  "dataset": {
+    "observed_dim": 3,
+    "latent_dim": 2,
+    "size": 10000,
+    "batch_size": 100,
+    "split": [0.8, 0.1, 0.1],
+    "num_workers": 4
+  }
+}

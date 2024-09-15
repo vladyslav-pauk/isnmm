@@ -138,3 +138,5 @@ if __name__ == "__main__":
 
     # 7. Visualize the true and estimated vertices
     plot_simplex(transformation_matrix, estimated_vertices, X)
+
+    # todo: implement mves

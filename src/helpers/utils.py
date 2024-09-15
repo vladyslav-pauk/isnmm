@@ -1,0 +1,88 @@
+import os
+import json
+import logging
+
+import wandb
+from pytorch_lightning.loggers import WandbLogger
+
+# todo: clean up utils
+# def load_config():
+#     experiment = sys.argv[1]
+#
+#     with open(f'experiments/{experiment}.json', 'r') as f:
+#         return json.load(f)
+#
+def load_experiment_config(experiment, config_name):
+    with open(f'experiments/{experiment}/{config_name}.json', 'r') as f:
+        return json.load(f)
+
+
+def init_logger(experiment_name=None, model=None, run_name=None):
+    os.environ["WANDB_API_KEY"] = "fcf64607eeb9e076d3cbfdfe0ea3532621753d78"
+    os.environ['WANDB_SILENT'] = 'true'
+    wandb.require("core")
+    wandb.login()
+
+    project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0].split("/")[-2]
+
+    # log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format=log_format,
+    #     datefmt="%Y-%m-%d %H:%M:%S",
+    # )
+    # logging.basicConfig(level=logging.INFO)
+    # logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
+    import warnings
+    warnings.filterwarnings(
+        "ignore",
+        message=".*GPU available but not used.*",
+        category=UserWarning
+    )
+
+    wandb_logger = WandbLogger(
+        entity=project_root,
+        project=experiment_name,
+        group=model,
+        name=run_name,
+        # tags=[model],
+        save_dir=f"models/{model}",
+        log_model=True,
+        resume="allow",
+        # config={}
+    )
+
+    return wandb_logger
+    # todo: update and add logging messages
+
+
+def get_parameter_combinations(config, prefix="", sep="_"):
+    params = {}
+
+    for key, value in config.items():
+        new_key = f"{prefix}{sep}{key}" if prefix else key
+
+        if isinstance(value, dict):
+            nested_params = get_parameter_combinations(value, new_key)
+            params.update(nested_params)
+        elif isinstance(value, list):
+            params[new_key] = value
+
+    return params
+
+
+def unflatten_dict(d, sep='_'):
+    """
+    Unflattens a dictionary with keys containing separators (e.g., 'lr.th').
+    Converts {'lr.th': 0.001, 'lr.ph': 0.005} into {'lr': {'th': 0.001, 'ph': 0.005}}.
+    """
+    result = {}
+    for key, value in d.items():
+        parts = key.split(sep)
+        d_ref = result
+        for part in parts[:-1]:
+            if part not in d_ref:
+                d_ref[part] = {}
+            d_ref = d_ref[part]
+        d_ref[parts[-1]] = value
+    return result

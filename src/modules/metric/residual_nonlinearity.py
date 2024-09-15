@@ -1,11 +1,67 @@
-import math
-import itertools
-import matplotlib.pyplot as plt
 import wandb
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchmetrics
+
+from src.helpers.plotter import plot_components
+
+
+# fixme: clean up and test residual nonlinearity
+class ResidualNonlinearity(torchmetrics.Metric):
+    def __init__(self, dist_sync_on_step=False):
+        super().__init__(dist_sync_on_step=dist_sync_on_step)
+
+        self.add_state("sum_r_squared", default=torch.tensor(0.0), dist_reduce_fx="sum")
+        self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
+
+        self.fitter = LineFitter()
+
+    def update(self, z, true_mixing_A, true_nonlinearity, model_nonlinearity):
+        residual_nonlinearity = lambda x: true_nonlinearity.inverse(model_nonlinearity(x))
+
+        z_true_mixed = z @ true_mixing_A.T
+
+        r_squared_values = self.fitter.fit(residual_nonlinearity, z_true_mixed).rsquared
+
+        self.sum_r_squared += r_squared_values.mean()
+        self.count += 1
+
+        # nonlinearity_plot = plot_components(
+        #     y_true,
+        #     true_nonlinearity=true_nonlinearity,
+        #     inferred_nonlinearity=model_nonlinearity,
+        # )
+        # residual_nonlinearity_plot = plot_components(
+        #     y_true,
+        #     residual_nonlinearity=residual_nonlinearity,
+        #     fitter=fitter,
+        #     labels=fitter.rsquared
+        # )
+
+    def compute(self):
+        return self.sum_r_squared / self.count
+
+    def plot(self, y_true, show_plot=False):
+        nonlinearity_plot = plot_components(
+            y_true,
+            true_nonlinearity=self.true_nonlinearity,
+            inferred_nonlinearity=self.model_nonlinearity,
+        )
+        residual_nonlinearity_plot = plot_components(
+            y_true,
+            residual_nonlinearity=self.residual_nonlinearity,
+            fitter=self.fitter,
+            labels=self.fitter.rsquared
+        )
+        if show_plot:
+            nonlinearity_plot.show()
+            residual_nonlinearity_plot.show()
+        else:
+            wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
+        nonlinearity_plot.close()
+        residual_nonlinearity_plot.close()
 
 
 class LineFitter(nn.Module):
@@ -108,122 +164,45 @@ class LineFitter(nn.Module):
 
         return torch.cat(transformed_components, dim=-1)
 
-
-def residual_nonlinearity(y_true, true_nonlinearity, model_nonlinearity, show_plot=False):
-
-    residual_nonlinearity = lambda x: true_nonlinearity.inverse(model_nonlinearity(x))
-
-    fitter = LineFitter()
-    fitter.fit(residual_nonlinearity, y_true).unsqueeze(0)
-
-    nonlinearity_plot = plot_components(
-        y_true,
-        true_nonlinearity=true_nonlinearity,
-        inferred_nonlinearity=model_nonlinearity,
-    )
-    residual_nonlinearity_plot = plot_components(
-        y_true,
-        residual_nonlinearity=residual_nonlinearity,
-        fitter=fitter,
-        labels=fitter.rsquared
-    )
-    if show_plot:
-        nonlinearity_plot.show()
-        residual_nonlinearity_plot.show()
-    else:
-        wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
-    nonlinearity_plot.close()
-    residual_nonlinearity_plot.close()
-
-    return fitter
-
-
-def plot_components(x, labels=None, **kwargs):
-    # todo: rescale each curve so that it fits in the plot (fitter has to refit exactly as original)
-    # todo: make it a line instead of scatter
-    import warnings
-    warnings.filterwarnings("ignore", message=".*path .*")
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": "serif",
-        "font.serif": ["Computer Modern Roman"],
-        "axes.labelsize": 20,
-        "font.size": 20,
-        "legend.fontsize": 20,
-        "xtick.labelsize": 20,
-        "ytick.labelsize": 20,
-        "figure.dpi": 300,
-        "savefig.dpi": 300,
-        "text.latex.preamble": r"\usepackage{amsmath}"
-    })
-    num_components = x.shape[-1]
-
-    n_cols = math.ceil(math.sqrt(num_components))
-    n_rows = math.ceil(num_components / n_cols)
-
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
-    axes = axes.flatten()
-
-    for i in range(num_components):
-        x_component = x[..., i].detach().cpu().numpy()
-
-        for k, v in kwargs.items():
-            if callable(v):
-                y_component = v(x)[..., i].detach().cpu().numpy()
-            else:
-                y_component = v[..., i].detach().cpu().numpy()
-
-            axes[i].scatter(x_component, y_component, label=k.replace('_', ' ').capitalize())
-
-        if labels is not None:
-            axes[i].text(0.5, 0.1, f"R-squared: {labels[i]:.4f}", horizontalalignment='center', verticalalignment='center',
-                     transform=axes[i].transAxes)
-        # axes[i].set_title(f'Component {i + 1} Nonlinearity')
-
-    axes[0].legend()
-
-    plt.tight_layout()
-
-    return plt
-
-
-def mse_matrix_db(A0, A_hat):
-    min_mse = torch.tensor(float('inf'))
-    perms = itertools.permutations(range(A0.shape[0]))
-    for perm in perms:
-        A_hat_permuted = A_hat[list(perm), :]
-        mse = torch.mean(torch.sum((A0 - A_hat_permuted) ** 2, dim=1))
-        if mse < min_mse:
-            min_mse = mse
-
-    mse_dB = 10 * torch.log10(min_mse)
-    return mse_dB
-
-
-def spectral_angle_distance(A0, A_hat):
-    A0 = A0 / torch.norm(A0, dim=1, keepdim=True)
-    A_hat = A_hat / torch.norm(A_hat, dim=1, keepdim=True)
-    cosines = torch.sum(A0 * A_hat, dim=1)
-    return torch.acos(cosines).mean()
-
-
-def subspace_distance(S, U):
-    import torch
-
-    S_pseudo_inv = torch.linalg.pinv(S)
-
-    I = torch.eye(S.shape[-1], device=S.device)
-    P_s_orth = I - S_pseudo_inv @ S
-
-    U_u, Q, V_u = torch.linalg.svd(U.T, full_matrices=False)
-    Q_u = V_u.T
-
-    matrix_product = Q_u @ P_s_orth
-
-    singular_values = torch.linalg.svd(matrix_product)[1]
-
-    norm_2 = torch.max(singular_values)
-    return norm_2
+#
+#
+# def mse_matrix_db(A0, A_hat):
+#     min_mse = torch.tensor(float('inf'))
+#     perms = itertools.permutations(range(A0.shape[0]))
+#     for perm in perms:
+#         A_hat_permuted = A_hat[list(perm), :]
+#         mse = torch.mean(torch.sum((A0 - A_hat_permuted) ** 2, dim=1))
+#         if mse < min_mse:
+#             min_mse = mse
+#
+#     mse_dB = 10 * torch.log10(min_mse)
+#     return mse_dB
+#
+#
+# def spectral_angle_distance(A0, A_hat):
+#     A0 = A0 / torch.norm(A0, dim=1, keepdim=True)
+#     A_hat = A_hat / torch.norm(A_hat, dim=1, keepdim=True)
+#     cosines = torch.sum(A0 * A_hat, dim=1)
+#     return torch.acos(cosines).mean()
+#
+#
+# def subspace_distance(S, U):
+#     import torch
+#
+#     S_pseudo_inv = torch.linalg.pinv(S)
+#
+#     I = torch.eye(S.shape[-1], device=S.device)
+#     P_s_orth = I - S_pseudo_inv @ S
+#
+#     U_u, Q, V_u = torch.linalg.svd(U.T, full_matrices=False)
+#     Q_u = V_u.T
+#
+#     matrix_product = Q_u @ P_s_orth
+#
+#     singular_values = torch.linalg.svd(matrix_product)[1]
+#
+#     norm_2 = torch.max(singular_values)
+#     return norm_2
 
 # todo: residual nonlinearity and plot components shall go under the Fitter class
 # todo: matrix distance class; vector (sub)space (set) distance class

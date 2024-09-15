@@ -1,16 +1,18 @@
 import sys
 
 import itertools
+
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
+
+from src.modules.network import ComponentWiseNonlinear, LinearPositive
 from torch.distributions import Dirichlet, LogNormal, Normal
-
-from src.modules.training_module import VAE
-from src.modules.metrics import subspace_distance
+from src.modules.vae_module import VAEModule
 
 
-class Model(VAE):
-    def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None, metrics=None, monitor=None):
+class Model(VAEModule):
+    def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None, metrics=None, monitor=None, config=None, data_config=None):
         super().__init__(encoder=encoder, decoder=decoder, lr=lr)
 
         self.observed_dim = encoder.input_dim
@@ -23,7 +25,8 @@ class Model(VAE):
         self.data_model = data_model
 
         self.mc_samples = mc_samples
-        # self.config['data']["SNR"]
+        self.metrics = metrics
+        self.monitor = monitor
 
     # def reparameterize(self, mean, log_var):
     #     std = torch.exp(0.5 * log_var)
@@ -54,7 +57,6 @@ class Model(VAE):
     #     noise_amp = torch.sqrt(
     #         noiseless_sample.pow(2).sum() / noiseless_sample.shape[0] / noiseless_sample.shape[1] / self.snr
     #     )
-    #     # todo: understand where else sigma goes, and check it's consistent with the dataset
     #     noise = self.noise_distribution(loc=torch.zeros_like(noiseless_sample), scale=noise_amp)
     #     noise_sample = noise.sample()
     #     return self.generative_model(z, noise_sample)
@@ -117,8 +119,8 @@ class Model(VAE):
     #     return {"recon_loss": (recon_loss / 2), "h_z": - (h_z / 2)}
 
     def metric(self, x, z, x_recon_samples, z_samples, posterior_params):
-        A_hat = self.decoder.lin_transform.matrix
-        A0 = self.data_model.dataset.lin_transform
+        A_hat = self.decoder.linear_mixing.matrix
+        A0 = self.data_model.dataset.linear_mixing
 
         min_mse = float('inf')
         perms = itertools.permutations(range(A0.shape[0]))
@@ -171,4 +173,56 @@ class Model(VAE):
 
         return {"mse_A_dB": mse_dB, "ssd": ssd}
 
-# todo: test independently subspace distance and find similar probabilistic measure and use IS expectation.
+
+class Encoder(nn.Module):
+    def __init__(self, input_dim, latent_dim, hidden_layers):
+        super().__init__()
+        self.input_dim = input_dim
+        self.output_dim = latent_dim
+
+        hidden_dims = list(hidden_layers.values())
+
+        self.mean_layers = nn.ModuleList()
+        self.var_layers = nn.ModuleList()
+        self.mean_bn_layers = nn.ModuleList()
+        self.var_bn_layers = nn.ModuleList()
+
+        prev_dim = input_dim
+        for h_dim in hidden_dims:
+            self.mean_layers.append(nn.Linear(prev_dim, h_dim))
+            self.var_layers.append(nn.Linear(prev_dim, h_dim))
+
+            self.mean_bn_layers.append(nn.BatchNorm1d(h_dim))
+            self.var_bn_layers.append(nn.BatchNorm1d(h_dim))
+
+            prev_dim = h_dim
+
+        self.fc_mean = nn.Linear(prev_dim, latent_dim - 1)
+        self.fc_var = nn.Linear(prev_dim, latent_dim - 1)
+
+    def forward(self, x):
+        h_mean = x
+        for fc, bn in zip(self.mean_layers, self.mean_bn_layers):
+            h_mean = F.relu(bn(fc(h_mean)))
+        mean = self.fc_mean(h_mean)
+
+        h_var = x
+        for fc, bn in zip(self.var_layers, self.var_bn_layers):
+            h_var = F.relu(bn(fc(h_var)))
+        log_var = self.fc_var(h_var)
+
+        return mean, log_var
+
+
+class Decoder(nn.Module):
+    def __init__(self, latent_dim, output_dim, hidden_layers, activation=None, sigma=None):
+        super(Decoder, self).__init__()
+        self.sigma = sigma
+
+        self.lin_transform = LinearPositive(latent_dim, output_dim)
+        self.nonlinear_transform = NonlinearTransform(output_dim, hidden_layers, activation)
+
+    def forward(self, z):
+        y = self.lin_transform(z)
+        x = self.nonlinear_transform(y)
+        return x
