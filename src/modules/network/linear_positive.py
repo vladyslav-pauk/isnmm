@@ -3,24 +3,15 @@ import torch.nn.functional as F
 
 
 class Network(nn.Linear):
-    def __init__(self, mixing_matrix, weight_initialization=None):
+    def __init__(self, mixing_matrix, mixture_initialization=None, **kwargs):
         super(Network, self).__init__(mixing_matrix.shape[1], mixing_matrix.shape[0], bias=False)
         self.weight = nn.Parameter(mixing_matrix)
-        getattr(nn.init, weight_initialization, lambda x: x)(self.weight)
+        getattr(nn.init, mixture_initialization, lambda x: x)(self.weight)
 
     @property
     def matrix(self):
-        return F.softplus(self.weight)
+        # return F.softplus(self.weight)
+        return self.weight.abs()
 
-    def forward(self, input):
-        return F.linear(input, self.matrix, self.bias)
-
-# class LinearPositive(nn.Module):
-#     def __init__(self, in_features, out_features):
-#         super().__init__()
-#         self.weight = nn.Parameter(torch.rand(out_features, in_features))
-#         self.bias = nn.Parameter(torch.zeros(out_features))
-#
-#     def forward(self, x):
-#         weight = F.softplus(self.weight)  # Ensure weights are positive
-#         return F.linear(x, weight, self.bias)
+    def forward(self, data):
+        return F.linear(data, self.matrix)

@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from src.modules.network import ComponentWiseNonlinear, LinearPositive
+from src.modules.network import LinearPositive
 from torch.distributions import Dirichlet, LogNormal, Normal
 from src.modules.vae_module import VAEModule
 

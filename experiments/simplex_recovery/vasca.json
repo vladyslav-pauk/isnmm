@@ -26,8 +26,8 @@
     "verbose": true
   },
   "early_stopping": {
-    "patience": 50,
-    "min_delta": 1e-4
+    "patience": 100,
+    "min_delta": 1e-1
   },
   "encoder": {
     "hidden_layers": {
@@ -41,7 +41,7 @@
     "weight_initialization": "normal_"
   },
   "decoder": {
-      "mixing_initialization": "normal_"
+      "mixture_initialization": "kaiming_normal_"
   },
   "schedule": {
     "repeats": 100,

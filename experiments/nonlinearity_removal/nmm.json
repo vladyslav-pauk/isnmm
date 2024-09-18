@@ -3,11 +3,11 @@
   "seed": 1,
   "data_model": {
     "model_name": "random_mixture",
-    "model": "linear",
+    "model": "polynomial",
+    "degree": 10,
+    "snr": 25,
     "mixing_matrix_init": "normal_",
-    "nonlinear_transform_init": "normal_",
-    "degree": 0,
-    "snr": 25
+    "nonlinear_transform_init": "normal_"
   },
   "dataset": {
     "observed_dim": 3,

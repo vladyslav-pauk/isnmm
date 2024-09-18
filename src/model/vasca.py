@@ -17,7 +17,7 @@ class Model(VAEModule):
         self.metrics = torchmetrics.MetricCollection({
             'mixture_mse_db': metric.MatrixMse(),
             'mixture_sam': metric.SpectralAngle(),
-            'z_subspace': metric.SubspaceDistance()
+            # 'z_subspace': metric.SubspaceDistance()
         })
         self.metrics.eval()
 
@@ -77,9 +77,9 @@ class Model(VAEModule):
         self.metrics['mixture_sam'].update(
             self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
         )
-        self.metrics['z_subspace'].update(
-            labels[0], model_output[1].mean(dim=0)
-        )
+        # self.metrics['z_subspace'].update(
+        #     labels[0], model_output[1].mean(dim=0)
+        # )
 
     # def inference_model(self, observed):
     #     mean, log_var = self.encoder(observed)
@@ -106,27 +106,62 @@ class Model(VAEModule):
 class Encoder(nn.Module):
     def __init__(self, input_dim, latent_dim, config_encoder):
         super().__init__()
+        self.input_dim = input_dim
+        self.output_dim = latent_dim
 
-        self.mu_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
-        self.log_var_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
+        hidden_dims = list(config_encoder["hidden_layers"].values())
+
+        self.mean_layers = nn.ModuleList()
+        self.var_layers = nn.ModuleList()
+        self.mean_bn_layers = nn.ModuleList()
+        self.var_bn_layers = nn.ModuleList()
+
+        prev_dim = input_dim
+        for h_dim in hidden_dims:
+            self.mean_layers.append(nn.Linear(prev_dim, h_dim))
+            self.var_layers.append(nn.Linear(prev_dim, h_dim))
+
+            self.mean_bn_layers.append(nn.BatchNorm1d(h_dim))
+            self.var_bn_layers.append(nn.BatchNorm1d(h_dim))
+
+            prev_dim = h_dim
+
+        self.fc_mean = nn.Linear(prev_dim, latent_dim - 1)
+        self.fc_var = nn.Linear(prev_dim, latent_dim - 1)
 
     def forward(self, x):
-        mu = self.mu_network.forward(x)
-        log_var = self.log_var_network.forward(x)
-        return mu, log_var
+        h_mean = x
+        for fc, bn in zip(self.mean_layers, self.mean_bn_layers):
+            h_mean = F.relu(bn(fc(h_mean)))
+        mean = self.fc_mean(h_mean)
+
+        h_var = x
+        for fc, bn in zip(self.var_layers, self.var_bn_layers):
+            h_var = F.relu(bn(fc(h_var)))
+        log_var = self.fc_var(h_var)
+
+        return mean, log_var
+
+# class Encoder(nn.Module):
+#     def __init__(self, input_dim, latent_dim, config_encoder):
+#         super().__init__()
+#
+#         self.mu_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
+#         self.log_var_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
+#
+#     def forward(self, x):
+#         mu = self.mu_network.forward(x)
+#         log_var = self.log_var_network.forward(x)
+#         return mu, log_var
 
 
 class Decoder(nn.Module):
-    def __init__(self, latent_dim, output_dim, mixing_initialization, **kwargs):
-        # fixme: fix signature of encoder/decoder choose config or **config
+    def __init__(self, latent_dim, output_dim, config_decoder):
         super(Decoder, self).__init__()
-
-        self.linear_mixture = LinearPositive(
-            torch.ones(output_dim, latent_dim), mixing_initialization
-        )
+        self.linear_mixture = LinearPositive(torch.ones(output_dim, latent_dim), **config_decoder)
 
     def forward(self, z):
         x = self.linear_mixture(z)
         return x
 
-# todo: check if the initialization of the weights is correct, compare vasca
+# fixme: check if the initialization of the weights is correct, compare vasca, too often get infty loss

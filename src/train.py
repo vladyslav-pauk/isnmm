@@ -56,7 +56,7 @@ def _setup_model(training_config, datamodule, logger):
     decoder = model_module.Decoder(
         latent_dim=datamodule.latent_dim,
         output_dim=datamodule.observed_dim,
-        **training_config['decoder']
+        config_decoder=training_config['decoder']
     )
     model = model_module.Model(
         ground_truth_model=datamodule,
@@ -146,3 +146,4 @@ if __name__ == "__main__":
         **hyperparameters
     )
 
+# todo: one monitor for early stopping (A not changing) and another monitor for checkpoint (best A)

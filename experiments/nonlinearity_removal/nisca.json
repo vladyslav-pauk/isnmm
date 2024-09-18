@@ -1,21 +1,21 @@
 {
-  "model_name": "vasca",
+  "model_name": "nisca",
   "logger_watch": "parameters",
   "torch_seed": null,
   "train": {
     "monitor": {
-      "monitor": "mixture_mse_db",
+      "monitor": "validation_loss",
       "mode": "min"
     },
     "lr": {
       "th": 0.001,
       "ph": 0.01
     },
-    "mc_samples": 1000
+    "mc_samples": 1
   },
   "trainer": {
     "accelerator": "cpu",
-    "max_epochs": 200,
+    "max_epochs": 500,
     "limit_test_batches": 1,
     "limit_val_batches": 1,
     "log_every_n_steps": 10,
@@ -26,26 +26,34 @@
     "verbose": true
   },
   "early_stopping": {
-    "patience": 50,
-    "min_delta": 1e-4
+    "patience": 100,
+    "min_delta": 1e-1
   },
   "encoder": {
     "hidden_layers": {
-      "h1":  64,
+      "h1":  32,
       "h2":  32,
       "h3":  16,
       "h4":  8
     },
-    "init_weights": "normal_"
+    "activation": "relu",
+    "output_activation": "none",
+    "weight_initialization": "none"
   },
   "decoder": {
-      "hidden_layers": {
-      },
-      "activation": null,
-      "init_weights": "kaiming_normal_"
+    "hidden_layers": {
+      "h1":  32,
+      "h2":  32,
+      "h3":  16,
+      "h4":  8
+    },
+    "activation": "leaky_relu",
+    "output_activation": "none",
+    "weight_initialization": "none",
+    "mixture_initialization": "none"
   },
   "schedule": {
-    "repeats": 2,
+    "repeats": 100,
     "parameters": {
       "train":
       {
