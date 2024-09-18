@@ -23,7 +23,9 @@
       "h2":  32,
       "h3":  16,
       "h4":  8
-    }
+    },
+    "activation": "relu",
+    "init_weights": "normal_"
   },
   "decoder": {
     "hidden_dim": {

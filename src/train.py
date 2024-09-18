@@ -1,5 +1,6 @@
 import argparse
-import logging
+import ast
+# import logging
 
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
@@ -24,15 +25,17 @@ def train_model(experiment_name, model_name, data_model_name, **kwargs):
     model = _setup_model(training_config, datamodule_instance, logger)
     trainer = _setup_trainer(training_config, logger)
 
-    logging.info(f"Training model {model_name} with data model {data_model_name}")
+    # logging.info(f"Training model {model_name} with data model {data_model_name}")
     trainer.fit(model, datamodule_instance)
     # logger.experiment.finish()
+
+    trainer.test(model, datamodule_instance)
 
     return logger.experiment.id
 
 
 def setup_data_module(data_config):
-    logging.info(f"Setting up data module {data_config['module_name']} with data model {data_config['data_model']}")
+    # logging.info(f"Setting up data module {data_config['module_name']} with data model {data_config['data_model']}")
     if data_config["seed"]:
         with isolate_rng():
             seed_everything(data_config["seed"], workers=True)
@@ -48,7 +51,7 @@ def _setup_model(training_config, datamodule, logger):
     encoder = model_module.Encoder(
         input_dim=datamodule.observed_dim,
         latent_dim=datamodule.latent_dim,
-        **training_config['encoder']
+        config_encoder=training_config['encoder']
     )
     decoder = model_module.Decoder(
         latent_dim=datamodule.latent_dim,
@@ -72,6 +75,7 @@ def _setup_trainer(config, logger):
         **config["train"]["monitor"],
         **config['early_stopping']
     )
+    # fixme: relative change in |A| < 1e-4
 
     checkpoint_callback = ModelCheckpoint(
         filename=f'best-model-{{epoch:02d}}-{{{config["train"]["monitor"]["monitor"]}:.2f}}',
@@ -130,17 +134,10 @@ if __name__ == "__main__":
     parser.add_argument('--hyperparameters', type=str, default=None, help='Hyperparameter dictionary')
     args = parser.parse_args()
 
-    import ast
     if args.hyperparameters:
         hyperparameters = ast.literal_eval(args.hyperparameters)
     else:
         hyperparameters = {}
-    # import json
-    # if args.hyperparameters:
-    #     print(args.hyperparameters)
-    #     hyperparameters = json.loads(args.hyperparameters)
-    # else:
-    #     hyperparameters = {}
 
     train_model(
         experiment_name=args.experiment_name,

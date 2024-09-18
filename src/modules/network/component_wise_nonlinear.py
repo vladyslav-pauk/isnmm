@@ -2,15 +2,17 @@ import torch
 import torch.nn as nn
 
 # todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
+# fixme: improve this one, too verbose, use fcn_constructor and decoder like in encoder?
+
 
 class Network(nn.Module):
-    def __init__(self, output_dim, hidden_layers, activation=None, init_weights=None):
+    def __init__(self, output_dim, hidden_layers, activation=None, output_activation=None, weight_initialization=None):
         super(Network, self).__init__()
         self.component_wise_nets = nn.ModuleList([
             self._build_component_wise_net(hidden_layers, activation)
             for _ in range(output_dim)
         ])
-        self._initialize_weights(activation, init_weights) if len(hidden_layers) != 0 else None
+        self._initialize_weights(activation, weight_initialization) if len(hidden_layers) != 0 else None
 
     def _build_component_wise_net(self, hidden_layers, activation):
         if len(hidden_layers) == 0:

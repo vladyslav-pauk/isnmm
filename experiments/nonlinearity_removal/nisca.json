@@ -4,7 +4,7 @@
   "torch_seed": null,
   "train": {
     "monitor": {
-      "monitor": "validation_loss",
+      "monitor": "mixture_mse_db",
       "mode": "min"
     },
     "lr": {
@@ -15,7 +15,7 @@
   },
   "trainer": {
     "accelerator": "cpu",
-    "max_epochs": 500,
+    "max_epochs": 200,
     "limit_test_batches": 1,
     "limit_val_batches": 1,
     "log_every_n_steps": 10,
@@ -31,20 +31,21 @@
   },
   "encoder": {
     "hidden_layers": {
-      "h1":  32,
+      "h1":  64,
       "h2":  32,
       "h3":  16,
       "h4":  8
     },
-    "activation": "relu",
-    "output_activation": "none",
-    "weight_initialization": "normal_"
+    "init_weights": "normal_"
   },
   "decoder": {
-      "mixing_initialization": "normal_"
+      "hidden_layers": {
+      },
+      "activation": null,
+      "init_weights": "kaiming_normal_"
   },
   "schedule": {
-    "repeats": 100,
+    "repeats": 2,
     "parameters": {
       "train":
       {

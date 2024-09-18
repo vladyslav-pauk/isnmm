@@ -48,3 +48,4 @@ class Network(nn.Module):
 
     # todo: use the same transform as in the network, just randomize weights? proof of principle, then use arbitrary
     #  nonlinearity
+    # todo: make it distributions.transform class? it has inv and derivative

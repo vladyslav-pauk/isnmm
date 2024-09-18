@@ -245,18 +245,22 @@ class Encoder(nn.Module):
 
 
 class Decoder(nn.Module):
-    def __init__(self, latent_dim, output_dim, hidden_layers, activation=None, sigma=None):
+    def __init__(self, latent_dim, output_dim,
+                 hidden_layers, activation, output_activation, mixing_initialization, weight_initialization):
         super(Decoder, self).__init__()
-        self.sigma = sigma
 
-        self.lin_transform = LinearPositive(latent_dim, output_dim)
-        self.nonlinear_transform = ComponentWiseNonlinear(output_dim, hidden_layers, activation)
+        self.linear_mixture = LinearPositive(
+            torch.ones(output_dim, latent_dim), mixing_initialization
+        )
+        self.nonlinear_transform = ComponentWiseNonlinear(
+            output_dim, hidden_layers, activation, output_activation, weight_initialization
+        )
+        # todo: no need for a class, compose from constructors here
 
     def forward(self, z):
-        y = self.lin_transform(z)
+        y = self.linear_mixture(z)
         x = self.nonlinear_transform(y)
         return x
 
-
-# fixme: clean up and test nisca model
+# fixme: clean up and test nisca model, initialize on top of vasca super. just modify the metric and decoder
 #  neural network output is horizontal!!! (nearly constant)  something is wrong

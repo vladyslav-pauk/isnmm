@@ -30,7 +30,7 @@ class GenerativeModel:  # (Distribution)
     def _init_model(self, linear_mixture_matrix):
         linear_mixture = LinearPositive(
             mixing_matrix=linear_mixture_matrix,
-            init_weights=self.mixing_matrix_init
+            weight_initialization=self.mixing_matrix_init
         ).requires_grad_(False)
 
         if self.model == "linear":
