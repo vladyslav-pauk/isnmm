@@ -23,10 +23,10 @@ class FCNConstructor(nn.Module):
         self.output_layer = self.init_layer(nn.Linear(hidden_dims[-1], output_dim))
 
     def init_layer(self, layer):
-        # try:
-        #     self.init_weights(layer.weight, nonlinearity=self.activation)
-        # except TypeError:
-        #     self.init_weights(layer.weight)
+        try:
+            self.init_weights(layer.weight, nonlinearity=self.activation)
+        except TypeError:
+            self.init_weights(layer.weight)
         nn.init.zeros_(layer.bias)
         return layer
 

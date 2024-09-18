@@ -10,8 +10,8 @@ class Network(nn.Linear):
 
     @property
     def matrix(self):
-        # return F.softplus(self.weight)
-        return self.weight.abs()
+        return F.softplus(self.weight)
+        # return self.weight.abs()
 
     def forward(self, data):
         return F.linear(data, self.matrix)

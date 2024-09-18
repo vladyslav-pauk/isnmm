@@ -38,10 +38,10 @@
     },
     "activation": "relu",
     "output_activation": "none",
-    "weight_initialization": "normal_"
+    "weight_initialization": "none"
   },
   "decoder": {
-      "mixture_initialization": "kaiming_normal_"
+      "mixture_initialization": "normal_"
   },
   "schedule": {
     "repeats": 100,

@@ -34,12 +34,12 @@ class Model(VAEModule):
 
     def loss_function(self, data, model_output):
         data_rec_mc_sample, latent_mc_sample, variational_parameters = model_output
-
+        # print(variational_parameters)
         recon_loss = self.reconstruction(data, data_rec_mc_sample)
         neg_entropy_z = - self.entropy(latent_mc_sample, variational_parameters)
         kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_mc_sample.size(-1)))
         # fixme: neg_e is not training without rec_loss (why? is already initiated with the largest possible?)
-
+        # print(recon_loss, kl_posterior_prior)
         return {"reconstruction": recon_loss, "kl_posterior_prior": kl_posterior_prior}
         # fixme: check all formula with the paper and thesis manuscript once again
 
@@ -103,56 +103,56 @@ class Model(VAEModule):
     #     pass
 
 
-class Encoder(nn.Module):
-    def __init__(self, input_dim, latent_dim, config_encoder):
-        super().__init__()
-        self.input_dim = input_dim
-        self.output_dim = latent_dim
-
-        hidden_dims = list(config_encoder["hidden_layers"].values())
-
-        self.mean_layers = nn.ModuleList()
-        self.var_layers = nn.ModuleList()
-        self.mean_bn_layers = nn.ModuleList()
-        self.var_bn_layers = nn.ModuleList()
-
-        prev_dim = input_dim
-        for h_dim in hidden_dims:
-            self.mean_layers.append(nn.Linear(prev_dim, h_dim))
-            self.var_layers.append(nn.Linear(prev_dim, h_dim))
-
-            self.mean_bn_layers.append(nn.BatchNorm1d(h_dim))
-            self.var_bn_layers.append(nn.BatchNorm1d(h_dim))
-
-            prev_dim = h_dim
-
-        self.fc_mean = nn.Linear(prev_dim, latent_dim - 1)
-        self.fc_var = nn.Linear(prev_dim, latent_dim - 1)
-
-    def forward(self, x):
-        h_mean = x
-        for fc, bn in zip(self.mean_layers, self.mean_bn_layers):
-            h_mean = F.relu(bn(fc(h_mean)))
-        mean = self.fc_mean(h_mean)
-
-        h_var = x
-        for fc, bn in zip(self.var_layers, self.var_bn_layers):
-            h_var = F.relu(bn(fc(h_var)))
-        log_var = self.fc_var(h_var)
-
-        return mean, log_var
-
 # class Encoder(nn.Module):
 #     def __init__(self, input_dim, latent_dim, config_encoder):
 #         super().__init__()
+#         self.input_dim = input_dim
+#         self.output_dim = latent_dim
 #
-#         self.mu_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
-#         self.log_var_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
+#         hidden_dims = list(config_encoder["hidden_layers"].values())
+#
+#         self.mean_layers = nn.ModuleList()
+#         self.var_layers = nn.ModuleList()
+#         self.mean_bn_layers = nn.ModuleList()
+#         self.var_bn_layers = nn.ModuleList()
+#
+#         prev_dim = input_dim
+#         for h_dim in hidden_dims:
+#             self.mean_layers.append(nn.Linear(prev_dim, h_dim))
+#             self.var_layers.append(nn.Linear(prev_dim, h_dim))
+#
+#             self.mean_bn_layers.append(nn.BatchNorm1d(h_dim))
+#             self.var_bn_layers.append(nn.BatchNorm1d(h_dim))
+#
+#             prev_dim = h_dim
+#
+#         self.fc_mean = nn.Linear(prev_dim, latent_dim - 1)
+#         self.fc_var = nn.Linear(prev_dim, latent_dim - 1)
 #
 #     def forward(self, x):
-#         mu = self.mu_network.forward(x)
-#         log_var = self.log_var_network.forward(x)
-#         return mu, log_var
+#         h_mean = x
+#         for fc, bn in zip(self.mean_layers, self.mean_bn_layers):
+#             h_mean = F.relu(bn(fc(h_mean)))
+#         mean = self.fc_mean(h_mean)
+#
+#         h_var = x
+#         for fc, bn in zip(self.var_layers, self.var_bn_layers):
+#             h_var = F.relu(bn(fc(h_var)))
+#         log_var = self.fc_var(h_var)
+#
+#         return mean, log_var
+
+class Encoder(nn.Module):
+    def __init__(self, input_dim, latent_dim, config_encoder):
+        super().__init__()
+
+        self.mu_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
+        self.log_var_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
+
+    def forward(self, x):
+        mu = self.mu_network.forward(x)
+        log_var = self.log_var_network.forward(x)
+        return mu, log_var
 
 
 class Decoder(nn.Module):
