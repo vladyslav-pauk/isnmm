@@ -16,8 +16,8 @@ class Model(VAEModule):
 
         self.metrics = torchmetrics.MetricCollection({
             'mixture_mse_db': metric.MatrixMse(),
-            # 'mixture_sam': metric.SpectralAngle(),
-            # 'mixture_volume': metric.MatrixVolume(),
+            'mixture_sam': metric.SpectralAngle(),
+            'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange(),
             # 'z_subspace': metric.SubspaceDistance()
         })
@@ -40,10 +40,10 @@ class Model(VAEModule):
         recon_loss = self.reconstruction(data, data_rec_mc_sample)
         neg_entropy_z = - self.entropy(latent_mc_sample, variational_parameters)
         kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_mc_sample.size(-1)))
-        # fixme: neg_e is not training without rec_loss (why? is already initiated with the largest possible?)
-
         return {"reconstruction": recon_loss, "kl_posterior_prior": kl_posterior_prior}
-        # fixme: check all formula with the paper and thesis manuscript once again
+
+        # todo: neg_e is not training without rec_loss, check constants,
+        #  kl should be always positive (check sign of gamma(N))
 
     def reconstruction(self, data, data_rec_mc_sample):
         N = data.size(-1)
@@ -70,41 +70,16 @@ class Model(VAEModule):
         h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
         return h_z
 
-    # def loss_function(self, data, model_output):
-    #     x_mc_sample, z_mc_sample, variational_parameters = model_output
-    #     x = data
-    #     mu, log_var = variational_parameters
-    #     sigma = self.ground_truth.data_model.sigma
-    #
-    #     R = x_mc_sample.size(0)
-    #
-    #     recon_loss = (x_mc_sample - x.unsqueeze(0).expand_as(x_mc_sample)).pow(2)
-    #     recon_loss = recon_loss.sum(dim=-1).mean() / 2 / sigma ** 2
-    #
-    #     tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_mc_sample[:, :, -1:]) - mu.unsqueeze(0)
-    #     sigma_diag_inv = torch.diag_embed(1.0 / torch.exp(0.5 * log_var)).unsqueeze(0).expand(R, -1, -1, -1)
-    #     h_z = torch.sum(tilde_z.unsqueeze(-1).transpose(-1, -2) @ sigma_diag_inv @ tilde_z.unsqueeze(-1),
-    #                     dim=-1).mean() / 2
-    #     h_z += log_var[:, :-1].sum(dim=-1).mean() / 2
-    #     h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
-    #
-    #     print({"reconstruction": recon_loss, "entropy": -h_z})
-    #     print(self.loss_function1(data, model_output))
-    #     import sys
-    #     sys.exit()
-    #
-    #     return {"reconstruction": recon_loss, "entropy": -h_z}
-
     def update_metrics(self, data, model_output, labels):
         self.metrics['mixture_mse_db'].update(
             self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
         )
-        # self.metrics['mixture_sam'].update(
-        #     self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
-        # )
-        # self.metrics['mixture_volume'].update(
-        #     self.decoder.linear_mixture.matrix
-        # )
+        self.metrics['mixture_sam'].update(
+            self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
+        )
+        self.metrics['mixture_log_volume'].update(
+            self.decoder.linear_mixture.matrix
+        )
         self.metrics['mixture_matrix_change'].update(
             self.decoder.linear_mixture.matrix
         )
@@ -133,45 +108,6 @@ class Model(VAEModule):
     # def marginal_likelihood(self):
     #     pass
 
-
-# class Encoder(nn.Module):
-#     def __init__(self, input_dim, latent_dim, config_encoder):
-#         super().__init__()
-#         self.input_dim = input_dim
-#         self.output_dim = latent_dim
-#
-#         hidden_dims = list(config_encoder["hidden_layers"].values())
-#
-#         self.mean_layers = nn.ModuleList()
-#         self.var_layers = nn.ModuleList()
-#         self.mean_bn_layers = nn.ModuleList()
-#         self.var_bn_layers = nn.ModuleList()
-#
-#         prev_dim = input_dim
-#         for h_dim in hidden_dims:
-#             self.mean_layers.append(nn.Linear(prev_dim, h_dim))
-#             self.var_layers.append(nn.Linear(prev_dim, h_dim))
-#
-#             self.mean_bn_layers.append(nn.BatchNorm1d(h_dim))
-#             self.var_bn_layers.append(nn.BatchNorm1d(h_dim))
-#
-#             prev_dim = h_dim
-#
-#         self.fc_mean = nn.Linear(prev_dim, latent_dim - 1)
-#         self.fc_var = nn.Linear(prev_dim, latent_dim - 1)
-#
-#     def forward(self, x):
-#         h_mean = x
-#         for fc, bn in zip(self.mean_layers, self.mean_bn_layers):
-#             h_mean = F.relu(bn(fc(h_mean)))
-#         mean = self.fc_mean(h_mean)
-#
-#         h_var = x
-#         for fc, bn in zip(self.var_layers, self.var_bn_layers):
-#             h_var = F.relu(bn(fc(h_var)))
-#         log_var = self.fc_var(h_var)
-#
-#         return mean, log_var
 
 class Encoder(nn.Module):
     def __init__(self, input_dim, latent_dim, config_encoder):

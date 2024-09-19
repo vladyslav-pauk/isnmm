@@ -8,9 +8,12 @@ class MatrixVolume(torchmetrics.Metric):
 
         self.add_state("vol", default=torch.tensor(float('nan')), dist_reduce_fx="mean")
 
+        self.vol = torch.tensor([])
+
     def update(self, matrix):
-        vol = torch.det(matrix.T @ matrix)
-        self.vol = matrix
+        lgamma = torch.lgamma(torch.tensor(matrix.size(1))).exp()
+        vol = 1 / lgamma * torch.det(matrix.T @ matrix)
+        self.vol = vol
 
     def compute(self):
-        return self.vol
+        return self.vol.log()
