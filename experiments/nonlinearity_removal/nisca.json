@@ -16,9 +16,10 @@
   "trainer": {
     "accelerator": "cpu",
     "max_epochs": 500,
-    "limit_test_batches": 1,
-    "limit_val_batches": 1.0,
     "log_every_n_steps": 10,
+    "limit_val_batches": 1,
+    "val_check_interval": 1.0,
+    "limit_test_batches": 1,
     "enable_progress_bar": false
   },
   "checkpoint": {
@@ -31,7 +32,8 @@
     "monitor": "validation_loss",
     "mode": "min",
     "patience": 50,
-    "min_delta": 1
+    "min_delta": 1,
+    "verbose": false
   },
   "encoder": {
     "hidden_layers": {

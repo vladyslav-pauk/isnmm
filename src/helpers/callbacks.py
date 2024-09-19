@@ -4,14 +4,14 @@ from math import isnan
 
 
 class EarlyStoppingCallback(Callback):
-    def __init__(self, monitor: str, patience: int = 3, mode: str = 'min', min_delta: float = 0.0):
+    def __init__(self, monitor: str, patience: int = 3, mode: str = 'min', min_delta: float = 0.0, verbose=False):
         super().__init__()
 
         stopping_threshold = min_delta
 
         if mode in ['min', 'max']:
             self.early_stopping = EarlyStopping(
-                monitor=monitor, patience=patience, mode=mode, min_delta=min_delta, verbose=True
+                monitor=monitor, patience=patience, mode=mode, min_delta=min_delta, verbose=verbose
             )
         else:
             self.monitor = monitor

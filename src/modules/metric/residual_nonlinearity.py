@@ -1,56 +1,40 @@
 import wandb
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
-
 from src.helpers.plotter import plot_components
 
 
-# fixme: clean up and test residual nonlinearity
 class ResidualNonlinearity(torchmetrics.Metric):
     def __init__(self, dist_sync_on_step=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
-
         self.add_state("sum_r_squared", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
-
         self.fitter = LineFitter()
 
     def update(self, z, true_mixing_A, true_nonlinearity, model_nonlinearity):
-        residual_nonlinearity = lambda x: true_nonlinearity.inverse(model_nonlinearity(x))
-
+        self.true_nonlinearity = true_nonlinearity
+        self.model_nonlinearity = model_nonlinearity
+        self.residual_nonlinearity = lambda x: true_nonlinearity.inverse(model_nonlinearity(x))
         z_true_mixed = z @ true_mixing_A.T
-
-        r_squared_values = self.fitter.fit(residual_nonlinearity, z_true_mixed).rsquared
-
+        self.y_true = z_true_mixed
+        r_squared_values = self.fitter.fit(self.residual_nonlinearity, z_true_mixed)
         self.sum_r_squared += r_squared_values.mean()
         self.count += 1
 
-        # nonlinearity_plot = plot_components(
-        #     y_true,
-        #     true_nonlinearity=true_nonlinearity,
-        #     inferred_nonlinearity=model_nonlinearity,
-        # )
-        # residual_nonlinearity_plot = plot_components(
-        #     y_true,
-        #     residual_nonlinearity=residual_nonlinearity,
-        #     fitter=fitter,
-        #     labels=fitter.rsquared
-        # )
-
     def compute(self):
+        self.plot(show_plot=False)
         return self.sum_r_squared / self.count
 
-    def plot(self, y_true, show_plot=False):
+    def plot(self, show_plot=False):
         nonlinearity_plot = plot_components(
-            y_true,
-            true_nonlinearity=self.true_nonlinearity,
+            self.y_true,
             inferred_nonlinearity=self.model_nonlinearity,
+            true_nonlinearity=self.true_nonlinearity
         )
         residual_nonlinearity_plot = plot_components(
-            y_true,
+            self.y_true,
             residual_nonlinearity=self.residual_nonlinearity,
             fitter=self.fitter,
             labels=self.fitter.rsquared
@@ -66,33 +50,18 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
 class LineFitter(nn.Module):
     def __init__(self):
-        super(LineFitter, self).__init__()
+        super().__init__()
         self.slopes = None
         self.intercepts = None
 
     def check_straightness(self, x, y):
-        """
-        Fit a line to y = function(x) and calculate the mean squared error (MSE)
-        between y and the fitted line. Additionally, use the slope magnitude and R-squared as metrics.
-        """
-        # Flatten x and y
-        x_flat = x.flatten()
-        y_flat = y.flatten()
-
-        # Stack y with ones for linear regression (adding bias term)
+        x_flat, y_flat = x.flatten(), y.flatten()
         Y = torch.stack([y_flat, torch.ones_like(y_flat)], dim=1)
-
-        # Solve for slope and intercept using least squares
         params = torch.linalg.lstsq(Y, x_flat).solution
         slope, intercept = params[0], params[1]
-
-        # Predict x using the fitted line
         x_pred = slope * y + intercept
-
-        # Calculate the MSE between actual x and predicted x
         mse = F.mse_loss(x_pred, x)
 
-        # Calculate the R-squared value
         ss_total = torch.sum((x - x.mean()) ** 2)
         ss_residual = torch.sum((x - x_pred) ** 2)
         r_squared = 1 - ss_residual / ss_total
@@ -100,68 +69,27 @@ class LineFitter(nn.Module):
         return r_squared, slope, intercept
 
     def fit(self, f, y):
-        """
-        Fits a separate line to each component of (x, f(x)) and stores the slope and intercept for each component.
-
-        Args:
-            f: A function that takes x as input and returns the output y.
-            x: A tensor of inputs (each component will be fit separately).
-
-        Returns:
-            mse_values: A tensor containing the MSE for each component.
-        """
-        num_components = y.shape[-1]  # Get the number of components
-        mse_values = []
-
-        # Initialize lists to store the slopes and intercepts for each component
-        slopes = []
-        intercepts = []
-
-        # Apply the function f to get the output y
+        num_components = y.shape[-1]
+        slopes, intercepts, mse_values = [], [], []
         x = f(y)
 
-        # Fit each component of x and y independently
         for i in range(num_components):
-            x_component = x[:, i:i + 1]  # Select the i-th component of x
-            y_component = y[:, i:i + 1]  # Select the i-th component of y
+            x_component, y_component = x[:, i:i + 1], y[:, i:i + 1]
+            r_squared, slope, intercept = self.check_straightness(x_component, y_component)
+            slopes.append(slope.item())
+            intercepts.append(intercept.item())
+            mse_values.append(r_squared.item())
 
-            # Perform the linear fit on the selected component
-            mse, slope, intercept = self.check_straightness(x_component, y_component)
+        self.slopes = torch.tensor(slopes)
+        self.intercepts = torch.tensor(intercepts)
+        self.rsquared = torch.tensor(mse_values)
 
-            # Store the slope and intercept for this component
-            slopes.append(slope)
-            intercepts.append(intercept)
-
-            # Save the MSE for this component
-            mse_values.append(mse)
-
-        # Store the slopes and intercepts as tensors (but not nn.Parameters, so they refit every time)
-        self.slopes = torch.tensor(slopes)  # Shape: [num_components]
-        self.intercepts = torch.tensor(intercepts)  # Shape: [num_components]
-
-        mse_values = torch.tensor(mse_values)
-
-        self.rsquared = mse_values
-
-        return mse_values
+        return self.rsquared
 
     def forward(self, x):
-        """
-        Forward pass applying the linear transformation for each component of x.
-        Args:
-            x: Input tensor with components to apply the fitted linear transformations.
-        Returns:
-            Tensor of transformed values based on the linear equations for each component.
-        """
         if self.slopes is None or self.intercepts is None:
             raise ValueError("Slopes and intercepts are not initialized. Call fit first.")
-
-        # Apply the linear transformations to each component separately
-        transformed_components = [
-            self.slopes[i] * x[:, i:i + 1] + self.intercepts[i]
-            for i in range(x.shape[-1])
-        ]
-
+        transformed_components = [self.slopes[i] * x[:, i:i + 1] + self.intercepts[i] for i in range(x.shape[-1])]
         return torch.cat(transformed_components, dim=-1)
 
 #

@@ -34,7 +34,6 @@ class VAEModule(pl.LightningModule):
         data, labels = batch
         loss = self.loss_function(data, self(data))
         self.log_dict(loss)
-        self.update_metrics(data, self(data), labels)
         return sum(loss.values())
 
     def validation_step(self, batch, batch_idx):

@@ -1,10 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchmetrics
 
 from src.modules.network import LinearPositive, FCNConstructor
-# from src.modules.vae_module import VAEModule
 from src.model.vasca import Model as VASCA
 from src.model.vasca import Encoder
 import src.modules.metric as metric
@@ -21,35 +19,40 @@ class Model(VASCA):
             'mixture_sam': metric.SpectralAngle(),
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange(),
-            'z_subspace': metric.SubspaceDistance()
-            # 'h_r_square': metric.ResidualNonlinearity()
+            'z_subspace': metric.SubspaceDistance(),
+            'h_r_square': metric.ResidualNonlinearity()
         })
         self.metrics.eval()
 
     def update_metrics(self, data, model_output, labels):
         self.metrics['mixture_mse_db'].update(
-            self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
+            self.ground_truth.data_model.linear_mixture.matrix,
+            self.decoder.linear_mixture.matrix
         )
+
         self.metrics['mixture_sam'].update(
-            self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
+            self.ground_truth.data_model.linear_mixture.matrix,
+            self.decoder.linear_mixture.matrix
         )
+
         self.metrics['mixture_log_volume'].update(
             self.decoder.linear_mixture.matrix
         )
+
         self.metrics['mixture_matrix_change'].update(
             self.decoder.linear_mixture.matrix
         )
+
         self.metrics['z_subspace'].update(
             labels[0], model_output[1].mean(dim=0)
         )
-        # self.metrics['h_r_square'].update(
-        #     labels[0],
-        #     self.ground_truth.data_model.linear_mixture.matrix,
-        #     self.ground_truth.data_model.nonlinear_transform, self.decoder.nonlinear_transform
-        # )
 
-# fixme: fix slow training, initialization (loss infinity), mc and batch in fcnconstructor, activation argument (to
-#  config?)
+        self.metrics['h_r_square'].update(
+            labels[0],
+            self.ground_truth.data_model.linear_mixture.matrix,
+            self.ground_truth.data_model.nonlinear_transform,
+            self.decoder.nonlinear_transform
+        )
 
 
 class Decoder(nn.Module):
@@ -60,28 +63,30 @@ class Decoder(nn.Module):
 
         # self.nonlinear_transform = ComponentWiseNonlinear(output_dim, **config_decoder)
 
-        self.nonlinear_transform = nn.ModuleList([
+        self.nonlinearity = nn.ModuleList([
             FCNConstructor(
                 input_dim=1, output_dim=1, **config_decoder
             ) for _ in range(output_dim)
         ])
-        # todo: no need for a class, compose from constructors here
+
+    def nonlinear_transform(self, x):
+        x = torch.cat([
+            self.nonlinearity[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
+            for i in range(x.shape[-1])
+        ], dim=-1)
+        return x
 
     def forward(self, z):
         x = self.linear_mixture(z)
-        # x = self.nonlinear_transform(y)
-
-        x = torch.cat([
-            self.nonlinear_transform[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
-            for i in range(x.shape[-1])
-        ], dim=-1)
-
+        x = self.nonlinear_transform(x)
         return x
-        # todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
 
-# fixme: clean up and test nisca model, initialize on top of vasca super. just modify the metric and decoder
+
+# todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
+# fixme: clean up and test nisca model.
 #  neural network output is horizontal!!! (nearly constant)  something is wrong
-
+# fixme: fix slow training, initialization (loss infinity), mc and batch in fcnconstructor, activation argument (to
+#  config?)
 
 # class Network(nn.Module):
 #     def __init__(self, output_dim, hidden_layers, activation=None, output_activation=None, weight_initialization=None, **kwargs):
