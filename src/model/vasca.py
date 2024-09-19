@@ -34,61 +34,66 @@ class Model(VAEModule):
         z_samples = F.softmax(z_samples, dim=-1)
         return z_samples
 
-    # def loss_function(self, data, model_output):
-    #     data_rec_mc_sample, latent_mc_sample, variational_parameters = model_output
-    #     # print(variational_parameters)
-    #     recon_loss = self.reconstruction(data, data_rec_mc_sample)
-    #     neg_entropy_z = - self.entropy(latent_mc_sample, variational_parameters)
-    #     kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_mc_sample.size(-1)))
-    #     # fixme: neg_e is not training without rec_loss (why? is already initiated with the largest possible?)
-    #     # print(recon_loss, kl_posterior_prior)
-    #     return {"reconstruction": recon_loss, "kl_posterior_prior": kl_posterior_prior}
-    #     # fixme: check all formula with the paper and thesis manuscript once again
-    #
-    # def reconstruction(self, data, data_rec_mc_sample):
-    #     N = data.size(-1)
-    #     sigma = self.ground_truth.data_model.sigma
-    #     mse_loss = F.mse_loss(
-    #         data_rec_mc_sample, data.expand_as(data_rec_mc_sample), reduction='mean'
-    #     )
-    #     recon_loss = mse_loss / (2 * sigma ** 2) * N
-    #     recon_loss += N / 2 * torch.log(torch.tensor(2 * torch.pi)) # 0.92 * N
-    #     return recon_loss
-    #
-    # def entropy(self, z_mc_sample, variational_parameters):
-    #     M = z_mc_sample.size(-1)
-    #     mu, log_var = variational_parameters
-    #
-    #     z_last = z_mc_sample[:, :, -1:]
-    #     tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_last) - mu
-    #
-    #     sigma_diag_inv = torch.exp(-0.5 * log_var)
-    #
-    #     log_2pi = torch.log(torch.tensor(2 * torch.pi))
-    #     h_z = 0.5 * (M - 1) * log_2pi
-    #     h_z += (tilde_z ** 2 * sigma_diag_inv.unsqueeze(0)).sum(dim=-1).mean() / 2
-    #     h_z += log_var[:, :-1].sum() / (2 * M)
-    #     h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
-    #     return h_z
-
     def loss_function(self, data, model_output):
-        x_mc_sample, z_mc_sample, variational_parameters = model_output
-        x = data
-        mu, log_var = variational_parameters
+        data_rec_mc_sample, latent_mc_sample, variational_parameters = model_output
+
+        recon_loss = self.reconstruction(data, data_rec_mc_sample)
+        neg_entropy_z = - self.entropy(latent_mc_sample, variational_parameters)
+        kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_mc_sample.size(-1)))
+        # fixme: neg_e is not training without rec_loss (why? is already initiated with the largest possible?)
+
+        return {"reconstruction": recon_loss, "kl_posterior_prior": kl_posterior_prior}
+        # fixme: check all formula with the paper and thesis manuscript once again
+
+    def reconstruction(self, data, data_rec_mc_sample):
+        N = data.size(-1)
         sigma = self.ground_truth.data_model.sigma
+        mse_loss = F.mse_loss(
+            data_rec_mc_sample, data.expand_as(data_rec_mc_sample), reduction='mean'
+        )
+        recon_loss = mse_loss / (2 * sigma ** 2) * N
+        recon_loss += N / 2 * torch.log(torch.tensor(2 * torch.pi))
+        return recon_loss
 
-        R = x_mc_sample.size(0)
+    def entropy(self, z_mc_sample, variational_parameters):
+        mu, log_var = variational_parameters
 
-        recon_loss = (x_mc_sample - x.unsqueeze(0).expand_as(x_mc_sample)).pow(2)
-        recon_loss = recon_loss.sum(dim=-1).mean() / 2 / sigma ** 2
+        z_last = z_mc_sample[:, :, -1:]
+        tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_last) - mu
 
-        tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_mc_sample[:, :, -1:]) - mu.unsqueeze(0)
-        sigma_diag_inv = torch.diag_embed(1.0 / torch.exp(0.5 * log_var)).unsqueeze(0).expand(R, -1, -1, -1)
-        h_z = torch.sum(tilde_z.unsqueeze(-1).transpose(-1, -2) @ sigma_diag_inv @ tilde_z.unsqueeze(-1),
-                        dim=-1).mean() / 2
-        h_z += log_var[:, :-1].sum(dim=-1).mean() / 2 + torch.log(z_mc_sample).sum(dim=-1).mean()
+        sigma_diag_inv = torch.exp(-0.5 * log_var)
 
-        return {"reconstruction": recon_loss, "entropy": -h_z}
+        log_2pi = torch.log(torch.tensor(2 * torch.pi))
+        h_z = 0.5 * (z_mc_sample.size(-1) - 1) * log_2pi
+        h_z += (tilde_z ** 2 * sigma_diag_inv.unsqueeze(0)).sum(dim=-1).mean() / 2
+        h_z += log_var[:, :-1].sum(dim=-1).mean() / 2
+        h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
+        return h_z
+
+    # def loss_function(self, data, model_output):
+    #     x_mc_sample, z_mc_sample, variational_parameters = model_output
+    #     x = data
+    #     mu, log_var = variational_parameters
+    #     sigma = self.ground_truth.data_model.sigma
+    #
+    #     R = x_mc_sample.size(0)
+    #
+    #     recon_loss = (x_mc_sample - x.unsqueeze(0).expand_as(x_mc_sample)).pow(2)
+    #     recon_loss = recon_loss.sum(dim=-1).mean() / 2 / sigma ** 2
+    #
+    #     tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_mc_sample[:, :, -1:]) - mu.unsqueeze(0)
+    #     sigma_diag_inv = torch.diag_embed(1.0 / torch.exp(0.5 * log_var)).unsqueeze(0).expand(R, -1, -1, -1)
+    #     h_z = torch.sum(tilde_z.unsqueeze(-1).transpose(-1, -2) @ sigma_diag_inv @ tilde_z.unsqueeze(-1),
+    #                     dim=-1).mean() / 2
+    #     h_z += log_var[:, :-1].sum(dim=-1).mean() / 2
+    #     h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
+    #
+    #     print({"reconstruction": recon_loss, "entropy": -h_z})
+    #     print(self.loss_function1(data, model_output))
+    #     import sys
+    #     sys.exit()
+    #
+    #     return {"reconstruction": recon_loss, "entropy": -h_z}
 
     def update_metrics(self, data, model_output, labels):
         self.metrics['mixture_mse_db'].update(
