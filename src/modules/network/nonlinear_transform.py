@@ -9,7 +9,7 @@ class Network(nn.Module):
         self.degree = degree
         self.coefficients = torch.tensor(random.rand(observed_dim, degree + 1))
         if init_weights:
-            getattr(nn.init, init_weights)(self.coefficients)
+            getattr(nn.init, init_weights, lambda x: x)(self.coefficients)
 
     def forward(self, x):
         """ Apply the transformation component-wise: tanh(x), tanh(2x), ..., tanh(nx) """

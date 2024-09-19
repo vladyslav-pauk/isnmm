@@ -6,8 +6,8 @@
     "model": "polynomial",
     "degree": 10,
     "snr": 25,
-    "mixing_matrix_init": "normal_",
-    "nonlinear_transform_init": "normal_"
+    "mixing_matrix_init": "none",
+    "nonlinear_transform_init": "none"
   },
   "dataset": {
     "observed_dim": 3,

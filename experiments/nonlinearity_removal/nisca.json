@@ -3,7 +3,7 @@
   "logger_watch": "parameters",
   "torch_seed": null,
   "train": {
-    "monitor": {
+    "log_monitor": {
       "monitor": "validation_loss",
       "mode": "min"
     },
@@ -17,17 +17,21 @@
     "accelerator": "cpu",
     "max_epochs": 500,
     "limit_test_batches": 1,
-    "limit_val_batches": 1,
+    "limit_val_batches": 1.0,
     "log_every_n_steps": 10,
     "enable_progress_bar": false
   },
   "checkpoint": {
+    "monitor": "validation_loss",
+    "mode": "min",
     "save_top_k": 1,
     "verbose": true
   },
   "early_stopping": {
-    "patience": 100,
-    "min_delta": 1e-1
+    "monitor": "validation_loss",
+    "mode": "min",
+    "patience": 50,
+    "min_delta": 1
   },
   "encoder": {
     "hidden_layers": {
