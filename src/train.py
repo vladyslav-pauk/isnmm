@@ -8,7 +8,7 @@ from pytorch_lightning.utilities.seed import isolate_rng
 
 import src.data as data_package
 import src.model as model_package
-from src.helpers.callbacks import EarlyStoppingThreshold
+from src.helpers.callbacks import EarlyStoppingCallback
 from src.helpers.utils import init_logger, load_experiment_config, unflatten_dict
 
 
@@ -72,7 +72,7 @@ def _setup_model(training_config, datamodule, logger):
 
 def _setup_trainer(config, logger):
 
-    early_stopping_callback = EarlyStoppingThreshold(
+    early_stopping_callback = EarlyStoppingCallback(
         **config['early_stopping']
     )
 

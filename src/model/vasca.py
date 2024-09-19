@@ -19,7 +19,7 @@ class Model(VAEModule):
             'mixture_sam': metric.SpectralAngle(),
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange(),
-            # 'z_subspace': metric.SubspaceDistance()
+            'z_subspace': metric.SubspaceDistance()
         })
         self.metrics.eval()
 
@@ -37,15 +37,15 @@ class Model(VAEModule):
     def loss_function(self, data, model_output):
         data_rec_mc_sample, latent_mc_sample, variational_parameters = model_output
 
-        recon_loss = self.reconstruction(data, data_rec_mc_sample)
-        neg_entropy_z = - self.entropy(latent_mc_sample, variational_parameters)
+        recon_loss = self._reconstruction(data, data_rec_mc_sample)
+        neg_entropy_z = - self._entropy(latent_mc_sample, variational_parameters)
         kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_mc_sample.size(-1)))
         return {"reconstruction": recon_loss, "kl_posterior_prior": kl_posterior_prior}
 
         # todo: neg_e is not training without rec_loss, check constants,
         #  kl should be always positive (check sign of gamma(N))
 
-    def reconstruction(self, data, data_rec_mc_sample):
+    def _reconstruction(self, data, data_rec_mc_sample):
         N = data.size(-1)
         sigma = self.ground_truth.data_model.sigma
         mse_loss = F.mse_loss(
@@ -55,7 +55,7 @@ class Model(VAEModule):
         recon_loss += N / 2 * torch.log(torch.tensor(2 * torch.pi))
         return recon_loss
 
-    def entropy(self, z_mc_sample, variational_parameters):
+    def _entropy(self, z_mc_sample, variational_parameters):
         mu, log_var = variational_parameters
 
         z_last = z_mc_sample[:, :, -1:]
@@ -83,9 +83,9 @@ class Model(VAEModule):
         self.metrics['mixture_matrix_change'].update(
             self.decoder.linear_mixture.matrix
         )
-        # self.metrics['z_subspace'].update(
-        #     labels[0], model_output[1].mean(dim=0)
-        # )
+        self.metrics['z_subspace'].update(
+            labels[0], model_output[1].mean(dim=0)
+        )
 
     # def inference_model(self, observed):
     #     mean, log_var = self.encoder(observed)

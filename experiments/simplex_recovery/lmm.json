@@ -4,10 +4,10 @@
   "data_model": {
     "model_name": "random_mixture",
     "model": "linear",
-    "mixing_matrix_init": "none",
-    "nonlinear_transform_init": "none",
     "degree": 0,
-    "snr": 25
+    "snr": 25,
+    "mixing_matrix_init": "none",
+    "nonlinear_transform_init": "none"
   },
   "dataset": {
     "observed_dim": 50,

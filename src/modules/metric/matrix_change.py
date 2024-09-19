@@ -22,7 +22,7 @@ class MatrixChange(torchmetrics.Metric):
         self.prev_value = current_value
 
     def compute(self):
-        return 10 * torch.log10(self.relative_change + 1e-8)    # or self.relative_change
+        return self.relative_change # 10 * torch.log10(self.relative_change + 1e-8)
 
 
     # def update(self, current_value):
@@ -36,5 +36,5 @@ class MatrixChange(torchmetrics.Metric):
     #     norm = (torch.sum(x ** 2) / x.numel()).pow(0.5)
     #     return norm
 
-# discuss: relative change starts oscillating too early
+# discuss: relative change starts oscillating too early (use matrix volume? as we know it's equiv to it)
 # todo: compute running average over last 100 epochs, if it's not changing stop

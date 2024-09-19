@@ -28,10 +28,10 @@
     "verbose": true
   },
   "early_stopping": {
-    "monitor": "mixture_matrix_change",
-    "mode": "min",
-    "patience": 10,
-    "min_delta": -100
+    "monitor": "mixture_log_volume",
+    "mode": "max",
+    "patience": 50,
+    "min_delta": 1e-3
   },
   "encoder": {
     "hidden_layers": {
