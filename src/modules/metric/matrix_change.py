@@ -12,8 +12,29 @@ class MatrixChange(torchmetrics.Metric):
 
     def update(self, current_value):
         if not torch.isnan(self.prev_value).any():
-            self.relative_change = torch.linalg.matrix_norm(current_value - self.prev_value) / torch.linalg.matrix_norm(current_value)
+
+            value_change = current_value - self.prev_value
+
+            norm = lambda x: (torch.sum(x ** 2) / x.numel()).pow(0.5)
+
+            self.relative_change = norm(value_change) / norm(current_value)
+
         self.prev_value = current_value
 
     def compute(self):
-        return self.relative_change
+        return 10 * torch.log10(self.relative_change + 1e-8)    # or self.relative_change
+
+
+    # def update(self, current_value):
+    #     if not torch.isnan(self.prev_value).any():
+    #         value_change = current_value - self.prev_value
+    #         self.relative_change = self._criterion(value_change) / self._criterion(self.prev_value)
+    #     self.prev_value = current_value
+    #
+    # def _criterion(self, x):
+    #     # norm = torch.linalg.matrix_norm(x, ord='fro')
+    #     norm = (torch.sum(x ** 2) / x.numel()).pow(0.5)
+    #     return norm
+
+# discuss: relative change starts oscillating too early
+# todo: compute running average over last 100 epochs, if it's not changing stop
