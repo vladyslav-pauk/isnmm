@@ -16,7 +16,9 @@ class Model(VAEModule):
 
         self.metrics = torchmetrics.MetricCollection({
             'mixture_mse_db': metric.MatrixMse(),
-            'mixture_sam': metric.SpectralAngle(),
+            # 'mixture_sam': metric.SpectralAngle(),
+            # 'mixture_volume': metric.MatrixVolume(),
+            'mixture_matrix_change': metric.MatrixChange(),
             # 'z_subspace': metric.SubspaceDistance()
         })
         self.metrics.eval()
@@ -74,8 +76,14 @@ class Model(VAEModule):
         self.metrics['mixture_mse_db'].update(
             self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
         )
-        self.metrics['mixture_sam'].update(
-            self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
+        # self.metrics['mixture_sam'].update(
+        #     self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
+        # )
+        # self.metrics['mixture_volume'].update(
+        #     self.decoder.linear_mixture.matrix
+        # )
+        self.metrics['mixture_matrix_change'].update(
+            self.decoder.linear_mixture.matrix
         )
         # self.metrics['z_subspace'].update(
         #     labels[0], model_output[1].mean(dim=0)
@@ -158,7 +166,8 @@ class Encoder(nn.Module):
 class Decoder(nn.Module):
     def __init__(self, latent_dim, output_dim, config_decoder):
         super(Decoder, self).__init__()
-        self.linear_mixture = LinearPositive(torch.ones(output_dim, latent_dim), **config_decoder)
+        print(config_decoder)
+        self.linear_mixture = LinearPositive(torch.rand(output_dim, latent_dim), **config_decoder)
 
     def forward(self, z):
         x = self.linear_mixture(z)

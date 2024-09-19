@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 
 
 class VAEModule(pl.LightningModule):
-    def __init__(self, encoder, decoder, lr=None, monitor=None, mc_samples=None):
+    def __init__(self, encoder, decoder, lr=None, log_monitor=None, mc_samples=None):
         super().__init__()
 
         self.encoder = encoder
@@ -14,7 +14,7 @@ class VAEModule(pl.LightningModule):
         self.lr_th = lr["th"]
         self.lr_ph = lr["ph"]
         self.number_mc_samples = mc_samples
-        self.monitor = monitor
+        self.log_monitor = log_monitor
 
         # todo: all hyperparameters that affect outcome of training are passed in **config["train"].
         #  Ideally, I save these as hyperparameters, and the rest as config.
@@ -27,7 +27,7 @@ class VAEModule(pl.LightningModule):
         return observed_mc_sample, latent_mc_sample, variational_parameters
 
     def on_train_start(self) -> None:
-        wandb.define_metric(name=self.monitor["monitor"], summary=self.monitor["mode"])
+        wandb.define_metric(name=self.log_monitor["monitor"], summary=self.log_monitor["mode"])
         # todo: move it out so i don't drag monitor config through classes
 
     def training_step(self, batch, batch_idx):

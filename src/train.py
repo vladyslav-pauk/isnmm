@@ -3,11 +3,12 @@ import ast
 # import logging
 
 from pytorch_lightning import Trainer, seed_everything
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.utilities.seed import isolate_rng
 
 import src.data as data_package
 import src.model as model_package
+from src.helpers.callbacks import EarlyStoppingThreshold
 from src.helpers.utils import init_logger, load_experiment_config, unflatten_dict
 
 
@@ -71,15 +72,12 @@ def _setup_model(training_config, datamodule, logger):
 
 def _setup_trainer(config, logger):
 
-    early_stopping_callback = EarlyStopping(
-        **config["train"]["monitor"],
+    early_stopping_callback = EarlyStoppingThreshold(
         **config['early_stopping']
     )
-    # fixme: relative change in |A| < 1e-4
 
     checkpoint_callback = ModelCheckpoint(
-        filename=f'best-model-{{epoch:02d}}-{{{config["train"]["monitor"]["monitor"]}:.2f}}',
-        **config["train"]["monitor"],
+        filename=f'best-model-{{epoch:02d}}-{{{config["checkpoint"]["monitor"]}:.2f}}',
         **config['checkpoint']
     )
     trainer = Trainer(
