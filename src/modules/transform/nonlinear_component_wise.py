@@ -4,20 +4,33 @@ import torch.nn as nn
 
 
 class Network(nn.Module):
-    def __init__(self, observed_dim, degree, init_weights=None):
+    def __init__(self, observed_dim, degree, model, init_weights=None):
         super(Network, self).__init__()
+        self.model = model
         self.degree = degree
         self.coefficients = torch.tensor(random.rand(observed_dim, degree + 1))
         if init_weights:
             getattr(nn.init, init_weights, lambda x: x)(self.coefficients)
 
     def forward(self, x):
-        """ Apply the transformation component-wise: tanh(x), tanh(2x), ..., tanh(nx) """
         transformed_components = [
-            torch.stack([coeff * torch.tanh((power + 1) * x[..., i:i + 1]**power) for power, coeff in enumerate(self.coefficients[i])]).sum(dim=0)
-            for i in range(x.shape[-1])
+            self.component_transform(x[..., i:i + 1], self.coefficients[i]) for i in range(x.shape[-1])
         ]
         return torch.cat(transformed_components, dim=-1)
+
+    def component_transform(self, x, coefficients):
+
+        if self.model == "linear":
+            return x
+
+        transformed_components = torch.stack(
+            [self.basis_function(x, power, coeff) for power, coeff in enumerate(coefficients)]
+        ).sum(dim=0)
+        return transformed_components
+
+    def basis_function(self, x, power, coeff):
+        x = coeff * torch.tanh((power + 1) * x ** power)
+        return x
 
     # def inverse(self, y, num_iterations=1000):
     #     """ Numerically approximate the inverse transformation using Newton's method """

@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.distributions import Distribution, constraints
 
 
-from src.modules.network.nonlinear_transform import Network as NonlinearTransform
+from src.modules.transform import NonlinearComponentWise as NonlinearTransform
 from src.modules.network.linear_positive import Network as LinearPositive
 
 
@@ -32,14 +32,12 @@ class GenerativeModel:  # (Distribution)
             linear_mixture_matrix, self.mixing_matrix_init
         ).requires_grad_(False)
 
-        if self.model == "linear":
-            nonlinear_transform = nn.Identity()
-        else:
-            nonlinear_transform = NonlinearTransform(
-                self.observed_dim,
-                self.degree,
-                init_weights=self.nonlinear_transform_init
-            ).requires_grad_(False)
+        nonlinear_transform = NonlinearTransform(
+            self.observed_dim,
+            self.degree,
+            self.model,
+            init_weights=self.nonlinear_transform_init
+        ).requires_grad_(False)
 
         latent_vec = torch.ones(self.latent_dim)
         latent_dist = torch.distributions.Dirichlet(concentration=latent_vec)

@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 import pytorch_lightning as pl
 
-import src.data.model as data_model_package
+import src.modules.distribution as probability_model
 
 
 class DataModule(pl.LightningDataModule):
@@ -50,7 +50,7 @@ class DataModule(pl.LightningDataModule):
         if not self.dataset:
             # todo: loading mixture matrix from file
             mixture_matrix = torch.randn(self.observed_dim, self.latent_dim)
-            data_model_class = getattr(data_model_package, self.config_data_model["model_name"])
+            data_model_class = getattr(probability_model, self.config_data_model["model_name"])
             self.data_model = data_model_class(mixture_matrix, **self.config_data_model)
 
             self.dataset = SyntheticDataset(self.data_model, self.size)

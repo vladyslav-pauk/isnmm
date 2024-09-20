@@ -2,7 +2,7 @@
   "module_name": "synthetic",
   "seed": 1,
   "data_model": {
-    "model_name": "random_mixture",
+    "model_name": "mixture_model",
     "model": "linear",
     "degree": 0,
     "snr": 25,
