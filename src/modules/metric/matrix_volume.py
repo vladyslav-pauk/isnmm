@@ -11,8 +11,8 @@ class MatrixVolume(torchmetrics.Metric):
         self.vol = torch.tensor([])
 
     def update(self, matrix):
-        lgamma = torch.lgamma(torch.tensor(matrix.size(1))).exp()
-        vol = 1 / lgamma * torch.det(matrix.T @ matrix)
+        gamma = torch.lgamma(torch.tensor(matrix.size(1))).exp()
+        vol = 1 / gamma * torch.det(matrix.T @ matrix).sqrt()
         self.vol = vol
 
     def compute(self):

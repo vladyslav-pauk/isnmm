@@ -20,7 +20,7 @@ class Model(VASCA):
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange(),
             'z_subspace': metric.SubspaceDistance(),
-            'h_r_square': metric.ResidualNonlinearity()
+            # 'h_r_square': metric.ResidualNonlinearity()
         })
         self.metrics.eval()
 
@@ -47,27 +47,27 @@ class Model(VASCA):
             labels[0], model_output[1].mean(dim=0)
         )
 
-        self.metrics['h_r_square'].update(
-            labels[0],
-            self.ground_truth.data_model.linear_mixture.matrix,
-            self.ground_truth.data_model.nonlinear_transform,
-            self.decoder.nonlinear_transform
-        )
+        # self.metrics['h_r_square'].update(
+        #     labels[0],
+        #     self.ground_truth.data_model.linear_mixture.matrix,
+        #     self.ground_truth.data_model.nonlinear_transform,
+        #     self.decoder.nonlinear_transform
+        # )
 
 
 class Decoder(nn.Module):
     def __init__(self, latent_dim, output_dim, config_decoder, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.linear_mixture = LinearPositive(torch.ones(output_dim, latent_dim), **config_decoder)
+        self.linear_mixture = LinearPositive(
+            torch.rand(output_dim, latent_dim), **config_decoder
+        )
 
         # self.nonlinear_transform = ComponentWiseNonlinear(output_dim, **config_decoder)
 
-        self.nonlinearity = nn.ModuleList([
-            FCNConstructor(
-                input_dim=1, output_dim=1, **config_decoder
-            ) for _ in range(output_dim)
-        ])
+        self.nonlinearity = nn.ModuleList([FCNConstructor(
+            input_dim=1, output_dim=1, **config_decoder
+        ) for _ in range(output_dim)])
 
     def nonlinear_transform(self, x):
         x = torch.cat([
@@ -81,12 +81,13 @@ class Decoder(nn.Module):
         x = self.nonlinear_transform(x)
         return x
 
+# fixme: fix decoder: sometimes get error, not at initialization (loss infinity, nans)
+# fixme: h_metric slow!!!
+# fixme: test to get good results, neural network output is horizontal!!! (nearly constant)  something is wrong
 
+# todo: mc and batch in fcnconstructor, activation argument (to config?)
 # todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
-# fixme: clean up and test nisca model.
-#  neural network output is horizontal!!! (nearly constant)  something is wrong
-# fixme: fix slow training, initialization (loss infinity), mc and batch in fcnconstructor, activation argument (to
-#  config?)
+# todo: clean up and test nisca model.
 
 # class Network(nn.Module):
 #     def __init__(self, output_dim, hidden_layers, activation=None, output_activation=None, weight_initialization=None, **kwargs):

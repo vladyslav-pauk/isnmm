@@ -43,6 +43,15 @@ class VAEModule(pl.LightningModule):
         self.log_dict({**validation_loss, **self.metrics.compute()})
 
     def test_step(self, batch, batch_idx):
+        # data, labels = batch
+        # self.update_metrics(data, self.ground_truth.data_model(data), labels)
+        # print("Ground truth metric values", self.metrics.compute())
+        # todo: refactor data_model so it has a forward method so i can run inference like on model
+        import torch
+        matrix = self.ground_truth.data_model.linear_mixture.matrix
+        gamma = torch.lgamma(torch.tensor(matrix.size(1))).exp()
+        vol = 1 / gamma * torch.det(matrix.T @ matrix).sqrt()
+        print(vol.log())
         print("Ground truth mixture matrix:\n", self.ground_truth.data_model.linear_mixture.matrix.numpy())
         print("Decoder mixture matrix:\n", self.decoder.linear_mixture.matrix.numpy())
         # todo: check if (independent on data) is the same as the best value in the validation wandb

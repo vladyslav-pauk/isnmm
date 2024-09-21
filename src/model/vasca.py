@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
+from torch import Tensor
 
 from src.modules.network import LinearPositive, FCNConstructor
 from src.modules.vae_module import VAEModule
@@ -22,6 +23,26 @@ class Model(VAEModule):
             'z_subspace': metric.SubspaceDistance()
         })
         self.metrics.eval()
+
+    # def on_before_backward(self, loss: Tensor) -> None:
+    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight)
+    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
+    #
+    # def on_after_backward(self) -> None:
+    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight)
+    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
+
+    def on_after_backward(self) -> None:
+        valid_gradients = True
+        for name, param in self.named_parameters():
+            if param.grad is not None:
+                valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
+                if not valid_gradients:
+                    break
+
+        if not valid_gradients:
+            print(f'inf or nan gradient, skipping update.')
+            self.zero_grad()
 
     def reparameterize(self, variational_parameters, mc_samples):
         mean, log_var = variational_parameters
@@ -60,7 +81,6 @@ class Model(VAEModule):
 
         z_last = z_mc_sample[:, :, -1:]
         tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_last) - mu
-
         sigma_diag_inv = torch.exp(-0.5 * log_var)
 
         log_2pi = torch.log(torch.tensor(2 * torch.pi))
@@ -117,8 +137,12 @@ class Encoder(nn.Module):
         self.log_var_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
 
     def forward(self, x):
+        # print(x)
+        # print()
         mu = self.mu_network.forward(x)
         log_var = self.log_var_network.forward(x)
+        # print("mu, logvar", mu, log_var)
+        # print(self.mu_network.hidden_layers[0][0].weight)
         return mu, log_var
 
 
