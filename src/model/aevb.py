@@ -4,13 +4,13 @@ import torchmetrics
 import torch.nn.functional as F
 import torch.optim as optim
 
-from src.modules.vae_module import VAEModule
-from src.modules.network import FCNConstructor
+from src.modules.ae_module import AutoEncoderModule
+from src.modules.network import FCN
 
 
-class Model(VAEModule):
+class Model(AutoEncoderModule):
     def __init__(self, encoder=None, decoder=None, model_config=None, optimizer_config=None, **kwargs):
-        super().__init__(encoder=encoder, decoder=decoder, **model_config)
+        super().__init__(encoder=encoder, decoder=decoder)
 
         self.metrics = torchmetrics.MetricCollection({})
         self.optimizer_config = optimizer_config
@@ -19,8 +19,9 @@ class Model(VAEModule):
             "monitor": "validation_loss",
             "mode": "min"
         }
+        self.latent_dim = model_config["latent_dim"]
 
-    def reparameterize(self, params, mc_samples):
+    def reparameterize(self, params):
         mean, log_var = params
         std = torch.exp(0.5 * log_var)
         eps = torch.randn_like(std)
@@ -56,8 +57,8 @@ class Encoder(nn.Module):
         self.config = config
 
     def construct(self, latent_dim, observed_dim):
-        self.mu_network = FCNConstructor(observed_dim, latent_dim, **self.config)
-        self.log_var_network = FCNConstructor(observed_dim, latent_dim, **self.config)
+        self.mu_network = FCN(observed_dim, latent_dim, **self.config)
+        self.log_var_network = FCN(observed_dim, latent_dim, **self.config)
 
     def forward(self, x):
         mu = self.mu_network.forward(x)
@@ -71,7 +72,7 @@ class Decoder(nn.Module):
         self.config = config
 
     def construct(self, latent_dim, observed_dim):
-        self.network = FCNConstructor(latent_dim, observed_dim, **self.config)
+        self.network = FCN(latent_dim, observed_dim, **self.config)
 
     def forward(self, z):
         return self.network.forward(z)

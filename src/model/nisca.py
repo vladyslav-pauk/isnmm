@@ -1,40 +1,42 @@
 import torch
 import torch.nn as nn
 import torchmetrics
+import torch.optim as optim
 
-from src.modules.network import LinearPositive, FCNConstructor
+import src.modules.network as network
 from src.model.vasca import Model as VASCA
 from src.model.vasca import Encoder
 import src.modules.metric as metric
 
 
 class Model(VASCA):
-    def __init__(self, ground_truth_model=None, encoder=None, decoder=None, train_config=None):
-        super().__init__(ground_truth_model=ground_truth_model, encoder=encoder, decoder=decoder, train_config=train_config)
+    def __init__(self, ground_truth_model=None, encoder=None, decoder=None, model_config=None, optimizer_config=None):
+        super().__init__(ground_truth_model, encoder, decoder, model_config, optimizer_config)
 
         self.ground_truth = ground_truth_model
 
         self.metrics = torchmetrics.MetricCollection({
-            'mixture_mse_db': metric.MatrixMse(),
-            'mixture_sam': metric.SpectralAngle(),
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange(),
             'z_subspace': metric.SubspaceDistance(),
-            # 'h_r_square': metric.ResidualNonlinearity()
+            'h_r_square': metric.ResidualNonlinearity()
         })
         self.metrics.eval()
 
+    def configure_optimizers(self):
+        lr = self.optimizer_config["lr"]
+        lr_th_nl = lr["th"]["nl"]
+        lr_th_l = lr["th"]["l"]
+        lr_ph = lr["ph"]
+        optimizer_class = getattr(optim, self.optimizer_config["name"])
+        optimizer = optimizer_class([
+            {'params': self.encoder.parameters(), 'lr': lr_ph},
+            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr_th_l},
+            {'params': self.decoder.nonlinearity.parameters(), 'lr': lr_th_nl}
+        ], **self.optimizer_config["params"])
+        return optimizer
+
     def update_metrics(self, data, model_output, labels):
-        self.metrics['mixture_mse_db'].update(
-            self.ground_truth.data_model.linear_mixture.matrix,
-            self.decoder.linear_mixture.matrix
-        )
-
-        self.metrics['mixture_sam'].update(
-            self.ground_truth.data_model.linear_mixture.matrix,
-            self.decoder.linear_mixture.matrix
-        )
-
         self.metrics['mixture_log_volume'].update(
             self.decoder.linear_mixture.matrix
         )
@@ -47,27 +49,27 @@ class Model(VASCA):
             labels[0], model_output[1].mean(dim=0)
         )
 
-        # self.metrics['h_r_square'].update(
-        #     labels[0],
-        #     self.ground_truth.data_model.linear_mixture.matrix,
-        #     self.ground_truth.data_model.nonlinear_transform,
-        #     self.decoder.nonlinear_transform
-        # )
+        self.metrics['h_r_square'].update(
+            self.decoder.nonlinear_transform,
+            self.ground_truth.linearly_mixed_sample,
+            self.ground_truth.noiseless_sample
+        )
 
 
 class Decoder(nn.Module):
-    def __init__(self, latent_dim, output_dim, config_decoder, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.constructor = getattr(network, config["constructor"])
 
-        self.linear_mixture = LinearPositive(
-            torch.rand(output_dim, latent_dim), **config_decoder
+    def construct(self, latent_dim, observed_dim):
+        self.linear_mixture = network.LinearPositive(
+            torch.rand(observed_dim, latent_dim), **self.config
         )
 
-        # self.nonlinear_transform = ComponentWiseNonlinear(output_dim, **config_decoder)
-
-        self.nonlinearity = nn.ModuleList([FCNConstructor(
-            input_dim=1, output_dim=1, **config_decoder
-        ) for _ in range(output_dim)])
+        self.nonlinearity = nn.ModuleList([self.constructor(
+            input_dim=1, output_dim=1, **self.config
+        ) for _ in range(observed_dim)])
 
     def nonlinear_transform(self, x):
         x = torch.cat([

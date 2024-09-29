@@ -32,18 +32,18 @@ class DataModule(LightningDataModule):
         self.latent_dim = data['latent_sample'][0, 0]
         self.observed_dim = data['observed_sample'][0, 0]
 
-        self.observed_data = torch.tensor(data['observed_sample'][:self.dataset_size], dtype=torch.float32)
-        self.latent_data = torch.tensor(data['latent_sample'][:self.dataset_size], dtype=torch.float32)
-        self.noiseless_data = torch.tensor(data['noiseless_sample'][:self.dataset_size], dtype=torch.float32)
-        self.linearly_mixed_data = torch.tensor(data['linearly_mixed_sample'][:self.dataset_size], dtype=torch.float32)
+        self.observed_sample = torch.tensor(data['observed_sample'][:self.dataset_size], dtype=torch.float32)
+        self.latent_sample = torch.tensor(data['latent_sample'][:self.dataset_size], dtype=torch.float32)
+        self.noiseless_sample = torch.tensor(data['noiseless_sample'][:self.dataset_size], dtype=torch.float32)
+        self.linearly_mixed_sample = torch.tensor(data['linearly_mixed_sample'][:self.dataset_size], dtype=torch.float32)
         self.latent_data_qr = torch.tensor(data['latent_sample_qr'][:self.dataset_size], dtype=torch.float32)
         self.linear_mixture = torch.tensor(data['linear_mixture'], dtype=torch.float32)
         self.sigma = data['sigma'][0, 0]
         # todo: might use self.data and call whatever needed from the model
 
     def setup(self, stage=None):
-        self.dataset = MyDataset((self.observed_data, (self.latent_data, self.linearly_mixed_data, self.noiseless_data)))
-        self.n_feature = self.observed_data.shape[1]
+        self.dataset = MyDataset((self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)))
+        self.n_feature = self.observed_sample.shape[1]
 
     def train_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, persistent_workers=True)

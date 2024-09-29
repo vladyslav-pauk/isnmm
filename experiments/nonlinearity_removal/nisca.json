@@ -1,27 +1,65 @@
 {
   "model_name": "nisca",
-  "logger_watch": "parameters",
   "torch_seed": null,
-  "train": {
-    "log_monitor": {
-      "monitor": "validation_loss",
-      "mode": "min"
-    },
-    "lr": {
-      "th": 0.001,
-      "ph": 0.01
-    },
-    "mc_samples": 1
+  "data_loader": {
+    "module_name": "synthetic",
+    "batch_size": 1000,
+    "split": [0.8, 0.1, 0.1],
+    "num_workers": 4
+  },
+  "model": {
+    "mc_samples": 100
   },
   "trainer": {
     "accelerator": "cpu",
     "max_epochs": 500,
-    "log_every_n_steps": 10,
+    "log_every_n_steps": 4,
     "limit_val_batches": 1,
     "val_check_interval": 1.0,
     "limit_test_batches": 1,
     "gradient_clip_val": 0.5,
     "enable_progress_bar": false
+  },
+  "encoder": {
+    "constructor": "FCN",
+    "hidden_layers": {
+      "h1":  256,
+      "h2":  256,
+      "h3":  128,
+      "h4":  128
+    },
+    "hidden_activation": "ReLU",
+    "output_activation": null,
+    "weight_initialization": null,
+    "bn_eps": 1e-5,
+    "bn_momentum": 0.1
+  },
+  "decoder": {
+    "constructor": "CNN",
+    "hidden_layers": {
+      "h1":  512,
+      "h2":  512,
+      "h3":  512
+    },
+    "hidden_activation": "ReLU",
+    "output_activation": null,
+    "weight_initialization": null,
+    "mixture_initialization": null,
+    "bn_eps": null,
+    "bn_momentum": 0.1,
+    "dropout_rate": null
+  },
+  "optimizer": {
+    "name": "Adam",
+    "params": {
+    },
+    "lr": {
+      "th": {
+        "l": 0.01,
+        "nl": 0.001
+      },
+      "ph": 0.01
+    }
   },
   "checkpoint": {
     "monitor": "validation_loss",
@@ -33,35 +71,7 @@
     "monitor": "validation_loss",
     "mode": "min",
     "patience": 20,
-    "min_delta": 0.01,
-    "verbose": false
-  },
-  "encoder": {
-    "hidden_layers": {
-      "h1":  32,
-      "h2":  16,
-      "h3":  8,
-      "h4":  4
-    },
-    "hidden_activation": "relu",
-    "output_activation": "none",
-    "weight_initialization": "none",
-    "bn_eps": 1e-5,
-    "bn_momentum": 0.1
-  },
-  "decoder": {
-    "hidden_layers": {
-      "h1":  32,
-      "h2":  16,
-      "h3":  8,
-      "h4":  4
-    },
-    "hidden_activation": "leaky_relu",
-    "output_activation": "none",
-    "weight_initialization": "none",
-    "mixture_initialization": "none",
-    "bn_eps": null,
-    "bn_momentum": null
+    "min_delta": 1e-3
   },
   "schedule": {
     "repeats": 100,

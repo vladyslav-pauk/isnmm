@@ -4,17 +4,18 @@ import torch.nn.functional as F
 import torchmetrics
 import torch.optim as optim
 
-from src.modules.network import LinearPositive, FCNConstructor
-from src.modules.vae_module import VAEModule
+import src.modules.network as network
+from src.modules.ae_module import AutoEncoderModule
 import src.modules.metric as metric
 
 
-class Model(VAEModule):
+class Model(AutoEncoderModule):
     def __init__(self, ground_truth_model=None, encoder=None, decoder=None, model_config=None, optimizer_config=None):
-        super().__init__(encoder, decoder, **model_config)
+        super().__init__(encoder, decoder)
 
         self.ground_truth = ground_truth_model
         self.optimizer_config = optimizer_config
+        self.mc_samples = model_config["mc_samples"]
 
         self.metrics = torchmetrics.MetricCollection({
             'mixture_mse_db': metric.MatrixMse(),
@@ -28,6 +29,7 @@ class Model(VAEModule):
             "monitor": "mixture_mse_db",
             "mode": "min"
         }
+        self.latent_dim = None
 
     def on_after_backward(self) -> None:
         valid_gradients = True
@@ -41,11 +43,11 @@ class Model(VAEModule):
             print(f'inf or nan gradient, skipping update.')
             self.zero_grad()
 
-    def reparameterize(self, variational_parameters, mc_samples):
+    def reparameterize(self, variational_parameters):
         mean, log_var = variational_parameters
         std = torch.exp(0.5 * log_var)
 
-        eps = torch.randn(mc_samples, *std.shape)
+        eps = torch.randn(self.mc_samples, *std.shape)
 
         z_samples = mean.unsqueeze(0) + eps * std.unsqueeze(0)
         z_samples = torch.cat((z_samples, torch.zeros(*z_samples.size()[:2], 1)), dim=2)
@@ -86,6 +88,19 @@ class Model(VAEModule):
         h_z += log_var[:, :-1].sum(dim=-1).mean() / 2
         h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
         return h_z
+
+    def test_step(self, batch, batch_idx):
+        print("Ground truth metric values", self.metrics.compute())
+        # todo: refactor data_model so it has a forward method so i can run inference like on model
+        # import torch
+        # matrix = self.ground_truth.linear_mixture
+        # gamma = torch.lgamma(torch.tensor(matrix.size(1))).exp()
+        # vol = 1 / gamma * torch.det(matrix.T @ matrix).sqrt()
+        # print(vol.log())
+        # print("Ground truth mixture matrix:\n", self.ground_truth.linear_mixture)
+        # print("Decoder mixture matrix:\n", self.decoder.linear_mixture.matrix.numpy())
+        # todo: check if (independent on data) is the same as the best value in the validation wandb
+
 
     def update_metrics(self, data, model_output, labels):
         self.metrics['mixture_mse_db'].update(
@@ -149,10 +164,11 @@ class Encoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
+        self.constructor = getattr(network, config["constructor"])
 
     def construct(self, latent_dim, observed_dim):
-        self.mu_network = FCNConstructor(observed_dim, latent_dim - 1, **self.config)
-        self.log_var_network = FCNConstructor(observed_dim, latent_dim - 1, **self.config)
+        self.mu_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
+        self.log_var_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
 
     def forward(self, x):
         mu = self.mu_network.forward(x)
@@ -166,7 +182,7 @@ class Decoder(nn.Module):
         self.config = config
 
     def construct(self, latent_dim, observed_dim):
-        self.linear_mixture = LinearPositive(torch.rand(observed_dim, latent_dim), **self.config)
+        self.linear_mixture = network.LinearPositive(torch.rand(observed_dim, latent_dim), **self.config)
         return self
 
     def forward(self, z):

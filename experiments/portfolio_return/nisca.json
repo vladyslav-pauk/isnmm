@@ -1,0 +1,90 @@
+{
+  "model_name": "nisca",
+  "logger_watch": "parameters",
+  "torch_seed": null,
+  "train": {
+    "log_monitor": {
+      "monitor": "validation_loss",
+      "mode": "min"
+    },
+    "lr": {
+      "th_l": 0.01,
+      "th_nl": 0.001,
+      "ph": 0.01
+    },
+    "mc_samples": 1,
+    "optimizer": {
+      "name": "Adam",
+      "params": {
+        "weight_decay": 0.0
+      }
+    }
+  },
+  "trainer": {
+    "accelerator": "cpu",
+    "max_epochs": 500,
+    "log_every_n_steps": 20,
+    "limit_val_batches": 1,
+    "val_check_interval": 1.0,
+    "limit_test_batches": 1,
+    "gradient_clip_val": 0.5,
+    "enable_progress_bar": false
+  },
+  "checkpoint": {
+    "monitor": "validation_loss",
+    "mode": "min",
+    "save_top_k": 1,
+    "verbose": true
+  },
+  "early_stopping": {
+    "monitor": "validation_loss",
+    "mode": "min",
+    "patience": 200,
+    "min_delta": 0.01,
+    "verbose": false
+  },
+  "encoder": {
+    "hidden_layers": {
+      "h1":  64,
+      "h2":  64,
+      "h3":  64,
+      "h4":  64
+    },
+    "hidden_activation": "leaky_relu",
+    "output_activation": "none",
+    "weight_initialization": "none",
+    "bn_eps": 1e-5,
+    "bn_momentum": 0.1
+  },
+  "decoder": {
+    "hidden_layers": {
+      "h1":  512,
+      "h2":  512,
+      "h3":  512,
+      "h4":  512
+    },
+    "hidden_activation": "leaky_relu",
+    "output_activation": "none",
+    "weight_initialization": "none",
+    "mixture_initialization": "none",
+    "bn_eps": null,
+    "bn_momentum": 0.1,
+    "dropout_rate": null
+  },
+  "schedule": {
+    "repeats": 100,
+    "parameters": {
+      "train":
+      {
+        "lr": {
+          "th": [0.001, 0.01],
+          "ph": [0.01, 0.005]
+        }
+      },
+      "data": {
+        "SNR": [10, 20, 30],
+        "seed": [29, 0, 42, 1, 2]
+      }
+    }
+  }
+}

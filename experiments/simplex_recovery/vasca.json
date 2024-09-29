@@ -21,21 +21,22 @@
     "enable_progress_bar": false
   },
   "encoder": {
+    "constructor": "FCN",
     "hidden_layers": {
       "h1":  32,
       "h2":  32,
       "h3":  16,
       "h4":  8
     },
-    "hidden_activation": "relu",
+    "hidden_activation": "ReLU",
     "output_activation": null,
     "weight_initialization": null,
-    "bn_eps": 1e-5,
+    "bn_eps": null,
     "bn_momentum": 0.1,
     "dropout_rate": null
   },
   "decoder": {
-      "mixture_initialization": null
+    "mixture_initialization": null
   },
   "optimizer": {
     "name": "Adam",

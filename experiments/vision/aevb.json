@@ -24,7 +24,7 @@
       "h1":  400,
       "h2":  400
     },
-    "hidden_activation": "leaky_relu",
+    "hidden_activation": "LeakyReLU",
     "output_activation": null,
     "weight_initialization": null,
     "bn_eps": null,
@@ -35,8 +35,8 @@
       "h1":  256,
       "h2":  512
       },
-    "hidden_activation": "leaky_relu",
-    "output_activation": "sigmoid",
+    "hidden_activation": "LeakyReLU",
+    "output_activation": "Sigmoid",
     "weight_initialization": null
   },
   "optimizer": {

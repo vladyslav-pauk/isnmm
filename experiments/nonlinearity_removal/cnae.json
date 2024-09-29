@@ -1,0 +1,18 @@
+{
+  "module_name": "synthetic_cnae",
+  "data_model": {
+    "model_name": "mixture_model",
+    "snr": 25,
+    "mixing_matrix_init": "normal_",
+    "nonlinear_transform_init": "normal_"
+  },
+  "dataset": {
+    "seed": 10,
+    "observed_dim": 3,
+    "latent_dim": 3,
+    "mixing_scale_factors": [1, 1, 1],
+    "size": 10000,
+    "batch_size": 1000,
+    "split": [0.8, 0.1, 0.1]
+  }
+}

@@ -7,43 +7,56 @@ from src.helpers.plotter import plot_components
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False):
+    def __init__(self, dist_sync_on_step=False, show_plot=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.add_state("sum_r_squared", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
         self.fitter = LineFitter()
 
-    def update(self, z, true_mixing_A, true_nonlinearity, model_nonlinearity):
-        self.true_nonlinearity = true_nonlinearity
+        self.show_plot = show_plot
+
+    def update(self, model_nonlinearity, linearly_mixed_sample, noiseless_sample):
+        self.noiseless_sample = noiseless_sample
         self.model_nonlinearity = model_nonlinearity
-        self.residual_nonlinearity = lambda x: true_nonlinearity.inverse(model_nonlinearity(x))
-        z_true_mixed = z @ true_mixing_A.T
-        self.y_true = z_true_mixed
-        r_squared_values = self.fitter.fit(self.residual_nonlinearity, z_true_mixed)
+        self.linearly_mixed_sample = linearly_mixed_sample
+        self.noiseless_sample = noiseless_sample
+
+        r_squared_values = self.fitter.fit(self.model_nonlinearity(linearly_mixed_sample), noiseless_sample)
         self.sum_r_squared += r_squared_values.mean()
         self.count += 1
 
     def compute(self):
-        self.plot(show_plot=False)
+        self.plot(show_plot=self.show_plot)
         return self.sum_r_squared / self.count
 
     def plot(self, show_plot=False):
+        model_sample = self.model_nonlinearity(self.linearly_mixed_sample)
+
         nonlinearity_plot = plot_components(
-            self.y_true,
-            inferred_nonlinearity=self.model_nonlinearity,
-            true_nonlinearity=self.true_nonlinearity
+            self.linearly_mixed_sample,
+            inferred_nonlinearity=model_sample,
+            true_nonlinearity=self.noiseless_sample,
+            scale=True
         )
         residual_nonlinearity_plot = plot_components(
-            self.y_true,
-            residual_nonlinearity=self.residual_nonlinearity,
+            self.noiseless_sample,
+            residual_nonlinearity=model_sample,
             fitter=self.fitter,
-            labels=self.fitter.rsquared
+            labels=self.fitter.rsquared,
+            scale=False
         )
+
         if show_plot:
             nonlinearity_plot.show()
             residual_nonlinearity_plot.show()
         else:
-            wandb.log({"nonlinearity": nonlinearity_plot, "residual_nonlinearity": residual_nonlinearity_plot})
+            wandb.log({
+                "Residual Nonlinearity": residual_nonlinearity_plot
+            })
+            wandb.log({
+                "Model and True Nonlinearity": nonlinearity_plot
+            })
+
         nonlinearity_plot.close()
         residual_nonlinearity_plot.close()
 
@@ -71,7 +84,7 @@ class LineFitter(nn.Module):
     def fit(self, f, y):
         num_components = y.shape[-1]
         slopes, intercepts, mse_values = [], [], []
-        x = f(y)
+        x = f
 
         for i in range(num_components):
             x_component, y_component = x[:, i:i + 1], y[:, i:i + 1]
