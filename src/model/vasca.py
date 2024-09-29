@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
-from torch import Tensor
+import torch.optim as optim
 
 from src.modules.network import LinearPositive, FCNConstructor
 from src.modules.vae_module import VAEModule
@@ -10,10 +10,11 @@ import src.modules.metric as metric
 
 
 class Model(VAEModule):
-    def __init__(self, ground_truth_model=None, encoder=None, decoder=None, train_config=None):
-        super().__init__(encoder, decoder, **train_config)
+    def __init__(self, ground_truth_model=None, encoder=None, decoder=None, model_config=None, optimizer_config=None):
+        super().__init__(encoder, decoder, **model_config)
 
         self.ground_truth = ground_truth_model
+        self.optimizer_config = optimizer_config
 
         self.metrics = torchmetrics.MetricCollection({
             'mixture_mse_db': metric.MatrixMse(),
@@ -23,14 +24,10 @@ class Model(VAEModule):
             'z_subspace': metric.SubspaceDistance()
         })
         self.metrics.eval()
-
-    # def on_before_backward(self, loss: Tensor) -> None:
-    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight)
-    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
-    #
-    # def on_after_backward(self) -> None:
-    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight)
-    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
+        self.log_monitor = {
+            "monitor": "mixture_mse_db",
+            "mode": "min"
+        }
 
     def on_after_backward(self) -> None:
         valid_gradients = True
@@ -68,7 +65,7 @@ class Model(VAEModule):
 
     def _reconstruction(self, data, data_rec_mc_sample):
         N = data.size(-1)
-        sigma = self.ground_truth.data_model.sigma
+        sigma = self.ground_truth.sigma
         mse_loss = F.mse_loss(
             data_rec_mc_sample, data.expand_as(data_rec_mc_sample), reduction='mean'
         )
@@ -92,10 +89,10 @@ class Model(VAEModule):
 
     def update_metrics(self, data, model_output, labels):
         self.metrics['mixture_mse_db'].update(
-            self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
+            self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
         )
         self.metrics['mixture_sam'].update(
-            self.ground_truth.data_model.linear_mixture.matrix, self.decoder.linear_mixture.matrix
+            self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
         )
         self.metrics['mixture_log_volume'].update(
             self.decoder.linear_mixture.matrix
@@ -106,6 +103,17 @@ class Model(VAEModule):
         self.metrics['z_subspace'].update(
             labels[0], model_output[1].mean(dim=0)
         )
+
+    def configure_optimizers(self):
+        lr = self.optimizer_config["lr"]
+        lr_th = lr["th"]
+        lr_ph = lr["ph"]
+        optimizer_class = getattr(optim, self.optimizer_config["name"])
+        optimizer = optimizer_class([
+            {'params': self.encoder.parameters(), 'lr': lr_ph},
+            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr_th}
+        ], **self.optimizer_config["params"])
+        return optimizer
 
     # def inference_model(self, observed):
     #     mean, log_var = self.encoder(observed)
@@ -128,28 +136,38 @@ class Model(VAEModule):
     # def marginal_likelihood(self):
     #     pass
 
+    # def on_before_backward(self, loss: Tensor) -> None:
+    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight)
+    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
+    #
+    # def on_after_backward(self) -> None:
+    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight)
+    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
+
 
 class Encoder(nn.Module):
-    def __init__(self, input_dim, latent_dim, config_encoder):
+    def __init__(self, config):
         super().__init__()
+        self.config = config
 
-        self.mu_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
-        self.log_var_network = FCNConstructor(input_dim, latent_dim - 1, **config_encoder)
+    def construct(self, latent_dim, observed_dim):
+        self.mu_network = FCNConstructor(observed_dim, latent_dim - 1, **self.config)
+        self.log_var_network = FCNConstructor(observed_dim, latent_dim - 1, **self.config)
 
     def forward(self, x):
-        # print(x)
-        # print()
         mu = self.mu_network.forward(x)
         log_var = self.log_var_network.forward(x)
-        # print("mu, logvar", mu, log_var)
-        # print(self.mu_network.hidden_layers[0][0].weight)
         return mu, log_var
 
 
 class Decoder(nn.Module):
-    def __init__(self, latent_dim, output_dim, config_decoder):
+    def __init__(self, config):
         super(Decoder, self).__init__()
-        self.linear_mixture = LinearPositive(torch.rand(output_dim, latent_dim), **config_decoder)
+        self.config = config
+
+    def construct(self, latent_dim, observed_dim):
+        self.linear_mixture = LinearPositive(torch.rand(observed_dim, latent_dim), **self.config)
+        return self
 
     def forward(self, z):
         x = self.linear_mixture(z)

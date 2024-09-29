@@ -6,12 +6,12 @@ class Network(nn.Linear):
     def __init__(self, mixing_matrix, mixture_initialization=None, **kwargs):
         super(Network, self).__init__(*mixing_matrix.size(), bias=False)
         self.weight = nn.Parameter(mixing_matrix)
-        getattr(nn.init, mixture_initialization, lambda x: x)(self.weight)
+        getattr(nn.init, mixture_initialization)(self.weight) if mixture_initialization else lambda x: x
 
     @property
     def matrix(self):
-        # return F.softplus(self.weight)
-        return self.weight.abs()
+        return F.softplus(self.weight)
+        # return self.weight.abs()
 
     def forward(self, data):
         return F.linear(data, self.matrix)

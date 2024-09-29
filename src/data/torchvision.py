@@ -10,19 +10,19 @@ class FlattenTransform:
         return x.view(-1)
 # todo: can i avoid this class?
 
+
 class DataModule(pl.LightningDataModule):
-    def __init__(self, config_data_model, observed_dim=None, latent_dim=None, batch_size=None, size=None, split=None,
-                 num_workers=None):
+    def __init__(self, dataset_config=None, batch_size=None, size=None, split=None, num_workers=None, **kwargs):
         super().__init__()
-        data_dir = "./datasets/torchvision/"
-        self.data_dir = data_dir
+        self.dataset_name = dataset_config["dataset_name"]
+        self.data_dir = dataset_config["data_dir"]
 
         self.transform = transforms.Compose([
             transforms.ToTensor(),
             FlattenTransform()
         ])
 
-        self.dataset = getattr(torchvision.datasets, config_data_model["model_name"])
+        self.dataset = getattr(torchvision.datasets, self.dataset_name.upper())
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.observed_dim = 784

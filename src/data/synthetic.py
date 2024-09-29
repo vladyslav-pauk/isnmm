@@ -1,81 +1,64 @@
 import torch
-from torch.utils.data import Dataset, DataLoader, random_split
-import pytorch_lightning as pl
+from torch.utils.data import DataLoader, Dataset
+from pytorch_lightning import LightningDataModule
+import scipy.io as sio
 
-import src.modules.distribution as probability_model
+from src.helpers.utils import dict_to_str
 
 
-class DataModule(pl.LightningDataModule):
-    def __init__(self, config_data_model, observed_dim, latent_dim, size, batch_size, split, num_workers):
+class DataModule(LightningDataModule):
+    def __init__(self, data_config, **config):
         super().__init__()
+        self.data_config = data_config
+        self.model_name = data_config["model_name"]
+        self.dataset_size = data_config["dataset_size"]
+        self.latent_dim = data_config["latent_dim"]
+        self.observed_dim = data_config["observed_dim"]
+        self.snr_db = data_config["snr_db"]
+        self.seed = data_config["seed"]
 
-        self.config_data_model = config_data_model
-        self.observed_dim = observed_dim
-        self.latent_dim = latent_dim
-        self.size = size
-        self.batch_size = batch_size
-        self.split_sizes = split
-        self.num_workers = num_workers
+        self.batch_size = config["batch_size"]
+        self.split = config["split"]
+        self.num_workers = config["num_workers"]
 
-        self.dataset = None
-        self.data_train = None
-        self.data_val = None
-        self.data_test = None
-        self.data_model = None
+        self.linear_mixture = None
+        self.observed_data = None
 
-    # def __init__(self, config_data_model, observed_dim=None, latent_dim=None, size=None, batch_size=None, split=None):
-    #     super().__init__()
-    #
-    #     mixture_matrix = torch.randn(observed_dim, latent_dim)
-    #     data_model_class = getattr(data_model_package, config_data_model["model_name"])
-    #
-    #     self.data_model = data_model_class(mixture_matrix, **config_data_model)
-    #     self.lin_transform = self.data_model.linear_mixing
-    #     self.nonlinear_transform = self.data_model.nonlinear_transform
-    #
-    #     self.config_data_model = config_data_model
-    #
-    #     self.observed_dim = observed_dim
-    #     self.latent_dim = latent_dim
-    #     self.batch_size = batch_size
-    #     self.split_sizes = split
-    #     self.size = size
-    #
-    #     self.prepare_data()
-    # def prepare_data(self) -> None:
-    #     self.dataset = SyntheticDataset(self.data_model, self.size)
-    #     self.sigma = self.dataset.sigma
+    def prepare_data(self):
+        dataset_name = dict_to_str(self.data_config)
+        data_file = f'../datasets/synthetic/{dataset_name}.mat'
+        data = sio.loadmat(data_file)
 
-    def setup(self, stage: str = None):
-        if not self.dataset:
-            # todo: loading mixture matrix from file
-            mixture_matrix = torch.randn(self.observed_dim, self.latent_dim)
-            data_model_class = getattr(probability_model, self.config_data_model["model_name"])
-            self.data_model = data_model_class(mixture_matrix, **self.config_data_model)
+        self.latent_dim = data['latent_sample'][0, 0]
+        self.observed_dim = data['observed_sample'][0, 0]
 
-            self.dataset = SyntheticDataset(self.data_model, self.size)
+        self.observed_data = torch.tensor(data['observed_sample'][:self.dataset_size], dtype=torch.float32)
+        self.latent_data = torch.tensor(data['latent_sample'][:self.dataset_size], dtype=torch.float32)
+        self.noiseless_data = torch.tensor(data['noiseless_sample'][:self.dataset_size], dtype=torch.float32)
+        self.linearly_mixed_data = torch.tensor(data['linearly_mixed_sample'][:self.dataset_size], dtype=torch.float32)
+        self.latent_data_qr = torch.tensor(data['latent_sample_qr'][:self.dataset_size], dtype=torch.float32)
+        self.linear_mixture = torch.tensor(data['linear_mixture'], dtype=torch.float32)
+        self.sigma = data['sigma'][0, 0]
+        # todo: might use self.data and call whatever needed from the model
 
-            self.data_train, self.data_val, self.data_test = random_split(
-                self.dataset, self.split_sizes
-            )
+    def setup(self, stage=None):
+        self.dataset = MyDataset((self.observed_data, (self.latent_data, self.linearly_mixed_data, self.noiseless_data)))
+        self.n_feature = self.observed_data.shape[1]
 
     def train_dataloader(self):
-        return DataLoader(self.data_train, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, persistent_workers=True)
+        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, persistent_workers=True)
 
     def val_dataloader(self):
-        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=self.num_workers, persistent_workers=True)
+        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, persistent_workers=True)
 
     def test_dataloader(self):
-        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=self.num_workers, persistent_workers=True)
-
-    def predict_dataloader(self):
-        return DataLoader(self.data_val, batch_size=self.batch_size, num_workers=self.num_workers, persistent_workers=True)
+        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, persistent_workers=True)
 
 
-class SyntheticDataset(Dataset):
-    def __init__(self, data_model, size):
-        self.data_size = size
-        self.data, self.labels = data_model.sample(sample_shape=torch.Size([size]))
+class MyDataset(Dataset):
+    def __init__(self, data_sample):
+        self.data_size = data_sample[0].size(0)
+        self.data, self.labels = data_sample
 
     def __len__(self):
         return self.data_size
@@ -83,12 +66,3 @@ class SyntheticDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx], tuple(l[idx] for l in self.labels)
 
-    # todo: generate data on-the-fly in the __getitem__ method to save memory
-    #  (in this case make sure splitting is handled, random_split won't work - "9. Handle Data Splitting Appropriately")
-    # def __getitem__(self, idx):
-    #     # Optionally, use the idx to seed the random generator for reproducibility
-    #     # torch.manual_seed(idx)
-    #     data, labels = self.data_model.sample(sample_shape=torch.Size([1]))
-    #     data = data.squeeze(0)
-    #     labels = tuple(label.squeeze(0) for label in labels)
-    #     return data, labels

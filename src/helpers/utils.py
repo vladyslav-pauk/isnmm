@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import logging
 
@@ -11,10 +12,21 @@ from pytorch_lightning.loggers import WandbLogger
 #
 #     with open(f'experiments/{experiment}.json', 'r') as f:
 #         return json.load(f)
-#
+
+
 def load_experiment_config(experiment, config_name):
-    with open(f'experiments/{experiment}/{config_name}.json', 'r') as f:
+    path = f'../experiments/{experiment}/{config_name}.json'
+
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            config = json.load(f)
+
+    with open(path, 'r') as f:
         return json.load(f)
+
+
+def dict_to_str(d):
+    return '_'.join([f'{value}' for key, value in d.items() if value is not None])
 
 
 def init_logger(experiment_name=None, model=None, run_name=None):

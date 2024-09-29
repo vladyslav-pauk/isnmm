@@ -1,25 +1,50 @@
 {
   "model_name": "vasca",
-  "logger_watch": "parameters",
   "torch_seed": null,
-  "train": {
-    "log_monitor": {
-      "monitor": "mixture_mse_db",
-      "mode": "min"
-    },
-    "lr": {
-      "th": 0.001,
-      "ph": 0.01
-    },
-    "mc_samples": 100
+  "data_loader": {
+    "module_name": "synthetic",
+    "batch_size": 100,
+    "split": [0.8, 0.1, 0.1],
+    "num_workers": 4
+  },
+  "model": {
+    "mc_samples": 1
   },
   "trainer": {
     "accelerator": "cpu",
     "max_epochs": 500,
-    "limit_test_batches": 1,
+    "log_every_n_steps": 4,
     "limit_val_batches": 1.0,
-    "log_every_n_steps": 10,
+    "val_check_interval": 1.0,
+    "limit_test_batches": 1,
+    "gradient_clip_val": 0.5,
     "enable_progress_bar": false
+  },
+  "encoder": {
+    "hidden_layers": {
+      "h1":  32,
+      "h2":  32,
+      "h3":  16,
+      "h4":  8
+    },
+    "hidden_activation": "relu",
+    "output_activation": null,
+    "weight_initialization": null,
+    "bn_eps": 1e-5,
+    "bn_momentum": 0.1,
+    "dropout_rate": null
+  },
+  "decoder": {
+      "mixture_initialization": null
+  },
+  "optimizer": {
+    "name": "Adam",
+    "params": {
+    },
+    "lr": {
+      "th": 0.01,
+      "ph": 0.01
+    }
   },
   "checkpoint": {
     "monitor": "mixture_mse_db",
@@ -30,22 +55,8 @@
   "early_stopping": {
     "monitor": "mixture_log_volume",
     "mode": "max",
-    "patience": 50,
+    "patience": 10,
     "min_delta": 1e-3
-  },
-  "encoder": {
-    "hidden_layers": {
-      "h1":  32,
-      "h2":  32,
-      "h3":  16,
-      "h4":  8
-    },
-    "activation": "relu",
-    "output_activation": "none",
-    "weight_initialization": "none"
-  },
-  "decoder": {
-      "mixture_initialization": "none"
   },
   "schedule": {
     "repeats": 100,
