@@ -2,18 +2,19 @@ import torch
 from pytorch_lightning import seed_everything
 
 from src.helpers.utils import load_experiment_config
-from src.modules.distribution.mixture_model import GenerativeModel
+import src.modules.distribution as distribution_package
 
 
 if __name__ == "__main__":
-    data_model_name = 'noisy_lmm'
-    config = load_experiment_config('simplex_recovery', data_model_name)
+    data_model_name = 'nmm'
+    config = load_experiment_config('noiseless_nonlinearity', data_model_name)
 
     linear_mixture_matrix = torch.randn(config["observed_dim"], config["latent_dim"])
-    model = GenerativeModel(linear_mixture_matrix, data_model_name, **config)
+
+    generative_model = getattr(distribution_package, config["model_name"])
+    model = generative_model(linear_mixture_matrix, data_model_name, **config)
 
     sample, (latent, linearly_mixed, noiseless) = model.sample(torch.Size([10000]))
     model.save_data()
 
-    model.plot_sample()
     model.plot_nonlinearities()

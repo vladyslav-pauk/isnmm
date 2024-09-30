@@ -1,12 +1,12 @@
 {
-  "model_name": "mixture_model",
+  "model_name": "noiseless_mixture_model",
   "data_model": "nmm",
   "nonlinearity": "sin",
   "degree": null,
   "snr_db": null,
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
-  "observed_dim": 4,
+  "observed_dim": 3,
   "latent_dim": 3,
   "dataset_size": 10000,
   "seed": 13

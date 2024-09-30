@@ -5,7 +5,7 @@ import ast
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
 
-import src.data as data_package
+import src.modules.data as data_package
 import src.model as model_package
 from src.helpers.callbacks import EarlyStoppingCallback
 from src.helpers.utils import init_logger, load_experiment_config, unflatten_dict

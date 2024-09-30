@@ -1,6 +1,6 @@
 {
-  "model_name": "mixture_model",
-  "data_model": "noisy_lmm",
+  "model_name": "noisy_mixture_model",
+  "data_model": "linear",
   "nonlinearity": null,
   "degree": null,
   "snr_db": 25,
