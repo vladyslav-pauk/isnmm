@@ -26,12 +26,31 @@ class SubspaceDistance(torchmetrics.Metric):
     #     self.max_singular_value = torch.max(self.max_singular_value, subspace_dist)
 
     def update(self, idxes, F, qs):
-        F_cpu = F.to('cpu').detach()
+        F_cpu = F[idxes.to('cpu').detach()].to('cpu').detach()
         qs = qs.to('cpu').detach()
         qf, _ = torch.linalg.qr(F_cpu)
 
-        import scipy
         self.subspace_dist = torch.sin(torch.tensor(scipy.linalg.subspace_angles(qs, qf)[0]))
+
+    # def update(self, idxes, F_buffer, true_subspace):
+    #     # Check that F_buffer is not empty
+    #     F = F_buffer[idxes]
+    #     if F.shape[1] == 0:
+    #         print("Warning: F_buffer is empty. Skipping update.")
+    #         return
+    #
+    #     qs = true_subspace
+    #     qf, _ = torch.linalg.qr(F.cpu().detach().numpy())
+    #
+    #     # Calculate subspace angles
+    #     angles = scipy.linalg.subspace_angles(qs, qf)
+    #
+    #     if len(angles) == 0:
+    #         self.subspace_dist = torch.tensor(0.0)
+    #     else:
+    #         self.subspace_dist = torch.sin(torch.tensor(angles[0]))
+    #
+    #     self.log('subspace_distance', self.subspace_dist.item(), prog_bar=True)
 
     def compute(self):
         return self.subspace_dist

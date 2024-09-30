@@ -16,61 +16,36 @@ class Model(AutoEncoderModule):
         super().__init__(encoder, decoder)
 
         self.ground_truth = ground_truth_model
-        self.lr = optimizer_config.get('lr', 1e-3)
+        self.optimizer_config = optimizer_config
 
         n_sample = ground_truth_model.dataset_size
         input_dim = ground_truth_model.observed_dim
         self.mult = nn.Parameter(torch.randn(n_sample), requires_grad=False)
         self.register_buffer('F_buffer', torch.zeros((n_sample, input_dim)))
         self.register_buffer('count_buffer', torch.zeros(n_sample, dtype=torch.int32))
-        self.rho = optimizer_config.get('rho', 1e2)
-        self.inner_iters = optimizer_config.get('inner_iters', 1)
 
         self.setup_metrics()
 
-    def loss_function(self, x, model_output, idxes):
-        qfx, fx, _ = model_output
-        tmp = torch.sum(fx, dim=1) - 1.0
-        mult = self.mult[idxes]
-        reconstruct_err = F.mse_loss(qfx, x)
-        feasible_err = torch.dot(mult, tmp) / x.shape[0]
-        augmented_err = (self.rho / 2) * torch.norm(tmp) ** 2 / x.shape[0]
-        return {"reconstruction": reconstruct_err, "feasible": feasible_err, "augmented": augmented_err}
+    def loss_function(self, observed_batch, model_output, idxes):
+        reconstructed_sample, latent_sample, _ = model_output
+        reconstruct_err = F.mse_loss(reconstructed_sample, observed_batch)
+
+        regularization_loss = self.optimizer.compute_constraint_errors(latent_sample, idxes, observed_batch)
+        loss = {"reconstruction": reconstruct_err}
+        loss.update(regularization_loss)
+        return loss
 
     def configure_optimizers(self):
-        params = list(self.parameters())
-        optimizer = ConstrainedLagrangeOptimizer(
-            params,
-            lr=self.lr["encoder"],
-            rho=self.rho,
-            inner_iters=self.inner_iters,
+        self.optimizer = ConstrainedLagrangeOptimizer(
+            list(self.parameters()),
+            lr=self.optimizer_config['lr']["encoder"],
+            rho=self.optimizer_config.get('rho', 1e2),
+            inner_iters=self.optimizer_config.get('inner_iters', 1),
             n_sample=self.ground_truth.dataset_size,
-            input_dim=int(self.ground_truth.observed_dim)
+            input_dim=int(self.ground_truth.observed_dim),
+            constraint_fn=lambda F: torch.sum(F, dim=1) - 1.0
         )
-        return optimizer
-
-    # def configure_optimizers(self):
-    #     return torch.optim.Adam(self.parameters(), lr=self.lr["encoder"])
-    #
-    # def on_train_batch_end(self, train_step_output, batch, batch_idx):
-    #     data, _, idxes = batch
-    #     qfx, fx, _ = self(data)
-    #     self.F_buffer[idxes] = fx.detach()
-    #     self.count_buffer[idxes] += 1
-    #
-    #     if (self.global_step + 1) % self.inner_iters == 0:
-    #         self.update_multipliers()
-    #     pass
-    #
-    # def update_multipliers(self):
-    #     idxes = self.count_buffer.nonzero(as_tuple=True)[0]
-    #     F = self.F_buffer[idxes]
-    #     diff = torch.sum(F, dim=1) - 1.0
-    #     self.mult[idxes] += self.rho * diff
-    #     self.F_buffer[idxes] = 0.0
-    #     self.count_buffer[idxes] = 0
-
-
+        return self.optimizer
 
     def setup_metrics(self):
         subspace_distance_metric = metric.SubspaceDistance()
@@ -88,8 +63,8 @@ class Model(AutoEncoderModule):
 
     def update_metrics(self, data, model_output, labels, idxes):
         self.metrics['evaluate_metric'].update(model_output[1], data, labels[1])
-        self.metrics['subspace_distance'].update(idxes, self.F_buffer[idxes], labels[0])
-        self.metrics['constraint'].update(self.F_buffer[idxes])
+        self.metrics['subspace_distance'].update(idxes, self.optimizer.F_buffer, labels[0])
+        self.metrics['constraint'].update(self.optimizer.F_buffer[idxes.to(self.optimizer.F_buffer.device)])
 
 
 class Encoder(nn.Module):

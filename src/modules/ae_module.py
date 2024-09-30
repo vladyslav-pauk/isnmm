@@ -43,11 +43,11 @@ class AutoEncoderModule(pl.LightningModule):
         self.log_dict(loss)
         return sum(loss.values())
 
-    def validation_step(self, batch, batch_idx):
-        data, labels, idxes = batch
-        validation_loss = {"validation_loss": sum(self.loss_function(data, self(data), idxes).values())}
-        self.update_metrics(data, self(data), labels, idxes)
-        self.log_dict({**validation_loss, **self.metrics.compute()})
+    # def validation_step(self, batch, batch_idx):
+    #     data, labels, idxes = batch
+    #     validation_loss = {"validation_loss": sum(self.loss_function(data, self(data), idxes).values())}
+    #     self.update_metrics(data, self(data), labels, idxes)
+    #     self.log_dict({**validation_loss, **self.metrics.compute()})
 
     def test_step(self, batch, batch_idx):
         data, labels, idxes = batch
