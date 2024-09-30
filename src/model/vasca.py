@@ -22,7 +22,7 @@ class Model(AutoEncoderModule):
             'mixture_sam': metric.SpectralAngle(),
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange(),
-            # 'subspace_distance': metric.SubspaceDistance()
+            'subspace_distance': metric.SubspaceDistance()
         })
         self.metrics.eval()
         self.log_monitor = {
@@ -39,7 +39,7 @@ class Model(AutoEncoderModule):
                     break
 
         if not valid_gradients:
-            print(f'inf or nan gradient, skipping update.')
+            # print(f'inf or nan gradient, skipping update.')
             self.zero_grad()
 
     def reparameterize(self, variational_parameters):
@@ -89,8 +89,8 @@ class Model(AutoEncoderModule):
         return h_z
 
     def update_metrics(self, data, model_output, labels, idxes):
-        # reconstructed_sample, latent_sample, _ = model_output
-        # true_latent_sample, linearly_mixed_sample, _ = labels
+        reconstructed_sample, latent_sample, _ = model_output
+        true_latent_sample, linearly_mixed_sample, _ = labels
 
         self.metrics['mixture_mse_db'].update(
             self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
@@ -105,9 +105,9 @@ class Model(AutoEncoderModule):
             self.decoder.linear_mixture.matrix
         )
 
-        # self.metrics['subspace_distance'].update(
-        #     idxes, reconstructed_sample.squeeze(0), true_latent_sample
-        # )
+        self.metrics['subspace_distance'].update(
+            idxes, reconstructed_sample.mean(0).squeeze(), true_latent_sample
+        )
 
     def configure_optimizers(self):
         lr = self.optimizer_config["lr"]
