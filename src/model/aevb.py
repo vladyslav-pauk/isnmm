@@ -29,7 +29,7 @@ class Model(AutoEncoderModule):
         return latent_mc_sample
 
     @staticmethod
-    def loss_function(data, model_output):
+    def loss_function(data, model_output, idxes):
         x = data
         recon_x, _, (mu, log_var) = model_output
         bce = F.binary_cross_entropy(recon_x, x, reduction='sum') / x.size(0)
@@ -47,7 +47,7 @@ class Model(AutoEncoderModule):
         ], **self.optimizer_config["params"])
         return optimizer
 
-    def update_metrics(self, data, model_output, labels):
+    def update_metrics(self, data, model_output, labels, idxes):
         pass
 
 
