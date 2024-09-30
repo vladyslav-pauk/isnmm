@@ -85,6 +85,12 @@ class DataModule(pl.LightningDataModule):
         # Nonlinear function for the 3rd dimension
         nonlinear_mixture[:, 2] = 0.4 * torch.exp(self.linear_mixture[:, 2])
 
+        # nonlinear_mixture[:, 3] = 0.5 * torch.sin(self.linear_mixture[:, 3]) + 0.2 * self.linear_mixture[:, 3]
+        #
+        # nonlinear_mixture[:, 4] = 0.5 * torch.cos(self.linear_mixture[:, 4]) + 0.2 * self.linear_mixture[:, 4]
+        #
+        # nonlinear_mixture[:, 5] = 0.5 * torch.tanh(self.linear_mixture[:, 5]) + 0.2 * self.linear_mixture[:, 5]
+
         return nonlinear_mixture
 
     def forward(self, x):
@@ -145,7 +151,7 @@ if __name__ == "__main__":
     observed_dim = 3
     latent_dim = 3
     num_samples = 5000
-    mixing_scale_factors = torch.tensor([5.0, 4.0, 1.0])
+    mixing_scale_factors = torch.tensor([5.0, 4.0, 1.0])#, 2.0, 1.5, 2.5])
 
     # Instantiate the model and move it to the appropriate device (GPU or CPU)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

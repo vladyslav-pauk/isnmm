@@ -15,7 +15,6 @@ class ConstraintError(torchmetrics.Metric):
     def compute(self):
         if len(self.constraint_violations) > 0:
             concatenated_constraints = torch.cat(self.constraint_violations, dim=0)
-
             self.reset()
             return torch.norm(concatenated_constraints) ** 2
         else:

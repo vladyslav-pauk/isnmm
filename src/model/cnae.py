@@ -4,11 +4,12 @@ from torch.nn import functional as F
 import torchmetrics
 
 from src.modules.ae_module import AutoEncoderModule
-# from src.model.nisca import Decoder
+from src.model.nisca import Encoder, Decoder
 from src.modules.network import CNN
 import src.modules.metric as metric
 from src.modules.metric import EvaluateMetric
 from src.modules.optimizer.constrained_lagrange import ConstrainedLagrangeOptimizer
+import src.modules.network as network
 
 
 class Model(AutoEncoderModule):
@@ -34,8 +35,8 @@ class Model(AutoEncoderModule):
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
         data, labels, idxes = batch
-        model_output = self(data)
-        self.optimizer.update_buffers(idxes, model_output[1])
+        reconstructed_samples, _, _ = self(data)
+        self.optimizer.update_buffers(idxes, reconstructed_samples)
 
     def configure_optimizers(self):
         self.optimizer = ConstrainedLagrangeOptimizer(
@@ -44,7 +45,7 @@ class Model(AutoEncoderModule):
             rho=self.optimizer_config['rho'],
             inner_iters=self.optimizer_config['inner_iters'],
             n_sample=self.ground_truth.dataset_size,
-            input_dim=self.observed_dim,
+            observed_dim=self.observed_dim,
             constraint_fn=lambda F: torch.sum(F, dim=1) - 1.0
         )
         return self.optimizer
@@ -64,10 +65,26 @@ class Model(AutoEncoderModule):
         self.log_monitor = {"monitor": "validation_loss", "mode": "min"}
 
     def update_metrics(self, data, model_output, labels, idxes):
-        self.metrics['evaluate_metric'].update(model_output[1], data, labels[1])
-        self.metrics['subspace_distance'].update(idxes, self.optimizer.F_buffer, labels[0])
-        self.metrics['constraint'].update(self.optimizer.F_buffer[idxes.to(self.optimizer.F_buffer.device)])
+        reconstructed_samples, _, _ = model_output
+        latent_sample, linearly_mixed_sample, _ = labels
+        self.metrics['evaluate_metric'].update(reconstructed_samples, data, linearly_mixed_sample)
+        self.metrics['subspace_distance'].update(idxes, self.optimizer.reconstructed_sample_buffer, latent_sample)
+        self.metrics['constraint'].update(self.optimizer.reconstructed_sample_buffer[idxes.to(self.optimizer.reconstructed_sample_buffer.device)])
 
+# class Encoder(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#         self.constructor = getattr(network, config["constructor"])
+#
+#     def construct(self, latent_dim, observed_dim):
+#         self.mu_network = self.constructor(observed_dim, latent_dim, **self.config)
+#         self.log_var_network = self.constructor(observed_dim, latent_dim, **self.config)
+#
+#     def forward(self, x):
+#         mu = self.mu_network.forward(x)
+#         log_var = self.log_var_network.forward(x)
+#         return mu, log_var
 
 class Encoder(nn.Module):
     def __init__(self, config):
@@ -77,7 +94,7 @@ class Encoder(nn.Module):
     def construct(self, input_dim, output_dim):
         layers = []
         in_channels = input_dim
-        hidden_sizes = self.config.get('hidden_layers', [128, 128, 128])
+        hidden_sizes = self.config['hidden_layers'].values()
 
         for h in hidden_sizes:
             layers.append(nn.Conv1d(in_channels, h * input_dim, kernel_size=1, groups=input_dim))

@@ -4,12 +4,12 @@ from torch.optim import Adam
 
 
 class ConstrainedLagrangeOptimizer(Optimizer):
-    def __init__(self, params=None, lr=None, rho=None, inner_iters=None, n_sample=None, input_dim=None, constraint_fn=None):
+    def __init__(self, params=None, lr=None, rho=None, inner_iters=None, n_sample=None, observed_dim=None, constraint_fn=None):
         defaults = dict(lr=lr, rho=rho, inner_iters=inner_iters)
         super(ConstrainedLagrangeOptimizer, self).__init__(params, defaults)
 
         self.constraint_fn = constraint_fn
-        self.F_buffer = torch.zeros((n_sample, input_dim))
+        self.reconstructed_sample_buffer = torch.zeros((n_sample, observed_dim))
         self.count_buffer = torch.zeros(n_sample, dtype=torch.int32)
         self.mult = torch.zeros(n_sample)
         self.rho = rho
@@ -19,7 +19,7 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         self.base_optimizer = Adam(params, lr=lr)
 
     def to(self, device):
-        self.F_buffer = self.F_buffer.to(device)
+        self.reconstructed_sample_buffer = self.reconstructed_sample_buffer.to(device)
         self.count_buffer = self.count_buffer.to(device)
         self.mult = self.mult.to(device)
 
@@ -37,18 +37,20 @@ class ConstrainedLagrangeOptimizer(Optimizer):
     def update_multipliers(self):
         if (self.global_step + 1) % self.inner_iters == 0:
             idxes = self.count_buffer.nonzero(as_tuple=True)[0]
-            F = self.F_buffer[idxes]
+            reconstructed_sample = self.reconstructed_sample_buffer[idxes]
 
-            if F.size(1) == 0:
-                print("F_buffer is empty, skipping multiplier update.")
-                return
-
-            diff = torch.sum(F, dim=1) - 1.0
+            diff = torch.sum(reconstructed_sample, dim=1) - 1.0
             self.mult[idxes] += self.rho * diff
 
-            # Reset buffers after updating
-            self.F_buffer[idxes] = 0.0
+            self.reconstructed_sample_buffer[idxes] = 0.0
             self.count_buffer[idxes] = 0
+
+    def update_buffers(self, idxes, reconstructed_sample):
+        idxes = idxes.to(self.reconstructed_sample_buffer.device)
+        reconstructed_sample = reconstructed_sample.to(self.reconstructed_sample_buffer.device).detach()
+
+        self.reconstructed_sample_buffer[idxes] = reconstructed_sample
+        self.count_buffer[idxes] += 1
 
     def compute_constraint_errors(self, fx, idxes, batch):
         batch_size = batch.size(0)
@@ -60,10 +62,3 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         augmented_err = (self.rho / 2) * torch.norm(tmp) ** 2 / batch_size
 
         return {"feasible": feasible_err.to(fx.device), "augmented": augmented_err.to(fx.device)}
-
-    def update_buffers(self, idxes, latent_sample):
-        idxes = idxes.to(self.F_buffer.device)
-        latent_sample = latent_sample.to(self.F_buffer.device).detach()
-
-        self.F_buffer[idxes] = latent_sample
-        self.count_buffer[idxes] += 1
