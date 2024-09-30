@@ -4,11 +4,12 @@
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 1000,
+    "val_batch_size": 100,
     "split": [0.8, 0.1, 0.1],
     "num_workers": 4
   },
   "model": {
-    "mc_samples": 100
+    "mc_samples": 1
   },
   "trainer": {
     "accelerator": "cpu",
@@ -23,10 +24,10 @@
   "encoder": {
     "constructor": "FCN",
     "hidden_layers": {
-      "h1":  256,
-      "h2":  256,
-      "h3":  128,
-      "h4":  128
+      "h1":  64,
+      "h2":  64,
+      "h3":  32,
+      "h4":  32
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -37,9 +38,10 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  512,
-      "h2":  512,
-      "h3":  512
+      "h1":  64,
+      "h2":  64,
+      "h3":  64,
+      "h4":  64
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -56,7 +58,7 @@
     "lr": {
       "th": {
         "l": 0.01,
-        "nl": 0.001
+        "nl": 0.01
       },
       "ph": 0.01
     }

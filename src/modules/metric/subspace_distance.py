@@ -1,25 +1,40 @@
 import torch
 import torchmetrics
+import scipy.linalg
 
 
-# fixme: test independently subspace distance
-# todo: find similar probabilistic measure and use IS expectation.
 class SubspaceDistance(torchmetrics.Metric):
     def __init__(self, dist_sync_on_step=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
+        # State to track the maximum subspace distance (max singular value)
         self.add_state("max_singular_value", default=torch.tensor(0.0), dist_reduce_fx="max")
 
-    def update(self, true_U, model_U):
-        true_U_pseudo_inv = torch.linalg.pinv(true_U)
+    # def update(self, true_U, model_U):
+    #     # Ensure that the inputs are on the same device
+    #     true_U, model_U = true_U.to('cpu').detach().numpy(), model_U.to('cpu').detach().numpy()
+    #
+    #     # QR decomposition to find orthonormal bases of the subspaces
+    #     q_true, _ = torch.linalg.qr(torch.tensor(true_U))
+    #     q_model, _ = torch.linalg.qr(torch.tensor(model_U))
+    #
+    #     # Compute subspace angles using scipy's function
+    #     subspace_angles = scipy.linalg.subspace_angles(q_true.numpy(), q_model.numpy())
+    #
+    #     # Take the sine of the largest principal angle as the subspace distance
+    #     subspace_dist = torch.sin(torch.tensor(subspace_angles[0]))  # Largest principal angle
+    #
+    #     # Update the state
+    #     self.max_singular_value = torch.max(self.max_singular_value, subspace_dist)
 
-        I = torch.eye(true_U.shape[-1], device=true_U.device)
-        P_true_orth = I - true_U_pseudo_inv @ true_U
+    def update(self, idxes, F, qs):
+        F_cpu = F.to('cpu').detach()
+        qs = qs.to('cpu').detach()
+        qf, _ = torch.linalg.qr(F_cpu)
 
-        matrix_product = model_U @ P_true_orth
-        singular_values = torch.linalg.svd(matrix_product)[1]
-
-        self.max_singular_value = torch.max(self.max_singular_value, singular_values.max())
+        import scipy
+        self.subspace_dist = torch.sin(torch.tensor(scipy.linalg.subspace_angles(qs, qf)[0]))
 
     def compute(self):
-        return self.max_singular_value
+        # Return the maximum subspace distance computed
+        return self.subspace_dist

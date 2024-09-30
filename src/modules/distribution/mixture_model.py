@@ -83,6 +83,9 @@ class GenerativeModel:  # (Distribution)
         self.sigma = torch.sqrt(
             self.noiseless_sample.pow(2).sum() / self.noiseless_sample.numel() / snr
         )
+        if self.snr_db is None:
+            self.sigma = torch.tensor(0.0)
+            
         self.observed_sample = self.noiseless_sample + self.sigma * noise_sample
         return self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)
         # todo: use dicts instead of tuples for forward method

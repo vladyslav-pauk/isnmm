@@ -1,5 +1,4 @@
 {
-  "seed": null,
   "model_name": "mixture_model",
   "data_model": "noisy_lmm",
   "nonlinearity": null,
@@ -9,5 +8,6 @@
   "nonlinear_transform_init": null,
   "observed_dim": 50,
   "latent_dim": 3,
-  "dataset_size": 10000
+  "dataset_size": 10000,
+  "seed": null
 }

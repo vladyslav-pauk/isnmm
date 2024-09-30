@@ -29,23 +29,30 @@ class AutoEncoderModule(pl.LightningModule):
         return observed_sample, latent_sample, latent_parameterization_batch
 
     def reparameterize(self, latent_parameterization_batch):
-        raise latent_parameterization_batch
+        return latent_parameterization_batch[0]
 
     def on_train_start(self) -> None:
         wandb.define_metric(name=self.log_monitor["monitor"], summary=self.log_monitor["mode"])
         # todo: move it out so i don't drag monitor config through classes
 
     def training_step(self, batch, batch_idx):
-        data, labels = batch
-        loss = self.loss_function(data, self(data))
+        data, labels, idxes = batch
+        loss = self.loss_function(data, self(data), idxes)
         self.log_dict(loss)
         return sum(loss.values())
 
     def validation_step(self, batch, batch_idx):
-        data, labels = batch
-        validation_loss = {"validation_loss": sum(self.loss_function(data, self(data)).values())}
-        self.update_metrics(data, self(data), labels)
+        data, labels, idxes = batch
+        validation_loss = {"validation_loss": sum(self.loss_function(data, self(data), idxes).values())}
+        self.update_metrics(data, self(data), labels, idxes)
         self.log_dict({**validation_loss, **self.metrics.compute()})
+
+    def test_step(self, batch, batch_idx):
+        data, labels, idxes = batch
+        model_outputs = self(data)
+        self.update_metrics(data, model_outputs, labels, idxes)
+        self.metrics['evaluate_metric'].toggle_show_plot(True)
+        print(self.metrics.compute())
 
 
 # loss = self.loss_function(x.view(-1, x[0].numel()), x_hat, z_hat, encoder_params, sigma)

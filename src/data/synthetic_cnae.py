@@ -129,10 +129,13 @@ class DataModule(pl.LightningDataModule):
     def save_data(self, filename='post-nonlinear_simplex_synthetic_data.mat'):
         # Save the generated data into a .mat file
         sio.savemat(filename, {
-            'x': self.nonlinear_mixture.cpu().numpy(),
-            's': self.s.cpu().numpy(),
-            's_q': self.q.cpu().numpy(),
-            'linear_mixture': self.linear_mixture.cpu().numpy()
+            'observed_sample': self.nonlinear_mixture.cpu().numpy(),
+            'noiseless_sample': self.nonlinear_mixture.cpu().numpy(),
+            'latent_sample': self.s.cpu().numpy(),
+            'latent_sample_qr': self.q.cpu().numpy(),
+            'linearly_mixed_sample': self.linear_mixture.cpu().numpy(),
+            'linear_mixture': self.mixing_matrix.cpu().numpy(),
+            'sigma': 1.0
         })
 
 

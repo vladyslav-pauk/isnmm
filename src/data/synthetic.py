@@ -18,15 +18,20 @@ class DataModule(LightningDataModule):
         self.seed = data_config["seed"]
 
         self.batch_size = config["batch_size"]
+        self.val_batch_size = config["val_batch_size"]
         self.split = config["split"]
         self.num_workers = config["num_workers"]
 
         self.linear_mixture = None
         self.observed_data = None
 
+        self.linearly_mixed_sample = None
+
     def prepare_data(self):
         dataset_name = dict_to_str(self.data_config)
-        data_file = f'../datasets/synthetic/{dataset_name}.mat'
+        # data_file = f'../datasets/synthetic/{dataset_name}.mat'
+        data_file = '../datasets/synthetic/post-nonlinear_simplex_synthetic_data.mat'
+
         data = sio.loadmat(data_file)
 
         self.latent_dim = data['latent_sample'][0, 0]
@@ -49,7 +54,7 @@ class DataModule(LightningDataModule):
         return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, persistent_workers=True)
 
     def val_dataloader(self):
-        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, persistent_workers=True)
+        return DataLoader(self.dataset, batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers, persistent_workers=True)
 
     def test_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, persistent_workers=True)
@@ -64,5 +69,4 @@ class MyDataset(Dataset):
         return self.data_size
 
     def __getitem__(self, idx):
-        return self.data[idx], tuple(l[idx] for l in self.labels)
-
+        return self.data[idx], tuple(l[idx] for l in self.labels), idx

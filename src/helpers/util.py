@@ -3,25 +3,18 @@ import torch
 import matplotlib.pyplot as plt
 
 
-def evaluate(F, dataloader, mixture, x):
-    # Check if F is an empty list or tensor
-    if isinstance(F, list) and len(F) == 0:
-        raise ValueError("The list F is empty.")
+def evaluate(F, dataloader, mixture):
 
-    if isinstance(F, torch.Tensor) and F.numel() == 0:
-        raise ValueError("The tensor F is empty.")
-
-    # Ensure that F now has the same number of samples as mixture
-    if F.shape[0] != mixture.shape[0]:
-        raise ValueError(f"Shape mismatch: mixture has {mixture.shape[0]} samples, but F has {F.shape[0]} samples.")
-
-    # Convert tensors to numpy arrays for plotting
     F = F.cpu().detach().numpy()
     mixture = mixture.cpu().detach().numpy()
-    x = x.cpu().detach().numpy()
+    x_list = []
+    for batch in dataloader:
+        x_batch, _ = batch
+        x_list.append(x_batch)
 
-    # Plot the results
-    plt.figure(figsize=(10, 5))  # Adjust size as needed
+    x = torch.cat(x_list, dim=0).to('cpu').detach().numpy()
+
+    plt.figure(figsize=(10, 5))
     for i in range(mixture.shape[1]):
         plt.subplot(1, mixture.shape[1], i + 1)
         plt.scatter(mixture[:, i], visual_normalization(F[:, i]),
@@ -36,8 +29,9 @@ def evaluate(F, dataloader, mixture, x):
 
     plt.show()
 
+
 def visual_normalization(x):
     bound = 10
-    x = x - np.min(x)  # Min normalization
-    x = x / np.max(x) * bound  # Scale to the range [0, bound]
+    x = x - np.min(x)
+    x = x / np.max(x) * bound
     return x

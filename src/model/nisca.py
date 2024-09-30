@@ -1,3 +1,5 @@
+import xxsubtype
+
 import torch
 import torch.nn as nn
 import torchmetrics
@@ -16,8 +18,8 @@ class Model(VASCA):
         self.ground_truth = ground_truth_model
 
         self.metrics = torchmetrics.MetricCollection({
-            'mixture_log_volume': metric.MatrixVolume(),
-            'mixture_matrix_change': metric.MatrixChange(),
+            # 'mixture_log_volume': metric.MatrixVolume(),
+            # 'mixture_matrix_change': metric.MatrixChange(),
             'z_subspace': metric.SubspaceDistance(),
             'h_r_square': metric.ResidualNonlinearity()
         })
@@ -37,19 +39,20 @@ class Model(VASCA):
         return optimizer
 
     def update_metrics(self, data, model_output, labels):
-        self.metrics['mixture_log_volume'].update(
-            self.decoder.linear_mixture.matrix
-        )
-
-        self.metrics['mixture_matrix_change'].update(
-            self.decoder.linear_mixture.matrix
-        )
+        # self.metrics['mixture_log_volume'].update(
+        #     self.decoder.linear_mixture.matrix
+        # )
+        #
+        # self.metrics['mixture_matrix_change'].update(
+        #     self.decoder.linear_mixture.matrix
+        # )
 
         self.metrics['z_subspace'].update(
             labels[0], model_output[1].mean(dim=0)
         )
 
         self.metrics['h_r_square'].update(
+            # lambda x: self.decoder(x.unsqueeze(1)).squeeze(1),
             self.decoder.nonlinear_transform,
             self.ground_truth.linearly_mixed_sample,
             self.ground_truth.noiseless_sample
@@ -79,52 +82,38 @@ class Decoder(nn.Module):
         return x
 
     def forward(self, z):
-        x = self.linear_mixture(z)
-        x = self.nonlinear_transform(x)
+        y = self.linear_mixture(z)
+        x = self.nonlinear_transform(y)
         return x
 
+# class Decoder(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#
+#     def construct(self, input_dim, output_dim):
+#         layers = []
+#         in_channels = input_dim
+#         hidden_sizes = list(self.config.get('hidden_layers').values())
+#
+#         for h in hidden_sizes:
+#             layers.append(nn.Conv1d(in_channels, h * input_dim, kernel_size=1, groups=input_dim))
+#             layers.append(nn.ReLU())
+#             in_channels = h * input_dim
+#
+#         layers.append(nn.Conv1d(in_channels, output_dim, kernel_size=1, groups=input_dim))
+#         self.d_net = nn.Sequential(*layers)
+#
+#     def forward(self, x):
+#         num_samples, monte_carlo_samples, components = x.shape
+#         x = x.view(-1, components).unsqueeze(-1)
+#         x = self.d_net(x)
+#         x = x.squeeze().view(num_samples, monte_carlo_samples, -1)
+#         return x
+
 # fixme: fix decoder: sometimes get error, not at initialization (loss infinity, nans)
-# fixme: h_metric slow!!!
 # fixme: test to get good results, neural network output is horizontal!!! (nearly constant)  something is wrong
 
 # todo: mc and batch in fcnconstructor, activation argument (to config?)
 # todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
 # todo: clean up and test nisca model.
-
-# class Network(nn.Module):
-#     def __init__(self, output_dim, hidden_layers, activation=None, output_activation=None, weight_initialization=None, **kwargs):
-#         super(Network, self).__init__()
-#         self.component_wise_nets = nn.ModuleList([
-#             self._build_component_wise_net(hidden_layers, activation)
-#             for _ in range(output_dim)
-#         ])
-#         self._initialize_weights(activation, weight_initialization) if len(hidden_layers) != 0 else None
-#
-#     def _build_component_wise_net(self, hidden_layers, activation):
-#         if len(hidden_layers) == 0:
-#             return nn.Identity()
-#         layers = []
-#         input_size = 1
-#         for hidden_size in hidden_layers.values():
-#             layers.append(nn.Linear(input_size, hidden_size))
-#             if activation:
-#                 layers.append(getattr(nn, activation)())  # Adding activation
-#             input_size = hidden_size
-#
-#         layers.append(nn.Linear(input_size, 1))
-#         return nn.Sequential(*layers)
-#
-#     def _initialize_weights(self, activation, init_weights):
-#         for net in self.component_wise_nets:
-#             for layer in net:
-#                 if isinstance(layer, nn.Linear):
-#                     if init_weights:
-#                         getattr(nn.init, init_weights)(layer.weight, nonlinearity=activation.lower())
-#                     if layer.bias is not None:
-#                         nn.init.zeros_(layer.bias)
-#
-#     def forward(self, x):
-#         transformed_components = [
-#             self.component_wise_nets[i](x[..., i:i + 1]) for i in range(x.shape[-1])
-#         ]
-#         return torch.cat(transformed_components, dim=-1).abs()
