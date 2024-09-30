@@ -1,6 +1,6 @@
 {
   "model_name": "cnae",
-  "torch_seed": 0,
+  "torch_seed": null,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 100,
@@ -28,7 +28,7 @@
   "trainer": {
     "accelerator": "auto",
     "devices": 1,
-    "max_epochs": 5,
+    "max_epochs": 100,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
     "log_every_n_steps": 10,
