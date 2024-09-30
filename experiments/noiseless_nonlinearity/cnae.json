@@ -23,7 +23,7 @@
       "encoder": 0.001
     },
     "rho": 100.0,
-    "inner_iters": 100
+    "inner_iters": 99
   },
   "trainer": {
     "accelerator": "auto",

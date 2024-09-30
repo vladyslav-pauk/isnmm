@@ -9,18 +9,20 @@ class AutoEncoderModule(pl.LightningModule):
 
         self.encoder = encoder
         self.decoder = decoder
+        self.latent_dim = None
+        self.observed_dim = None
 
     def setup(self, stage):
         if stage == 'fit' or stage is None:
             train_loader = self.trainer.datamodule.train_dataloader()
             sample_batch = next(iter(train_loader))
             data_sample = sample_batch
-            observed_dim = data_sample[0].shape[1]
+            self.observed_dim = data_sample[0].shape[1]
             if self.latent_dim is None:
                 self.latent_dim = data_sample[1][0].shape[1]
 
-            self.encoder.construct(self.latent_dim, observed_dim)
-            self.decoder.construct(self.latent_dim, observed_dim)
+            self.encoder.construct(self.latent_dim, self.observed_dim)
+            self.decoder.construct(self.latent_dim, self.observed_dim)
 
     def forward(self, observed_batch):
         latent_parameterization_batch = self.encoder(observed_batch)

@@ -29,7 +29,6 @@ class Model(AutoEncoderModule):
             "monitor": "mixture_mse_db",
             "mode": "min"
         }
-        self.latent_dim = None
 
     def on_after_backward(self) -> None:
         valid_gradients = True

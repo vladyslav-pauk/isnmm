@@ -6,8 +6,6 @@ import scipy.linalg
 class SubspaceDistance(torchmetrics.Metric):
     def __init__(self, dist_sync_on_step=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
-
-        # State to track the maximum subspace distance (max singular value)
         self.add_state("max_singular_value", default=torch.tensor(0.0), dist_reduce_fx="max")
 
     # def update(self, true_U, model_U):
@@ -36,5 +34,4 @@ class SubspaceDistance(torchmetrics.Metric):
         self.subspace_dist = torch.sin(torch.tensor(scipy.linalg.subspace_angles(qs, qf)[0]))
 
     def compute(self):
-        # Return the maximum subspace distance computed
         return self.subspace_dist
