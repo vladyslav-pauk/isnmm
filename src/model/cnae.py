@@ -8,6 +8,7 @@ from src.modules.ae_module import AutoEncoderModule
 from src.modules.network import CNN
 import src.modules.metric as metric
 from src.modules.metric import EvaluateMetric
+from src.modules.optimizer.constrained_lagrange import ConstrainedLagrangeOptimizer
 
 
 class Model(AutoEncoderModule):
@@ -27,24 +28,6 @@ class Model(AutoEncoderModule):
 
         self.setup_metrics()
 
-    def on_train_batch_end(self, train_step_output, batch, batch_idx):
-        data, _, idxes = batch
-        qfx, fx, _ = self(data)
-        self.F_buffer[idxes] = fx.detach()
-        self.count_buffer[idxes] += 1
-
-        if (self.global_step + 1) % self.inner_iters == 0:
-            self.update_multipliers()
-        pass
-
-    def update_multipliers(self):
-        idxes = self.count_buffer.nonzero(as_tuple=True)[0]
-        F = self.F_buffer[idxes]
-        diff = torch.sum(F, dim=1) - 1.0
-        self.mult[idxes] += self.rho * diff
-        self.F_buffer[idxes] = 0.0
-        self.count_buffer[idxes] = 0
-
     def loss_function(self, x, model_output, idxes):
         qfx, fx, _ = model_output
         tmp = torch.sum(fx, dim=1) - 1.0
@@ -55,7 +38,39 @@ class Model(AutoEncoderModule):
         return {"reconstruction": reconstruct_err, "feasible": feasible_err, "augmented": augmented_err}
 
     def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=self.lr["encoder"])
+        params = list(self.parameters())
+        optimizer = ConstrainedLagrangeOptimizer(
+            params,
+            lr=self.lr["encoder"],
+            rho=self.rho,
+            inner_iters=self.inner_iters,
+            n_sample=self.ground_truth.dataset_size,
+            input_dim=int(self.ground_truth.observed_dim)
+        )
+        return optimizer
+
+    # def configure_optimizers(self):
+    #     return torch.optim.Adam(self.parameters(), lr=self.lr["encoder"])
+    #
+    # def on_train_batch_end(self, train_step_output, batch, batch_idx):
+    #     data, _, idxes = batch
+    #     qfx, fx, _ = self(data)
+    #     self.F_buffer[idxes] = fx.detach()
+    #     self.count_buffer[idxes] += 1
+    #
+    #     if (self.global_step + 1) % self.inner_iters == 0:
+    #         self.update_multipliers()
+    #     pass
+    #
+    # def update_multipliers(self):
+    #     idxes = self.count_buffer.nonzero(as_tuple=True)[0]
+    #     F = self.F_buffer[idxes]
+    #     diff = torch.sum(F, dim=1) - 1.0
+    #     self.mult[idxes] += self.rho * diff
+    #     self.F_buffer[idxes] = 0.0
+    #     self.count_buffer[idxes] = 0
+
+
 
     def setup_metrics(self):
         subspace_distance_metric = metric.SubspaceDistance()
