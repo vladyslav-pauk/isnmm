@@ -34,7 +34,7 @@ class DataModule(LightningDataModule):
 
     def setup(self, stage=None):
         self.dataset = MyDataset(self.observed_sample, )
-        self.n_feature = self.observed_sample.shape[1]
+        self.observed_dim = self.observed_sample.shape[1]
 
     def train_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True)

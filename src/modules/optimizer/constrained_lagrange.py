@@ -4,12 +4,11 @@ from torch.optim import Adam
 
 
 class ConstrainedLagrangeOptimizer(Optimizer):
-    def __init__(self, params, lr=1e-3, rho=1e2, inner_iters=1, n_sample=100, input_dim=10, constraint_fn=None):
+    def __init__(self, params, lr=None, rho=None, inner_iters=None, n_sample=None, input_dim=None, constraint_fn=None):
         defaults = dict(lr=lr, rho=rho, inner_iters=inner_iters)
         super(ConstrainedLagrangeOptimizer, self).__init__(params, defaults)
 
         self.constraint_fn = constraint_fn
-
         self.F_buffer = torch.zeros((n_sample, input_dim))
         self.count_buffer = torch.zeros(n_sample, dtype=torch.int32)
         self.mult = torch.zeros(n_sample)
@@ -29,27 +28,31 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         if closure is not None:
             loss = closure()
 
-        self.base_optimizer.step()
-        self.update_multipliers()
+        self.base_optimizer.step()  # Standard optimization step
+        self.update_multipliers()  # Update Lagrange multipliers every few steps
 
         self.global_step += 1
         return loss
 
     def update_multipliers(self):
+        """Update Lagrange multipliers based on the content of F_buffer."""
         if (self.global_step + 1) % self.inner_iters == 0:
             idxes = self.count_buffer.nonzero(as_tuple=True)[0]
             F = self.F_buffer[idxes]
-            print(F)
-            diff = torch.sum(F, dim=1) - 1.0
 
+            if F.size(1) == 0:
+                print("F_buffer is empty, skipping multiplier update.")
+                return
+
+            diff = torch.sum(F, dim=1) - 1.0
             self.mult[idxes] += self.rho * diff
 
+            # Reset buffers after updating
             self.F_buffer[idxes] = 0.0
             self.count_buffer[idxes] = 0
 
     def compute_constraint_errors(self, fx, idxes, batch):
         batch_size = batch.size(0)
-
         tmp = self.constraint_fn(fx).to(self.mult.device)
         idxes = idxes.to(self.mult.device)
 
