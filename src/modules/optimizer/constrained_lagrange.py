@@ -4,7 +4,7 @@ from torch.optim import Adam
 
 
 class ConstrainedLagrangeOptimizer(Optimizer):
-    def __init__(self, params, lr=None, rho=None, inner_iters=None, n_sample=None, input_dim=None, constraint_fn=None):
+    def __init__(self, params=None, lr=None, rho=None, inner_iters=None, n_sample=None, input_dim=None, constraint_fn=None):
         defaults = dict(lr=lr, rho=rho, inner_iters=inner_iters)
         super(ConstrainedLagrangeOptimizer, self).__init__(params, defaults)
 
@@ -28,14 +28,13 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         if closure is not None:
             loss = closure()
 
-        self.base_optimizer.step()  # Standard optimization step
-        self.update_multipliers()  # Update Lagrange multipliers every few steps
+        self.base_optimizer.step()
+        self.update_multipliers()
 
         self.global_step += 1
         return loss
 
     def update_multipliers(self):
-        """Update Lagrange multipliers based on the content of F_buffer."""
         if (self.global_step + 1) % self.inner_iters == 0:
             idxes = self.count_buffer.nonzero(as_tuple=True)[0]
             F = self.F_buffer[idxes]
@@ -61,3 +60,10 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         augmented_err = (self.rho / 2) * torch.norm(tmp) ** 2 / batch_size
 
         return {"feasible": feasible_err.to(fx.device), "augmented": augmented_err.to(fx.device)}
+
+    def update_buffers(self, idxes, latent_sample):
+        idxes = idxes.to(self.F_buffer.device)
+        latent_sample = latent_sample.to(self.F_buffer.device).detach()
+
+        self.F_buffer[idxes] = latent_sample
+        self.count_buffer[idxes] += 1

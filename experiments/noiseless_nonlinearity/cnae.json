@@ -1,6 +1,6 @@
 {
   "model_name": "cnae",
-  "torch_seed": null,
+  "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 1000,

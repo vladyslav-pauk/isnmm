@@ -17,6 +17,8 @@ class Model(AutoEncoderModule):
 
         self.ground_truth = ground_truth_model
         self.optimizer_config = optimizer_config
+        self.optimizer = None
+
         self.observed_dim = self.ground_truth.observed_dim
 
         self.setup_metrics()
@@ -33,18 +35,15 @@ class Model(AutoEncoderModule):
     def on_train_batch_end(self, outputs, batch, batch_idx):
         data, labels, idxes = batch
         model_output = self(data)
-
-        self.optimizer.F_buffer[idxes] = model_output[1].to(self.optimizer.F_buffer.device).detach()
-        self.optimizer.count_buffer[idxes.to(self.optimizer.F_buffer.device)] += 1
+        self.optimizer.update_buffers(idxes, model_output[1])
 
     def configure_optimizers(self):
-        n_samples= self.ground_truth.dataset_size
         self.optimizer = ConstrainedLagrangeOptimizer(
-            list(self.parameters()),
+            params=list(self.parameters()),
             lr=self.optimizer_config['lr']["encoder"],
-            rho=self.optimizer_config.get('rho', 1e2),
-            inner_iters=self.optimizer_config.get('inner_iters', 1),
-            n_sample=n_samples,
+            rho=self.optimizer_config['rho'],
+            inner_iters=self.optimizer_config['inner_iters'],
+            n_sample=self.ground_truth.dataset_size,
             input_dim=self.observed_dim,
             constraint_fn=lambda F: torch.sum(F, dim=1) - 1.0
         )
