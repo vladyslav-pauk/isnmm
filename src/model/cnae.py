@@ -35,8 +35,8 @@ class Model(AutoEncoderModule):
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
         data, labels, idxes = batch
-        reconstructed_samples, _, _ = self(data)
-        self.optimizer.update_buffers(idxes, reconstructed_samples)
+        reconstructed_samples, latent_sample, _ = self(data)
+        self.optimizer.update_buffers(idxes, latent_sample)
 
     def configure_optimizers(self):
         self.optimizer = ConstrainedLagrangeOptimizer(
@@ -68,10 +68,10 @@ class Model(AutoEncoderModule):
         }
 
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_samples, _, _ = model_output
-        latent_sample, linearly_mixed_sample, _ = labels
-        self.metrics['evaluate_metric'].update(reconstructed_samples, data, linearly_mixed_sample)
-        self.metrics['subspace_distance'].update(idxes, self.optimizer.reconstructed_sample_buffer, latent_sample)
+        reconstructed_sample, latent_sample, _ = model_output
+        true_latent_sample, linearly_mixed_sample, latent_sample_qr = labels
+        self.metrics['evaluate_metric'].update(latent_sample, data, linearly_mixed_sample)
+        self.metrics['subspace_distance'].update(idxes, self.optimizer.reconstructed_sample_buffer, latent_sample_qr)
         self.metrics['constraint'].update(self.optimizer.reconstructed_sample_buffer[idxes.to(self.optimizer.reconstructed_sample_buffer.device)])
 
 # class Encoder(nn.Module):
