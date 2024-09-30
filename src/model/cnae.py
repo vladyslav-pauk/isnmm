@@ -62,7 +62,10 @@ class Model(AutoEncoderModule):
             'constraint': constraint_error
         })
         self.metrics.eval()
-        self.log_monitor = {"monitor": "validation_loss", "mode": "min"}
+        self.log_monitor = {
+            "monitor": "validation_loss",
+            "mode": "min"
+        }
 
     def update_metrics(self, data, model_output, labels, idxes):
         reconstructed_samples, _, _ = model_output

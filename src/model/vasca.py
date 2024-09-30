@@ -22,7 +22,7 @@ class Model(AutoEncoderModule):
             'mixture_sam': metric.SpectralAngle(),
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange(),
-            'z_subspace': metric.SubspaceDistance()
+            # 'subspace_distance': metric.SubspaceDistance()
         })
         self.metrics.eval()
         self.log_monitor = {
@@ -53,7 +53,7 @@ class Model(AutoEncoderModule):
         z_samples = F.softmax(z_samples, dim=-1)
         return z_samples
 
-    def loss_function(self, data, model_output):
+    def loss_function(self, data, model_output, idxes):
         data_rec_mc_sample, latent_mc_sample, variational_parameters = model_output
 
         recon_loss = self._reconstruction(data, data_rec_mc_sample)
@@ -88,20 +88,10 @@ class Model(AutoEncoderModule):
         h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
         return h_z
 
-    def test_step(self, batch, batch_idx):
-        print("Ground truth metric values", self.metrics.compute())
-        # todo: refactor data_model so it has a forward method so i can run inference like on model
-        # import torch
-        # matrix = self.ground_truth.linear_mixture
-        # gamma = torch.lgamma(torch.tensor(matrix.size(1))).exp()
-        # vol = 1 / gamma * torch.det(matrix.T @ matrix).sqrt()
-        # print(vol.log())
-        # print("Ground truth mixture matrix:\n", self.ground_truth.linear_mixture)
-        # print("Decoder mixture matrix:\n", self.decoder.linear_mixture.matrix.numpy())
-        # todo: check if (independent on data) is the same as the best value in the validation wandb
+    def update_metrics(self, data, model_output, labels, idxes):
+        # reconstructed_sample, latent_sample, _ = model_output
+        # true_latent_sample, linearly_mixed_sample, _ = labels
 
-
-    def update_metrics(self, data, model_output, labels):
         self.metrics['mixture_mse_db'].update(
             self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
         )
@@ -114,9 +104,10 @@ class Model(AutoEncoderModule):
         self.metrics['mixture_matrix_change'].update(
             self.decoder.linear_mixture.matrix
         )
-        self.metrics['z_subspace'].update(
-            labels[0], model_output[1].mean(dim=0)
-        )
+
+        # self.metrics['subspace_distance'].update(
+        #     idxes, reconstructed_sample.squeeze(0), true_latent_sample
+        # )
 
     def configure_optimizers(self):
         lr = self.optimizer_config["lr"]
@@ -165,6 +156,9 @@ class Encoder(nn.Module):
         self.config = config
         self.constructor = getattr(network, config["constructor"])
 
+        self.mu_network = None
+        self.log_var_network = None
+
     def construct(self, latent_dim, observed_dim):
         self.mu_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
         self.log_var_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
@@ -179,6 +173,7 @@ class Decoder(nn.Module):
     def __init__(self, config):
         super(Decoder, self).__init__()
         self.config = config
+        self.linear_mixture = None
 
     def construct(self, latent_dim, observed_dim):
         self.linear_mixture = network.LinearPositive(torch.rand(observed_dim, latent_dim), **self.config)

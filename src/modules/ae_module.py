@@ -53,10 +53,12 @@ class AutoEncoderModule(pl.LightningModule):
         data, labels, idxes = batch
         model_outputs = self(data)
         self.update_metrics(data, model_outputs, labels, idxes)
-        self.metrics['evaluate_metric'].toggle_show_plot(True)
+        # self.metrics['evaluate_metric'].toggle_show_plot(True)
         print(self.metrics.compute())
 
 
+# todo: refactor data_model so it has a forward method so i can run inference like on model
+# todo: check if (independent on data) is the same as the best value in the validation wandb
 # loss = self.loss_function(x.view(-1, x[0].numel()), x_hat, z_hat, encoder_params, sigma)
 # posterior_params = self.encoder(x.view(-1, x[0].numel()))
 # todo: move x = x.view(-1, x[0].numel()) to MNIST transform

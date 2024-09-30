@@ -15,7 +15,7 @@
     "accelerator": "cpu",
     "max_epochs": 500,
     "log_every_n_steps": 4,
-    "limit_val_batches": 1.0,
+    "limit_val_batches": 1,
     "val_check_interval": 1.0,
     "limit_test_batches": 1,
     "gradient_clip_val": 0.5,
@@ -57,7 +57,7 @@
   "early_stopping": {
     "monitor": "mixture_log_volume",
     "mode": "max",
-    "patience": 10,
+    "patience": 50,
     "min_delta": 1e-3
   },
   "schedule": {
