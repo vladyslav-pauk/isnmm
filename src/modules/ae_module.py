@@ -27,8 +27,8 @@ class AutoEncoderModule(pl.LightningModule):
     def forward(self, observed_batch):
         latent_parameterization_batch = self.encoder(observed_batch)
         latent_sample = self.reparameterize(latent_parameterization_batch)
-        observed_sample = self.decoder(latent_sample)
-        return observed_sample, latent_sample, latent_parameterization_batch
+        reconstructed_sample = self.decoder(latent_sample)
+        return reconstructed_sample, latent_sample, latent_parameterization_batch
 
     def reparameterize(self, latent_parameterization_batch):
         return latent_parameterization_batch[0]
