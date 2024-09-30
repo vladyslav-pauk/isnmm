@@ -18,9 +18,7 @@ class Model(VASCA):
         self.ground_truth = ground_truth_model
 
         self.metrics = torchmetrics.MetricCollection({
-            # 'mixture_log_volume': metric.MatrixVolume(),
-            # 'mixture_matrix_change': metric.MatrixChange(),
-            'z_subspace': metric.SubspaceDistance(),
+            'subspace_distance': metric.SubspaceDistance(),
             'h_r_square': metric.ResidualNonlinearity()
         })
         self.metrics.eval()
@@ -38,17 +36,12 @@ class Model(VASCA):
         ], **self.optimizer_config["params"])
         return optimizer
 
-    def update_metrics(self, data, model_output, labels):
-        # self.metrics['mixture_log_volume'].update(
-        #     self.decoder.linear_mixture.matrix
-        # )
-        #
-        # self.metrics['mixture_matrix_change'].update(
-        #     self.decoder.linear_mixture.matrix
-        # )
+    def update_metrics(self, data, model_output, labels, idxes):
+        reconstructed_sample, latent_sample, _ = model_output
+        true_latent_sample, linearly_mixed_sample, _ = labels
 
-        self.metrics['z_subspace'].update(
-            labels[0], model_output[1].mean(dim=0)
+        self.metrics['subspace_distance'].update(
+            idxes, reconstructed_sample.mean(0).squeeze(), true_latent_sample
         )
 
         self.metrics['h_r_square'].update(
@@ -113,7 +106,6 @@ class Decoder(nn.Module):
 
 # fixme: fix decoder: sometimes get error, not at initialization (loss infinity, nans)
 # fixme: test to get good results, neural network output is horizontal!!! (nearly constant)  something is wrong
-
 # todo: mc and batch in fcnconstructor, activation argument (to config?)
 # todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
 # todo: clean up and test nisca model.

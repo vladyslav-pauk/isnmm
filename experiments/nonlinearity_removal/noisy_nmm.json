@@ -1,5 +1,5 @@
 {
-  "model_name": "mixture_model",
+  "model_name": "noisy_mixture_model",
   "data_model": "noisy_nmm",
   "nonlinearity": "sin",
   "degree": null,
