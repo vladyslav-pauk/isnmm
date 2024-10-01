@@ -11,23 +11,13 @@
   "model": {
     "mc_samples": 1
   },
-  "trainer": {
-    "accelerator": "cpu",
-    "max_epochs": 500,
-    "log_every_n_steps": 4,
-    "limit_val_batches": 1,
-    "val_check_interval": 1.0,
-    "limit_test_batches": 1,
-    "gradient_clip_val": 0.5,
-    "enable_progress_bar": false
-  },
   "encoder": {
     "constructor": "FCN",
     "hidden_layers": {
-      "h1":  64,
-      "h2":  64,
-      "h3":  32,
-      "h4":  32
+      "h1":  128,
+      "h2":  128,
+      "h3":  128,
+      "h4":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -38,10 +28,10 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  64,
-      "h2":  64,
-      "h3":  64,
-      "h4":  64
+      "h1":  128,
+      "h2":  128,
+      "h3":  128,
+      "h4":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -51,13 +41,23 @@
     "bn_momentum": 0.1,
     "dropout_rate": null
   },
+  "trainer": {
+    "accelerator": "cpu",
+    "max_epochs": 500,
+    "log_every_n_steps": 4,
+    "limit_val_batches": 1,
+    "val_check_interval": 1.0,
+    "limit_test_batches": 1,
+    "gradient_clip_val": 0.5,
+    "enable_progress_bar": false
+  },
   "optimizer": {
     "name": "Adam",
     "params": {
     },
     "lr": {
       "th": {
-        "l": 0.00001,
+        "l": 0.001,
         "nl": 0.001
       },
       "ph": 0.01
