@@ -17,11 +17,7 @@ class Model(VASCA):
 
         self.ground_truth = ground_truth_model
 
-        self.metrics = torchmetrics.MetricCollection({
-            'subspace_distance': metric.SubspaceDistance(),
-            'h_r_square': metric.ResidualNonlinearity()
-        })
-        self.metrics.eval()
+        self.setup_metrics()
 
     def configure_optimizers(self):
         lr = self.optimizer_config["lr"]
@@ -36,9 +32,22 @@ class Model(VASCA):
         ], **self.optimizer_config["params"])
         return optimizer
 
+    def setup_metrics(self):
+        self.metrics = torchmetrics.MetricCollection({
+            'subspace_distance': metric.SubspaceDistance(),
+            'h_r_square': metric.ResidualNonlinearity()
+        })
+        self.metrics.eval()
+        self.log_monitor = {
+            "monitor": "mixture_mse_db",
+            "mode": "min"
+        }
+
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample, latent_sample, _ = model_output
-        true_latent_sample, linearly_mixed_sample, _ = labels
+        reconstructed_sample = model_output["reconstructed_sample"]
+        latent_sample = model_output["latent_sample"]
+        true_latent_sample = labels["latent_sample"]
+        linearly_mixed_sample = labels["linearly_mixed_sample"]
 
         self.metrics['subspace_distance'].update(
             idxes, reconstructed_sample.mean(0).squeeze(), true_latent_sample

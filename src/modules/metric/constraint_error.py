@@ -8,8 +8,9 @@ class ConstraintError(torchmetrics.Metric):
         self.constraint_fn = constraint_fn
         self.add_state("constraint_violations", default=[], dist_reduce_fx="cat")
 
-    def update(self, F):
-        constraint_violation = self.constraint_fn(F)
+    def update(self, idxes, latent_sample):
+        idxes = idxes.to(latent_sample.device)
+        constraint_violation = self.constraint_fn(latent_sample[idxes])
         self.constraint_violations.append(constraint_violation)
 
     def compute(self):

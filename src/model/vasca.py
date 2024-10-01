@@ -17,18 +17,7 @@ class Model(AutoEncoderModule):
         self.optimizer_config = optimizer_config
         self.mc_samples = model_config["mc_samples"]
 
-        self.metrics = torchmetrics.MetricCollection({
-            'mixture_mse_db': metric.MatrixMse(),
-            'mixture_sam': metric.SpectralAngle(),
-            'mixture_log_volume': metric.MatrixVolume(),
-            'mixture_matrix_change': metric.MatrixChange(),
-            'subspace_distance': metric.SubspaceDistance()
-        })
-        self.metrics.eval()
-        self.log_monitor = {
-            "monitor": "mixture_mse_db",
-            "mode": "min"
-        }
+        self.setup_metrics()
 
     def on_after_backward(self) -> None:
         valid_gradients = True
@@ -54,21 +43,23 @@ class Model(AutoEncoderModule):
         return z_samples
 
     def loss_function(self, data, model_output, idxes):
-        data_rec_mc_sample, latent_mc_sample, variational_parameters = model_output
+        reconstructed_sample = model_output["reconstructed_sample"]
+        latent_sample = model_output["latent_sample"]
+        variational_parameters = model_output["latent_parameterization_batch"]
 
-        recon_loss = self._reconstruction(data, data_rec_mc_sample)
-        neg_entropy_z = - self._entropy(latent_mc_sample, variational_parameters)
-        kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_mc_sample.size(-1)))
+        recon_loss = self._reconstruction(data, reconstructed_sample)
+        neg_entropy_z = - self._entropy(latent_sample, variational_parameters)
+        kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_sample.size(-1)))
         return {"reconstruction": recon_loss, "kl_posterior_prior": kl_posterior_prior}
 
         # todo: neg_e is not training without rec_loss, check constants,
         #  kl should be always positive (check sign of gamma(N))
 
-    def _reconstruction(self, data, data_rec_mc_sample):
+    def _reconstruction(self, data, reconstructed_sample):
         N = data.size(-1)
         sigma = self.ground_truth.sigma
         mse_loss = F.mse_loss(
-            data_rec_mc_sample, data.expand_as(data_rec_mc_sample), reduction='mean'
+            reconstructed_sample, data.expand_as(reconstructed_sample), reduction='mean'
         )
         recon_loss = mse_loss / (2 * sigma ** 2) * N
         recon_loss += N / 2 * torch.log(torch.tensor(2 * torch.pi))
@@ -88,9 +79,26 @@ class Model(AutoEncoderModule):
         h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
         return h_z
 
+    def setup_metrics(self):
+        self.metrics = torchmetrics.MetricCollection({
+            'mixture_mse_db': metric.MatrixMse(),
+            'mixture_sam': metric.SpectralAngle(),
+            'mixture_log_volume': metric.MatrixVolume(),
+            'mixture_matrix_change': metric.MatrixChange(),
+            'subspace_distance': metric.SubspaceDistance()
+        })
+        self.metrics.eval()
+        self.log_monitor = {
+            "monitor": "mixture_mse_db",
+            "mode": "min"
+        }
+
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample, latent_sample, _ = model_output
-        true_latent_sample, linearly_mixed_sample, _ = labels
+        reconstructed_sample = model_output["reconstructed_sample"]
+        latent_sample = model_output["latent_sample"]
+        true_latent_sample = labels["latent_sample"]
+        linearly_mixed_sample = labels["linearly_mixed_sample"]
+        latent_sample_qr = labels["latent_sample_qr"]
 
         self.metrics['mixture_mse_db'].update(
             self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix

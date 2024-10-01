@@ -10,15 +10,15 @@ class EvaluateMetric(torchmetrics.Metric):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.show_plot = show_plot
 
-    def update(self, reconstructed_sample, data, linearly_mixed_sample):
-        reconstructed_sample = reconstructed_sample.detach().cpu()
+    def update(self, data, linearly_mixed_sample, latent_sample):
+        latent_sample = latent_sample.detach().cpu()
         linearly_mixed_sample = linearly_mixed_sample.detach().cpu()
-        self.reconstructed_sample = reconstructed_sample
+        self.latent_sample = latent_sample
         self.data = data
         self.linearly_mixed_sample = linearly_mixed_sample
 
     def compute(self):
-        self.plot(self.reconstructed_sample, self.data, self.linearly_mixed_sample)
+        self.plot(self.latent_sample, self.data, self.linearly_mixed_sample)
         return torch.tensor(0.0)
 
     def toggle_show_plot(self, enable):

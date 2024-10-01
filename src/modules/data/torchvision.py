@@ -9,8 +9,8 @@ class FlattenTransform:
     def __call__(self, x):
         return x.view(-1)
 
+
 class IndexedDataset(Dataset):
-    """Custom Dataset that returns the index along with the data and labels."""
     def __init__(self, dataset):
         self.dataset = dataset
 
@@ -19,7 +19,8 @@ class IndexedDataset(Dataset):
 
     def __getitem__(self, idx):
         x, y = self.dataset[idx]
-        return x, y, idx  # Return index as the third value
+        return {"data": x, "labels": y, "idxes": idx}
+
 
 class DataModule(pl.LightningDataModule):
     def __init__(self, dataset_config=None, batch_size=None, size=None, split=None, num_workers=None, **kwargs):
@@ -27,7 +28,6 @@ class DataModule(pl.LightningDataModule):
         self.dataset_name = dataset_config["dataset_name"]
         self.data_dir = dataset_config["data_dir"]
 
-        # Define the transformation explicitly instead of using lambda
         self.transform = transforms.Compose([
             transforms.ToTensor(),
             FlattenTransform()
@@ -50,17 +50,14 @@ class DataModule(pl.LightningDataModule):
     def setup(self, stage: str):
         if stage == "fit" or stage is None:
             dataset_full = self.dataset(self.data_dir, train=True, transform=self.transform)
-            # Wrap dataset in IndexedDataset to return index
             dataset_full = IndexedDataset(dataset_full)
 
-            # Split dataset into training and validation sets
             self.data_train, self.data_val = random_split(
                 dataset_full, [55000, 5000], generator=torch.Generator().manual_seed(42)
             )
 
         if stage == "test":
             dataset = self.dataset(self.data_dir, train=False, transform=self.transform)
-            # Wrap dataset in IndexedDataset to return index
             self.data_test = IndexedDataset(dataset)
 
     def train_dataloader(self):

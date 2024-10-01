@@ -46,7 +46,14 @@ class DataModule(LightningDataModule):
         # todo: might use self.data and call whatever needed from the model
 
     def setup(self, stage=None):
-        self.dataset = MyDataset((self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)))
+        self.dataset = MyDataset(
+            data=self.observed_sample,
+            labels={
+                "latent_sample": self.latent_sample,
+                "linearly_mixed_sample": self.linearly_mixed_sample,
+                "noiseless_sample": self.noiseless_sample,
+                "latent_sample_qr": self.latent_data_qr
+            })
         self.n_feature = self.observed_sample.shape[1]
 
     def train_dataloader(self):
@@ -60,12 +67,19 @@ class DataModule(LightningDataModule):
 
 
 class MyDataset(Dataset):
-    def __init__(self, data_sample):
-        self.data_size = data_sample[0].size(0)
-        self.data, self.labels = data_sample
+    def __init__(self, data, labels):
+        self.data = data
+        self.labels = labels
+        self.data_size = self.data.size(0)
 
     def __len__(self):
         return self.data_size
 
     def __getitem__(self, idx):
-        return self.data[idx], tuple(l[idx] for l in self.labels), idx
+        indexed_labels = {key: value[idx] for key, value in self.labels.items()}
+
+        return {
+            "data": self.data[idx],
+            "labels": indexed_labels,
+            "idxes": idx
+        }

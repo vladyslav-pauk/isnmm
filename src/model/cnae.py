@@ -25,7 +25,8 @@ class Model(AutoEncoderModule):
         self.setup_metrics()
 
     def loss_function(self, observed_batch, model_output, idxes):
-        reconstructed_sample, latent_sample, _ = model_output
+        reconstructed_sample = model_output["reconstructed_sample"]
+        latent_sample = model_output["latent_sample"]
         reconstruct_err = F.mse_loss(reconstructed_sample, observed_batch)
 
         regularization_loss = self.optimizer.compute_constraint_errors(latent_sample, idxes, observed_batch)
@@ -34,9 +35,7 @@ class Model(AutoEncoderModule):
         return loss
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
-        data, labels, idxes = batch
-        reconstructed_samples, latent_sample, _ = self(data)
-        self.optimizer.update_buffers(idxes, latent_sample)
+        self.optimizer.update_buffers(batch["idxes"], self(batch["data"])["latent_sample"])
 
     def configure_optimizers(self):
         self.optimizer = ConstrainedLagrangeOptimizer(
@@ -68,11 +67,16 @@ class Model(AutoEncoderModule):
         }
 
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample, latent_sample, _ = model_output
-        true_latent_sample, linearly_mixed_sample, latent_sample_qr = labels
-        self.metrics['evaluate_metric'].update(latent_sample, data, linearly_mixed_sample)
-        self.metrics['subspace_distance'].update(idxes, self.optimizer.reconstructed_sample_buffer, latent_sample_qr)
-        self.metrics['constraint'].update(self.optimizer.reconstructed_sample_buffer[idxes.to(self.optimizer.reconstructed_sample_buffer.device)])
+        reconstructed_sample = model_output["reconstructed_sample"]
+        latent_sample = model_output["latent_sample"]
+
+        true_latent_sample = labels["latent_sample"]
+        linearly_mixed_sample = labels["linearly_mixed_sample"]
+        latent_sample_qr = labels["latent_sample_qr"]
+
+        self.metrics['evaluate_metric'].update(data, linearly_mixed_sample, latent_sample)
+        self.metrics['subspace_distance'].update(idxes, self.optimizer.latent_sample_buffer, latent_sample_qr)
+        self.metrics['constraint'].update(idxes, self.optimizer.latent_sample_buffer)
 
 # class Encoder(nn.Module):
 #     def __init__(self, config):
@@ -88,6 +92,7 @@ class Model(AutoEncoderModule):
 #         mu = self.mu_network.forward(x)
 #         log_var = self.log_var_network.forward(x)
 #         return mu, log_var
+
 
 class Encoder(nn.Module):
     def __init__(self, config):

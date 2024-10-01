@@ -30,10 +30,10 @@ class Model(AutoEncoderModule):
 
     @staticmethod
     def loss_function(data, model_output, idxes):
-        x = data
-        recon_x, _, (mu, log_var) = model_output
-        bce = F.binary_cross_entropy(recon_x, x, reduction='sum') / x.size(0)
-        kld = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp()) / x.size(0)
+        reconstructed_data = model_output["reconstructed_sample"]
+        mu, log_var = model_output["latent_parameterization_batch"]
+        bce = F.binary_cross_entropy(reconstructed_data, data, reduction='sum') / data.size(0)
+        kld = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp()) / data.size(0)
         return {"cross-entropy": bce, "kl_divergence": kld}
 
     def configure_optimizers(self):

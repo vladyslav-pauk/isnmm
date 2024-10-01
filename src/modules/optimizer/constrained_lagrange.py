@@ -9,7 +9,7 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         super(ConstrainedLagrangeOptimizer, self).__init__(params, defaults)
 
         self.constraint_fn = constraint_fn
-        self.reconstructed_sample_buffer = torch.zeros((n_sample, observed_dim))
+        self.latent_sample_buffer = torch.zeros((n_sample, observed_dim))
         self.count_buffer = torch.zeros(n_sample, dtype=torch.int32)
         self.mult = torch.zeros(n_sample)
         self.rho = rho
@@ -19,7 +19,7 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         self.base_optimizer = Adam(params, lr=lr)
 
     def to(self, device):
-        self.reconstructed_sample_buffer = self.reconstructed_sample_buffer.to(device)
+        self.latent_sample_buffer = self.latent_sample_buffer.to(device)
         self.count_buffer = self.count_buffer.to(device)
         self.mult = self.mult.to(device)
 
@@ -37,19 +37,19 @@ class ConstrainedLagrangeOptimizer(Optimizer):
     def update_multipliers(self):
         if (self.global_step + 1) % self.inner_iters == 0:
             idxes = self.count_buffer.nonzero(as_tuple=True)[0]
-            reconstructed_sample = self.reconstructed_sample_buffer[idxes]
+            latent_sample = self.latent_sample_buffer[idxes]
 
-            diff = torch.sum(reconstructed_sample, dim=1) - 1.0
+            diff = torch.sum(latent_sample, dim=1) - 1.0
             self.mult[idxes] += self.rho * diff
 
-            self.reconstructed_sample_buffer[idxes] = 0.0
+            self.latent_sample_buffer[idxes] = 0.0
             self.count_buffer[idxes] = 0
 
-    def update_buffers(self, idxes, reconstructed_sample):
-        idxes = idxes.to(self.reconstructed_sample_buffer.device)
-        reconstructed_sample = reconstructed_sample.to(self.reconstructed_sample_buffer.device).detach()
+    def update_buffers(self, idxes, latent_sample):
+        idxes = idxes.to(self.latent_sample_buffer.device)
+        latent_sample = latent_sample.to(self.latent_sample_buffer.device).detach()
 
-        self.reconstructed_sample_buffer[idxes] = reconstructed_sample
+        self.latent_sample_buffer[idxes] = latent_sample
         self.count_buffer[idxes] += 1
 
     def compute_constraint_errors(self, fx, idxes, batch):
