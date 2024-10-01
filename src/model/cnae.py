@@ -103,7 +103,11 @@ class Decoder(nn.Module):
         self.nonlinear_transform = None
 
     def construct(self, latent_dim, observed_dim):
-        self.linear_mixture = nn.Identity()
+        self.linear_mixture = network.LinearPositive(
+            torch.eye(observed_dim, latent_dim), **self.config
+        )
+        # self.linear_mixture.eval()
+
         self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
 
     def forward(self, x):
@@ -139,11 +143,10 @@ class Decoder(nn.Module):
 #         x = self.nonlinear_transform(y)
 #         return x
 
-
-# fixme: check neural network architecture, implement the correct module
+# todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
 # fixme: cnae unequal dimensions
 # fixme: experiment cnae on noisy data
-# fixme: clean up and readme
+# todo: clean up and readme
 # fixme: make some runs and organize wandb to show Xiao
 # fixme: train cnae with reparametrization
 # fixme: train nisca with constrained optimization
