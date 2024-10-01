@@ -4,8 +4,6 @@ from torch.nn import functional as F
 import torchmetrics
 
 from src.modules.ae_module import AutoEncoderModule
-from src.model.nisca import Encoder, Decoder
-from src.modules.network import CNN
 import src.modules.metric as metric
 from src.modules.metric import EvaluateMetric
 from src.modules.optimizer.constrained_lagrange import ConstrainedLagrangeOptimizer
@@ -19,7 +17,8 @@ class Model(AutoEncoderModule):
         self.ground_truth = ground_truth_model
         self.optimizer_config = optimizer_config
         self.optimizer = None
-
+        self.metrics = None
+        self.log_monitor = None
         self.observed_dim = self.ground_truth.observed_dim
 
         self.setup_metrics()

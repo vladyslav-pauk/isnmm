@@ -1,6 +1,3 @@
-import xxsubtype
-
-import torch
 import torch.nn as nn
 import torchmetrics
 import torch.optim as optim
@@ -16,6 +13,9 @@ class Model(VASCA):
         super().__init__(ground_truth_model, encoder, decoder, model_config, optimizer_config)
 
         self.ground_truth = ground_truth_model
+        self.metrics = None
+        self.log_monitor = None
+        self.optimizer = None
 
         self.setup_metrics()
 
@@ -25,12 +25,12 @@ class Model(VASCA):
         lr_th_l = lr["th"]["l"]
         lr_ph = lr["ph"]
         optimizer_class = getattr(optim, self.optimizer_config["name"])
-        optimizer = optimizer_class([
+        self.optimizer = optimizer_class([
             {'params': self.encoder.parameters(), 'lr': lr_ph},
             {'params': self.decoder.linear_mixture.parameters(), 'lr': lr_th_l},
             {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr_th_nl}
         ], **self.optimizer_config["params"])
-        return optimizer
+        return self.optimizer
 
     def setup_metrics(self):
         self.metrics = torchmetrics.MetricCollection({
@@ -54,7 +54,6 @@ class Model(VASCA):
         )
 
         self.metrics['h_r_square'].update(
-            # lambda x: self.decoder(x.unsqueeze(1)).squeeze(1),
             self.decoder.nonlinear_transform,
             self.ground_truth.linearly_mixed_sample,
             self.ground_truth.noiseless_sample

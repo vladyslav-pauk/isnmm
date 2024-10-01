@@ -8,7 +8,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.helpers.callbacks import EarlyStoppingCallback
-from src.helpers.utils import init_logger, load_experiment_config, unflatten_dict
+from src.helpers.utils import init_logger, load_experiment_config, unflatten_dict, hash_name
 
 
 def train_model(experiment_name, data_model_name, model_name, **kwargs):
@@ -70,7 +70,7 @@ def _setup_trainer(config, logger):
         filename=f'best-model-{{epoch:02d}}-{{{config["checkpoint"]["monitor"]}:.2f}}',
         **config['checkpoint']
     )
-    # todo: fix folder
+
     trainer = Trainer(
         callbacks=[early_stopping_callback, checkpoint_callback],
         logger=logger,
@@ -82,21 +82,10 @@ def _setup_trainer(config, logger):
 
 def _setup_logger(experiment_name, config, kwargs):
 
-    import hashlib
-    if kwargs:
-        kwargs_str = str(sorted(kwargs.items()))
-        run_name = hashlib.md5(kwargs_str.encode()).hexdigest()
-    else:
-        run_name = None
-    # if any(value is not None for value in kwargs.values()):
-    #     run_name = "-".join([f"{key}_{value}" for key, value in kwargs.items() if value is not None])
-    # else:
-    #     run_name = None
-
     logger = init_logger(
         experiment_name=experiment_name,
         model=config['model_name'],
-        run_name=run_name
+        run_name=hash_name(kwargs)
     )
     logger.log_hyperparams({
         'config': config

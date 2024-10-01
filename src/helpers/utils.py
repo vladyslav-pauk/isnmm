@@ -68,6 +68,20 @@ def init_logger(experiment_name=None, model=None, run_name=None):
     # todo: add logging messages for the command line output
 
 
+def hash_name(kwargs):
+
+    import hashlib
+    if kwargs:
+        kwargs_str = str(sorted(kwargs.items()))
+        run_name = hashlib.md5(kwargs_str.encode()).hexdigest()
+    else:
+        run_name = None
+    # if any(value is not None for value in kwargs.values()):
+    #     run_name = "-".join([f"{key}_{value}" for key, value in kwargs.items() if value is not None])
+    # else:
+    #     run_name = None
+
+
 def get_parameter_combinations(config, prefix="", sep="_"):
     params = {}
 
