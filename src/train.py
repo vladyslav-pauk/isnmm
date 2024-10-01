@@ -29,10 +29,9 @@ def train_model(experiment_name, data_model_name, model_name, **kwargs):
 
     # logging.info(f"Training model {model_name} with data model {data_model_name}")
     trainer.fit(model, datamodule_instance)
+    trainer.test(model, datamodule_instance)
     model.summary()
     # logger.experiment.finish()
-
-    trainer.test(model, datamodule_instance)
 
     return logger.experiment.id
 

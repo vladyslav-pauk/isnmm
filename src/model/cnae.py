@@ -99,25 +99,15 @@ class Decoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
+        self.constructor = getattr(network, config["constructor"])
+        self.network = None
 
-    def construct(self, input_dim, output_dim):
-        layers = []
-        in_channels = input_dim
-        hidden_sizes = list(self.config.get('hidden_layers').values())
-
-        for h in hidden_sizes:
-            layers.append(nn.Conv1d(in_channels, h * input_dim, kernel_size=1, groups=input_dim))
-            layers.append(nn.ReLU())
-            in_channels = h * input_dim
-
-        layers.append(nn.Conv1d(in_channels, output_dim, kernel_size=1, groups=input_dim))
-        self.d_net = nn.Sequential(*layers)
-        # self.d_net = CNN(input_dim, output_dim, **self.config)
+    def construct(self, latent_dim, observed_dim):
+        self.network = self.constructor(latent_dim, observed_dim, **self.config)
 
     def forward(self, x):
-        x = x.unsqueeze(-1)
-        x = self.d_net(x)
-        return x.squeeze(-1)
+        x = self.network.forward(x)
+        return x
 
 
 # class Decoder(nn.Module):

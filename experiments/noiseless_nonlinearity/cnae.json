@@ -33,7 +33,8 @@
     "hidden_layers": {
       "h1":  128,
       "h2":  128,
-      "h3":  128
+      "h3":  128,
+      "h4":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
