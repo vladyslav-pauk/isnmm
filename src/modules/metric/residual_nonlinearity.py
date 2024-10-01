@@ -17,11 +17,15 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
     def update(self, model_nonlinearity, linearly_mixed_sample, noiseless_sample):
         self.noiseless_sample = noiseless_sample
-        self.model_nonlinearity = model_nonlinearity
+        if callable(model_nonlinearity):
+            self.model_sample = model_nonlinearity(linearly_mixed_sample)
+        else:
+            self.model_sample = model_nonlinearity
+
         self.linearly_mixed_sample = linearly_mixed_sample
         self.noiseless_sample = noiseless_sample
 
-        r_squared_values = self.fitter.fit(self.model_nonlinearity(linearly_mixed_sample), noiseless_sample)
+        r_squared_values = self.fitter.fit(self.model_sample, noiseless_sample)
         self.sum_r_squared += r_squared_values.mean()
         self.count += 1
 
@@ -30,17 +34,16 @@ class ResidualNonlinearity(torchmetrics.Metric):
         return self.sum_r_squared / self.count
 
     def plot(self, show_plot=False):
-        model_sample = self.model_nonlinearity(self.linearly_mixed_sample)
 
         nonlinearity_plot = plot_components(
             self.linearly_mixed_sample,
-            inferred_nonlinearity=model_sample,
+            inferred_nonlinearity=self.model_sample,
             true_nonlinearity=self.noiseless_sample,
             scale=True
         )
         residual_nonlinearity_plot = plot_components(
             self.noiseless_sample,
-            residual_nonlinearity=model_sample,
+            residual_nonlinearity=self.model_sample,
             fitter=self.fitter,
             labels=self.fitter.rsquared,
             scale=False
@@ -68,7 +71,7 @@ class LineFitter(nn.Module):
         self.intercepts = None
 
     def check_straightness(self, x, y):
-        x_flat, y_flat = x.flatten(), y.flatten()
+        x_flat, y_flat = x.flatten().to('cpu'), y.flatten().to('cpu')
         Y = torch.stack([y_flat, torch.ones_like(y_flat)], dim=1)
         params = torch.linalg.lstsq(Y, x_flat).solution
         slope, intercept = params[0], params[1]
