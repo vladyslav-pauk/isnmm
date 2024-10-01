@@ -4,12 +4,12 @@ from torch.optim import Adam
 
 
 class ConstrainedLagrangeOptimizer(Optimizer):
-    def __init__(self, params=None, lr=None, rho=None, inner_iters=None, n_sample=None, observed_dim=None, constraint_fn=None):
+    def __init__(self, params=None, lr=None, rho=None, inner_iters=None, n_sample=None, latent_dim=None, constraint_fn=None):
         defaults = dict(lr=lr, rho=rho, inner_iters=inner_iters)
         super(ConstrainedLagrangeOptimizer, self).__init__(params, defaults)
 
         self.constraint_fn = constraint_fn
-        self.latent_sample_buffer = torch.zeros((n_sample, observed_dim))
+        self.latent_sample_buffer = torch.zeros((n_sample, latent_dim))
         self.count_buffer = torch.zeros(n_sample, dtype=torch.int32)
         self.mult = torch.zeros(n_sample)
         self.rho = rho

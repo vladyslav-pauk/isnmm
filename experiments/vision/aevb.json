@@ -44,8 +44,8 @@
     "params": {
     },
     "lr": {
-      "th": 0.001,
-      "ph": 0.001
+      "decoder": 0.001,
+      "encoder": 0.001
     }
   },
   "checkpoint": {

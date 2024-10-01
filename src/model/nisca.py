@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torchmetrics
 import torch.optim as optim
+import torch
 
 import src.modules.network as network
 from src.model.vasca import Model as VASCA
@@ -20,15 +21,12 @@ class Model(VASCA):
         self.setup_metrics()
 
     def configure_optimizers(self):
-        lr = self.optimizer_config["lr"]
-        lr_th_nl = lr["th"]["nl"]
-        lr_th_l = lr["th"]["l"]
-        lr_ph = lr["ph"]
         optimizer_class = getattr(optim, self.optimizer_config["name"])
+        lr = self.optimizer_config["lr"]
         self.optimizer = optimizer_class([
-            {'params': self.encoder.parameters(), 'lr': lr_ph},
-            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr_th_l},
-            {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr_th_nl}
+            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
+            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
+            {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
         ], **self.optimizer_config["params"])
         return self.optimizer
 
@@ -44,15 +42,12 @@ class Model(VASCA):
         }
 
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"]
-        latent_sample = model_output["latent_sample"]
+        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
         true_latent_sample = labels["latent_sample"]
-        linearly_mixed_sample = labels["linearly_mixed_sample"]
 
         self.metrics['subspace_distance'].update(
-            idxes, reconstructed_sample.mean(0).squeeze(), true_latent_sample
+            idxes, reconstructed_sample, true_latent_sample
         )
-
         self.metrics['h_r_square'].update(
             self.decoder.nonlinear_transform,
             self.ground_truth.linearly_mixed_sample,
@@ -69,14 +64,17 @@ class Decoder(nn.Module):
         self.nonlinear_transform = None
 
     def construct(self, latent_dim, observed_dim):
-        self.linear_mixture = nn.Identity()
-        self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
+        self.linear_mixture = network.LinearPositive(
+            torch.eye(observed_dim, latent_dim), **self.config
+        )
+        # self.linear_mixture.eval()
+
+        self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
 
     def forward(self, x):
         x = self.linear_mixture(x)
         x = self.nonlinear_transform(x)
         return x
-
 
 # class Decoder(nn.Module):
 #     def __init__(self, config):

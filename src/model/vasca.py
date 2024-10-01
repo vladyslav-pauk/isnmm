@@ -17,67 +17,57 @@ class Model(AutoEncoderModule):
         self.optimizer_config = optimizer_config
         self.mc_samples = model_config["mc_samples"]
 
+        self.sigma = model_config["sigma"]
+
+        self.metrics = None
+        self.log_monitor = None
         self.setup_metrics()
 
-    def on_after_backward(self) -> None:
-        valid_gradients = True
-        for name, param in self.named_parameters():
-            if param.grad is not None:
-                valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
-                if not valid_gradients:
-                    break
-
-        if not valid_gradients:
-            # print(f'inf or nan gradient, skipping update.')
-            self.zero_grad()
-
-    def reparameterize(self, variational_parameters):
-        mean, log_var = variational_parameters
-        std = torch.exp(0.5 * log_var)
-
-        eps = torch.randn(self.mc_samples, *std.shape)
-
-        z_samples = mean.unsqueeze(0) + eps * std.unsqueeze(0)
-        z_samples = torch.cat((z_samples, torch.zeros(*z_samples.size()[:2], 1)), dim=2)
-        z_samples = F.softmax(z_samples, dim=-1)
-        return z_samples
-
     def loss_function(self, data, model_output, idxes):
+        if not self.sigma:
+            self.sigma = self.ground_truth.sigma
+
         reconstructed_sample = model_output["reconstructed_sample"]
         latent_sample = model_output["latent_sample"]
         variational_parameters = model_output["latent_parameterization_batch"]
 
-        recon_loss = self._reconstruction(data, reconstructed_sample)
-        neg_entropy_z = - self._entropy(latent_sample, variational_parameters)
-        kl_posterior_prior = neg_entropy_z - torch.lgamma(torch.tensor(latent_sample.size(-1)))
-        return {"reconstruction": recon_loss, "kl_posterior_prior": kl_posterior_prior}
+        loss = {"reconstruction": self._reconstruction(data, reconstructed_sample)}
 
-        # todo: neg_e is not training without rec_loss, check constants,
-        #  kl should be always positive (check sign of gamma(N))
+        neg_entropy_latent = - self._entropy(latent_sample, variational_parameters)
+        kl_posterior_prior = neg_entropy_latent - torch.lgamma(torch.tensor(latent_sample.size(-1)))
+        loss.update({"kl_posterior_prior": self.sigma ** 2 * kl_posterior_prior})
 
-    def _reconstruction(self, data, reconstructed_sample):
-        N = data.size(-1)
-        sigma = self.ground_truth.sigma
-        mse_loss = F.mse_loss(
+        return loss
+
+    @staticmethod
+    def reparameterization(z):
+        z = torch.cat((z, torch.zeros_like(z[..., :1])), dim=-1)
+        return F.softmax(z, dim=-1)
+
+    @staticmethod
+    def _reconstruction(data, reconstructed_sample):
+        recon_loss = data.size(-1) / 2 * F.mse_loss(
             reconstructed_sample, data.expand_as(reconstructed_sample), reduction='mean'
         )
-        recon_loss = mse_loss / (2 * sigma ** 2) * N
-        recon_loss += N / 2 * torch.log(torch.tensor(2 * torch.pi))
+        # recon_loss += self.sigma ** 2 * data.size(-1) / 2 * torch.log(torch.tensor(2 * torch.pi))
         return recon_loss
 
-    def _entropy(self, z_mc_sample, variational_parameters):
-        mu, log_var = variational_parameters
+    @staticmethod
+    def _entropy(latent_sample, variational_parameters):
+        mean, std = variational_parameters
 
-        z_last = z_mc_sample[:, :, -1:]
-        tilde_z = torch.log(z_mc_sample[:, :, :-1] / z_last) - mu
-        sigma_diag_inv = torch.exp(-0.5 * log_var)
+        log_var = 2 * torch.log(std + 1e-12)
+        sigma_diag_inv = 1 / (std + 1e-12)
+
+        projected_latent = torch.log(latent_sample[:, :, :-1] / latent_sample[:, :, -1:]) - mean
 
         log_2pi = torch.log(torch.tensor(2 * torch.pi))
-        h_z = 0.5 * (z_mc_sample.size(-1) - 1) * log_2pi
-        h_z += (tilde_z ** 2 * sigma_diag_inv.unsqueeze(0)).sum(dim=-1).mean() / 2
-        h_z += log_var[:, :-1].sum(dim=-1).mean() / 2
-        h_z += torch.log(z_mc_sample).sum(dim=-1).mean()
-        return h_z
+        entropy = 0.5 * (latent_sample.size(-1) - 1) * log_2pi
+        entropy += (projected_latent ** 2 * sigma_diag_inv.unsqueeze(0)).sum(dim=-1).mean() / 2
+        entropy += log_var[:, :-1].sum(dim=-1).mean() / 2
+        entropy += torch.log(latent_sample).sum(dim=-1).mean()
+
+        return entropy
 
     def setup_metrics(self):
         self.metrics = torchmetrics.MetricCollection({
@@ -94,11 +84,8 @@ class Model(AutoEncoderModule):
         }
 
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"]
-        latent_sample = model_output["latent_sample"]
+        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
         true_latent_sample = labels["latent_sample"]
-        linearly_mixed_sample = labels["linearly_mixed_sample"]
-        latent_sample_qr = labels["latent_sample_qr"]
 
         self.metrics['mixture_mse_db'].update(
             self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
@@ -112,50 +99,29 @@ class Model(AutoEncoderModule):
         self.metrics['mixture_matrix_change'].update(
             self.decoder.linear_mixture.matrix
         )
-
         self.metrics['subspace_distance'].update(
-            idxes, reconstructed_sample.mean(0).squeeze(), true_latent_sample
+            idxes, reconstructed_sample, true_latent_sample
         )
 
     def configure_optimizers(self):
         lr = self.optimizer_config["lr"]
-        lr_th = lr["th"]
-        lr_ph = lr["ph"]
         optimizer_class = getattr(optim, self.optimizer_config["name"])
         optimizer = optimizer_class([
-            {'params': self.encoder.parameters(), 'lr': lr_ph},
-            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr_th}
+            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
+            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]}
         ], **self.optimizer_config["params"])
         return optimizer
 
-    # def inference_model(self, observed):
-    #     mean, log_var = self.encoder(observed)
-    #     covariance = log_var.exp().diag_embed()
-    #     distribution = self.variational_posterior_distribution(loc=mean, covariance_matrix=covariance)
-    #     return distribution
-    #
-    # def likelihood(self, latent):
-    #     decoded_latent = self.decoder(latent)
-    #     noise_covariance = 0.1 * torch.eye(decoded_latent.shape[1])
-    #     distribution = self.noise_distribution(loc=decoded_latent, covariance_matrix=noise_covariance)
-    #     return distribution
-    #
-    # def prior(self):
-    #     distribution = self.latent_prior_distribution(
-    #         loc=torch.zeros(self.latent_dim), covariance_matrix=torch.eye(self.latent_dim)
-    #     )
-    #     return distribution
-    #
-    # def marginal_likelihood(self):
-    #     pass
+    def on_after_backward(self):
+        valid_gradients = True
+        for name, param in self.named_parameters():
+            if param.grad is not None:
+                valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
+                if not valid_gradients:
+                    break
 
-    # def on_before_backward(self, loss: Tensor) -> None:
-    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight)
-    #     print("Encoder", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
-    #
-    # def on_after_backward(self) -> None:
-    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight)
-    #     print("EncoderA", self.encoder.mu_network.hidden_layers[0][0].weight.grad)
+        if not valid_gradients:
+            self.zero_grad()
 
 
 class Encoder(nn.Module):
@@ -174,7 +140,8 @@ class Encoder(nn.Module):
     def forward(self, x):
         mu = self.mu_network.forward(x)
         log_var = self.log_var_network.forward(x)
-        return mu, log_var
+        std = torch.exp(0.5 * log_var)
+        return mu, std
 
 
 class Decoder(nn.Module):

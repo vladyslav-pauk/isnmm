@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 import torchmetrics
+from torch import optim
 
 from src.modules.ae_module import AutoEncoderModule
 import src.modules.metric as metric
@@ -17,47 +18,67 @@ class Model(AutoEncoderModule):
         self.ground_truth = ground_truth_model
         self.optimizer_config = optimizer_config
         self.optimizer = None
+        self.observed_dim = self.ground_truth.observed_dim
+        self.sigma = 0
+        self.mc_samples = 1
+
         self.metrics = None
         self.log_monitor = None
-        self.observed_dim = self.ground_truth.observed_dim
-
         self.setup_metrics()
 
     def loss_function(self, observed_batch, model_output, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"]
+        reconstructed_sample = model_output["reconstructed_sample"].squeeze(0)
         latent_sample = model_output["latent_sample"]
-        reconstruct_err = F.mse_loss(reconstructed_sample, observed_batch)
 
-        regularization_loss = self.optimizer.compute_constraint_errors(latent_sample, idxes, observed_batch)
-        loss = {"reconstruction": reconstruct_err}
+        loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch.squeeze(0))}
+
+        regularization_loss = {}
+        if hasattr(self.optimizer, "compute_constraint_errors"):
+            regularization_loss = self.optimizer.compute_constraint_errors(latent_sample, idxes, observed_batch)
         loss.update(regularization_loss)
+
         return loss
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
-        self.optimizer.update_buffers(batch["idxes"], self(batch["data"])["latent_sample"])
+        if hasattr(self.optimizer, "update_buffers"):
+            self.optimizer.update_buffers(batch["idxes"], self(batch["data"])["latent_sample"])
+
+    @staticmethod
+    def reparameterization(sample):
+        sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+        return F.softmax(sample, dim=-1)
+
+    # def configure_optimizers(self):
+    #     self.optimizer = ConstrainedLagrangeOptimizer(
+    #         params=list(self.parameters()),
+    #         lr=self.optimizer_config['lr']["encoder"],
+    #         rho=self.optimizer_config['rho'],
+    #         inner_iters=self.optimizer_config['inner_iters'],
+    #         n_sample=self.ground_truth.dataset_size,
+    #         latent_dim=self.latent_dim,
+    #         constraint_fn=lambda F: torch.sum(F, dim=1) - 1.0
+    #     )
+    #     return self.optimizer
+    # todo: check factory signature of optimizer
 
     def configure_optimizers(self):
-        self.optimizer = ConstrainedLagrangeOptimizer(
-            params=list(self.parameters()),
-            lr=self.optimizer_config['lr']["encoder"],
-            rho=self.optimizer_config['rho'],
-            inner_iters=self.optimizer_config['inner_iters'],
-            n_sample=self.ground_truth.dataset_size,
-            observed_dim=self.observed_dim,
-            constraint_fn=lambda F: torch.sum(F, dim=1) - 1.0
-        )
+        optimizer_class = getattr(optim, self.optimizer_config["name"])
+        lr = self.optimizer_config["lr"]
+        self.optimizer = optimizer_class([
+            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
+            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
+            {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
+        ], **self.optimizer_config["params"])
         return self.optimizer
 
     def setup_metrics(self):
-        subspace_distance_metric = metric.SubspaceDistance()
-        evaluate_metric = EvaluateMetric()
-        constraint_error = metric.ConstraintError(lambda F: torch.sum(F, dim=1) - 1.0)
+        # constraint_error = metric.ConstraintError(lambda F: torch.sum(F, dim=1) - 1.0)
 
         self.metrics = torchmetrics.MetricCollection({
-            'subspace_distance': subspace_distance_metric,
+            'subspace_distance': metric.SubspaceDistance(),
             'h_r_square': metric.ResidualNonlinearity(),
-            'evaluate_metric': evaluate_metric,
-            'constraint': constraint_error
+            'evaluate_metric': EvaluateMetric(),
+            # 'constraint': constraint_error
         })
         self.metrics.eval()
         self.log_monitor = {
@@ -66,17 +87,24 @@ class Model(AutoEncoderModule):
         }
 
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"]
+        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
         latent_sample = model_output["latent_sample"]
 
-        true_latent_sample = labels["latent_sample"]
         linearly_mixed_sample = labels["linearly_mixed_sample"]
+        true_latent_sample = labels["latent_sample"]
         latent_sample_qr = labels["latent_sample_qr"]
 
-        self.metrics['evaluate_metric'].update(data, linearly_mixed_sample, latent_sample)
-        self.metrics['subspace_distance'].update(idxes, self.optimizer.latent_sample_buffer, latent_sample_qr)
-        self.metrics['constraint'].update(idxes, self.optimizer.latent_sample_buffer)
-        self.metrics['h_r_square'].update(reconstructed_sample, linearly_mixed_sample, data)
+        self.metrics['evaluate_metric'].update(
+            data, linearly_mixed_sample, latent_sample
+        )
+        self.metrics['subspace_distance'].update(
+            idxes, reconstructed_sample, true_latent_sample
+        )
+        # self.metrics['subspace_distance'].update(idxes, self.optimizer.latent_sample_buffer, latent_sample_qr)
+        # self.metrics['constraint'].update(idxes, self.optimizer.latent_sample_buffer)
+        self.metrics['h_r_square'].update(
+            reconstructed_sample, linearly_mixed_sample, data
+        )
 
 
 class Encoder(nn.Module):
@@ -87,11 +115,11 @@ class Encoder(nn.Module):
         self.network = None
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(observed_dim, latent_dim, **self.config)
+        self.network = self.constructor(observed_dim, latent_dim - 1, **self.config)
 
     def forward(self, x):
         x = self.network.forward(x)
-        return x, None
+        return x, torch.zeros_like(x).to(x.device)
 
 
 class Decoder(nn.Module):
@@ -108,7 +136,7 @@ class Decoder(nn.Module):
         )
         # self.linear_mixture.eval()
 
-        self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
+        self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
 
     def forward(self, x):
         x = self.linear_mixture(x)

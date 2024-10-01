@@ -50,8 +50,8 @@
     },
     "lr": {
       "decoder": {
-        "l": 0.001,
-        "nl": 0.001
+        "linear": 0.001,
+        "nonlinear": 0.001
       },
       "encoder": 0.001
     },

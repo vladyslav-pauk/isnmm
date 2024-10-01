@@ -1,6 +1,8 @@
 import wandb
 import pytorch_lightning as pl
 from torchsummary import summary
+import torch.nn.functional as F
+import torch
 
 
 class AutoEncoderModule(pl.LightningModule):
@@ -12,6 +14,7 @@ class AutoEncoderModule(pl.LightningModule):
         self.decoder = decoder
         self.latent_dim = None
         self.observed_dim = None
+        self.noise_level = 1.0
 
     def setup(self, stage):
         if stage == 'fit' or stage is None:
@@ -27,7 +30,7 @@ class AutoEncoderModule(pl.LightningModule):
 
     def forward(self, observed_batch):
         latent_parameterization_batch = self.encoder(observed_batch)
-        latent_sample = self.reparameterize(latent_parameterization_batch)
+        latent_sample = self.sample_latent(latent_parameterization_batch)
         reconstructed_sample = self.decoder(latent_sample)
 
         model_output = {
@@ -37,8 +40,11 @@ class AutoEncoderModule(pl.LightningModule):
         }
         return model_output
 
-    def reparameterize(self, latent_parameterization_batch):
-        return latent_parameterization_batch[0]
+    def sample_latent(self, variational_parameters):
+        mean, std = variational_parameters
+        eps = torch.randn(self.mc_samples, *std.shape).to(std.device)
+        variational_sample = eps.mul(std.unsqueeze(0)).add_(mean.unsqueeze(0))
+        return self.reparameterization(variational_sample)
 
     def on_train_start(self) -> None:
         wandb.define_metric(name=self.log_monitor["monitor"], summary=self.log_monitor["mode"])

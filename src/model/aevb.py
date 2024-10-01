@@ -20,30 +20,27 @@ class Model(AutoEncoderModule):
             "mode": "min"
         }
         self.latent_dim = model_config["latent_dim"]
+        self.mc_samples = model_config["mc_samples"]
 
-    def reparameterize(self, params):
-        mean, log_var = params
-        std = torch.exp(0.5 * log_var)
-        eps = torch.randn_like(std)
-        latent_mc_sample = eps.mul(std).add_(mean)
-        return latent_mc_sample
+    @staticmethod
+    def reparameterization(sample):
+        return sample
 
     @staticmethod
     def loss_function(data, model_output, idxes):
-        reconstructed_data = model_output["reconstructed_sample"]
-        mu, log_var = model_output["latent_parameterization_batch"]
-        bce = F.binary_cross_entropy(reconstructed_data, data, reduction='sum') / data.size(0)
-        kld = -0.5 * torch.sum(1 + log_var - mu.pow(2) - log_var.exp()) / data.size(0)
+        reconstructed_sample = model_output["reconstructed_sample"]
+        mu, std = model_output["latent_parameterization_batch"]
+
+        bce = F.binary_cross_entropy(reconstructed_sample, data.expand_as(reconstructed_sample), reduction='sum') / data.size(0)
+        kld = -0.5 * torch.sum(1 + 2 * torch.log(std + 1e-12) - mu.pow(2) - std.pow(2)) / data.size(0)
         return {"cross-entropy": bce, "kl_divergence": kld}
 
     def configure_optimizers(self):
         lr = self.optimizer_config["lr"]
-        lr_th = lr["th"]
-        lr_ph = lr["ph"]
         optimizer_class = getattr(optim, self.optimizer_config["name"])
         optimizer = optimizer_class([
-            {'params': self.encoder.parameters(), 'lr': lr_ph},
-            {'params': self.decoder.parameters(), 'lr': lr_th}
+            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
+            {'params': self.decoder.parameters(), 'lr': lr["decoder"]}
         ], **self.optimizer_config["params"])
         return optimizer
 
@@ -63,7 +60,8 @@ class Encoder(nn.Module):
     def forward(self, x):
         mu = self.mu_network.forward(x)
         log_var = self.log_var_network.forward(x)
-        return mu, log_var
+        std = torch.exp(0.5 * log_var)
+        return mu, std
 
 
 class Decoder(nn.Module):
