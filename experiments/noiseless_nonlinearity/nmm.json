@@ -1,5 +1,5 @@
 {
-  "model_name": "noiseless_mixture_model",
+  "model_name": "noiseless_mixture",
   "data_model": "nonlinear",
   "nonlinearity": "sin",
   "degree": null,

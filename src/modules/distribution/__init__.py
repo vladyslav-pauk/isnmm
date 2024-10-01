@@ -1,2 +1,2 @@
-from .noisy_mixture_model import GenerativeModel as noisy_mixture_model
-from .noiseless_mixture_model import GenerativeModel as noiseless_mixture_model
+from .noisy_mixture import GenerativeModel as noisy_mixture
+from .noiseless_mixture import GenerativeModel as noiseless_mixture

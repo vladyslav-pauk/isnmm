@@ -6,8 +6,8 @@ import src.modules.distribution as distribution_package
 
 
 if __name__ == "__main__":
-    data_model_name = 'nmm'
-    config = load_experiment_config('noiseless_nonlinearity', data_model_name)
+    data_model_name = 'noisy_nmm'
+    config = load_experiment_config('nonlinearity_removal', data_model_name)
 
     linear_mixture_matrix = torch.randn(config["observed_dim"], config["latent_dim"])
 
