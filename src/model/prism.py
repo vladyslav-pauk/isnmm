@@ -10,7 +10,7 @@ from src.modules.network import LinearPositive
 from torch.distributions import Dirichlet, LogNormal, Normal
 from src.modules.ae_module import AutoEncoderModule
 
-# fixme: implement prism-vae
+# todo: implement prism-vae
 
 
 class Model(AutoEncoderModule):

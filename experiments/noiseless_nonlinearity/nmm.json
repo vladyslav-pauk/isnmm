@@ -1,6 +1,6 @@
 {
   "model_name": "noiseless_mixture_model",
-  "data_model": "nmm",
+  "data_model": "nonlinear",
   "nonlinearity": "sin",
   "degree": null,
   "snr_db": null,

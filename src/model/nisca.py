@@ -113,8 +113,7 @@ class Decoder(nn.Module):
 #         x = x.squeeze().view(num_samples, monte_carlo_samples, -1)
 #         return x
 
-# fixme: fix decoder: sometimes get error, not at initialization (loss infinity, nans)
-# fixme: test to get good results, neural network output is horizontal!!! (nearly constant)  something is wrong
+# todo: sometimes during training get nan, right now skipped
 # todo: mc and batch in fcnconstructor, activation argument (to config?)
 # todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
 # todo: clean up and test nisca model.

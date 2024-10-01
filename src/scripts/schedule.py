@@ -6,7 +6,8 @@ from train import train_model
 from src.helpers.utils import load_experiment_config, get_parameter_combinations
 from src.modules.data_module import DataModule
 
-# fixme: fix and run schedule with 100 MC runs. implement saving of multiple run results mean and vars
+# todo: fix and run schedule with 100 MC runs.
+# todo: implement saving of multiple run results mean and vars and comparison of models
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
