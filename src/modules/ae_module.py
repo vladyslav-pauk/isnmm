@@ -1,5 +1,6 @@
 import wandb
 import pytorch_lightning as pl
+from torchsummary import summary
 
 
 class AutoEncoderModule(pl.LightningModule):
@@ -61,6 +62,10 @@ class AutoEncoderModule(pl.LightningModule):
         self.update_metrics(data, model_outputs, labels, idxes)
         # self.metrics['evaluate_metric'].toggle_show_plot(True)
         print(self.metrics.compute())
+
+    def summary(self):
+        summary(self.encoder, (self.observed_dim,))
+        summary(self.decoder, (self.latent_dim,))
 
 
 # todo: refactor data_model so it has a forward method so i can run inference like on model

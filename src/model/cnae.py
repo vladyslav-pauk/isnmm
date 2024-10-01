@@ -79,51 +79,20 @@ class Model(AutoEncoderModule):
         self.metrics['constraint'].update(idxes, self.optimizer.latent_sample_buffer)
         self.metrics['h_r_square'].update(reconstructed_sample, linearly_mixed_sample, data)
 
-# class Encoder(nn.Module):
-#     def __init__(self, config):
-#         super().__init__()
-#         self.config = config
-#         self.constructor = getattr(network, config["constructor"])
-#
-#     def construct(self, latent_dim, observed_dim):
-#         self.mu_network = self.constructor(observed_dim, latent_dim, **self.config)
-#         self.log_var_network = self.constructor(observed_dim, latent_dim, **self.config)
-#
-#     def forward(self, x):
-#         mu = self.mu_network.forward(x)
-#         log_var = self.log_var_network.forward(x)
-#         return mu, log_var
-
-# fixme: check neural network architecture, implement the correct module
-# fixme: cnae unequal dimensions
-# fixme: experiment cnae on noisy data
-# fixme: clean up and readme
-# fixme: make some runs and organize wandb to show Xiao
-# fixme: train cnae with reparametrization
-# fixme: train nisca with constrained optimization
 
 class Encoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
+        self.constructor = getattr(network, config["constructor"])
+        self.network = None
 
-    def construct(self, input_dim, output_dim):
-        layers = []
-        in_channels = input_dim
-        hidden_sizes = self.config['hidden_layers'].values()
-
-        for h in hidden_sizes:
-            layers.append(nn.Conv1d(in_channels, h * input_dim, kernel_size=1, groups=input_dim))
-            layers.append(nn.ReLU())
-            in_channels = h * input_dim
-
-        layers.append(nn.Conv1d(in_channels, output_dim, kernel_size=1, groups=input_dim))
-        self.e_net = nn.Sequential(*layers)
+    def construct(self, latent_dim, observed_dim):
+        self.network = self.constructor(observed_dim, latent_dim, **self.config)
 
     def forward(self, x):
-        x = x.float().unsqueeze(-1)
-        x = self.e_net(x)
-        return x.squeeze(-1), None
+        x = self.network.forward(x)
+        return x, None
 
 
 class Decoder(nn.Module):
@@ -149,3 +118,40 @@ class Decoder(nn.Module):
         x = x.unsqueeze(-1)
         x = self.d_net(x)
         return x.squeeze(-1)
+
+
+# class Decoder(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#         self.constructor = getattr(network, config["constructor"])
+#
+#     def construct(self, latent_dim, observed_dim):
+#         self.linear_mixture = network.LinearPositive(
+#             torch.rand(observed_dim, latent_dim), **self.config
+#         )
+#
+#         self.nonlinearity = nn.ModuleList([self.constructor(
+#             input_dim=1, output_dim=1, **self.config
+#         ) for _ in range(observed_dim)])
+#
+#     def nonlinear_transform(self, x):
+#         x = torch.cat([
+#             self.nonlinearity[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
+#             for i in range(x.shape[-1])
+#         ], dim=-1)
+#         return x
+#
+#     def forward(self, z):
+#         y = self.linear_mixture(z)
+#         x = self.nonlinear_transform(y)
+#         return x
+
+
+# fixme: check neural network architecture, implement the correct module
+# fixme: cnae unequal dimensions
+# fixme: experiment cnae on noisy data
+# fixme: clean up and readme
+# fixme: make some runs and organize wandb to show Xiao
+# fixme: train cnae with reparametrization
+# fixme: train nisca with constrained optimization

@@ -1,6 +1,6 @@
 {
   "model_name": "cnae",
-  "torch_seed": null,
+  "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 100,
@@ -11,13 +11,45 @@
   "model": {
     "mc_samples": 1
   },
+  "encoder": {
+    "constructor": "CNN",
+    "hidden_layers": {
+      "h1":  128,
+      "h2":  128,
+      "h3":  128,
+      "h4":  128
+    },
+    "hidden_activation": "ReLU",
+    "output_activation": null,
+    "weight_initialization": null,
+    "mixture_initialization": null,
+    "bn_eps": null,
+    "bn_momentum": 0.1,
+    "dropout_rate": null,
+    "groups": null
+  },
+  "decoder": {
+    "constructor": "CNN",
+    "hidden_layers": {
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
+    },
+    "hidden_activation": "ReLU",
+    "output_activation": null,
+    "weight_initialization": null,
+    "mixture_initialization": null,
+    "bn_eps": null,
+    "bn_momentum": 0.1,
+    "dropout_rate": null
+  },
   "optimizer": {
     "name": "Adam",
     "params": {
     },
     "lr": {
       "decoder": {
-        "l": 0.01,
+        "l": 0.001,
         "nl": 0.001
       },
       "encoder": 0.001
@@ -28,7 +60,7 @@
   "trainer": {
     "accelerator": "auto",
     "devices": 1,
-    "max_epochs": 100,
+    "max_epochs": 5,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
     "log_every_n_steps": 10,
@@ -44,31 +76,7 @@
   "early_stopping": {
     "monitor": "reconstruction",
     "mode": "min",
-    "patience": 50,
+    "patience": 10,
     "min_delta": 1e-3
-  },
-  "encoder": {
-    "constructor": "FCN",
-    "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128
-    },
-    "groups": null
-  },
-  "decoder": {
-    "constructor": "FCN",
-    "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128
-    },
-    "hidden_activation": "ReLU",
-    "output_activation": null,
-    "weight_initialization": null,
-    "mixture_initialization": null,
-    "bn_eps": null,
-    "bn_momentum": 0.1,
-    "dropout_rate": null
   }
 }

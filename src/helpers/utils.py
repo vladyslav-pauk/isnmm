@@ -36,7 +36,6 @@ def init_logger(experiment_name=None, model=None, run_name=None):
     wandb.login()
 
     project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0].split("/")[-2]
-    print(project_root)
 
     # log_format = "%(asctime)s - %(levelname)s - %(message)s"
     # logging.basicConfig(
