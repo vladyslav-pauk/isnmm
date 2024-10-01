@@ -47,7 +47,36 @@ class CNNConstructor(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        x = x.unsqueeze(-1)
-        x = self.layers(x)
-        x = x.squeeze(-1)
-        return x
+        monte_carlo = len(x.size()) == 3
+        batch_size, *dims = x.size()
+        if monte_carlo:
+            x = x.view(-1, *dims[1:])
+        x = self.layers(x.unsqueeze(-1)).squeeze(-1)
+        return x.view(batch_size, *dims) if monte_carlo else x
+
+
+# class Decoder(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#
+#     def construct(self, input_dim, output_dim):
+#         layers = []
+#         in_channels = input_dim
+#         hidden_sizes = list(self.config.get('hidden_layers').values())
+#
+#         for h in hidden_sizes:
+#             layers.append(nn.Conv1d(in_channels, h * input_dim, kernel_size=1, groups=input_dim))
+#             layers.append(nn.ReLU())
+#             in_channels = h * input_dim
+# todo: use this method in cnn build
+#
+#         layers.append(nn.Conv1d(in_channels, output_dim, kernel_size=1, groups=input_dim))
+#         self.d_net = nn.Sequential(*layers)
+#
+#     def forward(self, x):
+#         num_samples, monte_carlo_samples, components = x.shape
+#         x = x.view(-1, components).unsqueeze(-1)
+#         x = self.d_net(x)
+#         x = x.squeeze().view(num_samples, monte_carlo_samples, -1)
+#         return x

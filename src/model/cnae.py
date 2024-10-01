@@ -100,13 +100,16 @@ class Decoder(nn.Module):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
-        self.network = None
+        self.linear_mixture = None
+        self.nonlinear_transform = None
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(latent_dim, observed_dim, **self.config)
+        self.linear_mixture = nn.Identity()
+        self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
 
     def forward(self, x):
-        x = self.network.forward(x)
+        x = self.linear_mixture(x)
+        x = self.nonlinear_transform(x)
         return x
 
 

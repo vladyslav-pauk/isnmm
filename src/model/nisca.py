@@ -28,7 +28,7 @@ class Model(VASCA):
         optimizer = optimizer_class([
             {'params': self.encoder.parameters(), 'lr': lr_ph},
             {'params': self.decoder.linear_mixture.parameters(), 'lr': lr_th_l},
-            {'params': self.decoder.nonlinearity.parameters(), 'lr': lr_th_nl}
+            {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr_th_nl}
         ], **self.optimizer_config["params"])
         return optimizer
 
@@ -66,52 +66,46 @@ class Decoder(nn.Module):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
+        self.linear_mixture = None
+        self.nonlinear_transform = None
 
     def construct(self, latent_dim, observed_dim):
-        self.linear_mixture = network.LinearPositive(
-            torch.rand(observed_dim, latent_dim), **self.config
-        )
+        self.linear_mixture = nn.Identity()
+        self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
 
-        self.nonlinearity = nn.ModuleList([self.constructor(
-            input_dim=1, output_dim=1, **self.config
-        ) for _ in range(observed_dim)])
-
-    def nonlinear_transform(self, x):
-        x = torch.cat([
-            self.nonlinearity[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
-            for i in range(x.shape[-1])
-        ], dim=-1)
+    def forward(self, x):
+        x = self.linear_mixture(x)
+        x = self.nonlinear_transform(x)
         return x
 
-    def forward(self, z):
-        y = self.linear_mixture(z)
-        x = self.nonlinear_transform(y)
-        return x
 
 # class Decoder(nn.Module):
 #     def __init__(self, config):
 #         super().__init__()
 #         self.config = config
+#         self.constructor = getattr(network, config["constructor"])
 #
-#     def construct(self, input_dim, output_dim):
-#         layers = []
-#         in_channels = input_dim
-#         hidden_sizes = list(self.config.get('hidden_layers').values())
+#     def construct(self, latent_dim, observed_dim):
+#         self.linear_mixture = network.LinearPositive(
+#             torch.rand(observed_dim, latent_dim), **self.config
+#         )
 #
-#         for h in hidden_sizes:
-#             layers.append(nn.Conv1d(in_channels, h * input_dim, kernel_size=1, groups=input_dim))
-#             layers.append(nn.ReLU())
-#             in_channels = h * input_dim
+#         self.nonlinearity = nn.ModuleList([self.constructor(
+#             input_dim=1, output_dim=1, **self.config
+#         ) for _ in range(observed_dim)])
 #
-#         layers.append(nn.Conv1d(in_channels, output_dim, kernel_size=1, groups=input_dim))
-#         self.d_net = nn.Sequential(*layers)
-#
-#     def forward(self, x):
-#         num_samples, monte_carlo_samples, components = x.shape
-#         x = x.view(-1, components).unsqueeze(-1)
-#         x = self.d_net(x)
-#         x = x.squeeze().view(num_samples, monte_carlo_samples, -1)
+#     def nonlinear_transform(self, x):
+#         x = torch.cat([
+#             self.nonlinearity[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
+#             for i in range(x.shape[-1])
+#         ], dim=-1)
 #         return x
+#
+#     def forward(self, z):
+#         y = self.linear_mixture(z)
+#         x = self.nonlinear_transform(y)
+#         return x
+
 
 # todo: sometimes during training get nan, right now skipped
 # todo: mc and batch in fcnconstructor, activation argument (to config?)
