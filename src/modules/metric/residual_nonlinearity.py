@@ -15,19 +15,14 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
         self.show_plot = show_plot
 
-    def update(self, model_nonlinearity, linearly_mixed_sample, noiseless_sample):
-        self.noiseless_sample = noiseless_sample
-        if callable(model_nonlinearity):
-            self.model_sample = model_nonlinearity(linearly_mixed_sample)
-        else:
-            self.model_sample = model_nonlinearity
-
+    def update(self, data, reconstructed_sample, linearly_mixed_sample):
+        self.data = data
+        self.reconstructed_sample = reconstructed_sample
         self.linearly_mixed_sample = linearly_mixed_sample
-        self.noiseless_sample = noiseless_sample
 
-        r_squared_values = self.fitter.fit(self.model_sample, noiseless_sample)
-        self.sum_r_squared += r_squared_values.mean()
-        self.count += 1
+        r_squared_values = self.fitter.fit(self.reconstructed_sample, data)
+        self.sum_r_squared += r_squared_values.sum()
+        self.count += r_squared_values.shape[0]
 
     def compute(self):
         self.plot(show_plot=self.show_plot)
@@ -35,22 +30,17 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
     def plot(self, show_plot=False):
 
-        test = self.noiseless_sample
-        if (torch.max(test) - torch.min(test)).any() < 1e-6:
-            print(torch.max(test) - torch.min(test))
-
         nonlinearity_plot = plot_components(
             self.linearly_mixed_sample,
-            inferred_nonlinearity=self.model_sample,
-            true_nonlinearity=self.noiseless_sample,
+            inferred_nonlinearity=self.visual_normalization(self.reconstructed_sample),
+            true_nonlinearity=self.visual_normalization(self.data),
             scale=True
         )
         residual_nonlinearity_plot = plot_components(
-            self.noiseless_sample,
-            residual_nonlinearity=self.model_sample,
+            self.data,
+            residual_nonlinearity=self.reconstructed_sample,
             fitter=self.fitter,
             labels=self.fitter.rsquared,
-            scale=False
         )
 
         if show_plot:
@@ -58,7 +48,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             residual_nonlinearity_plot.show()
         else:
             wandb.log({
-                "Residual Nonlinearity": residual_nonlinearity_plot
+                f"Residual Nonlinearity": residual_nonlinearity_plot
             })
             wandb.log({
                 "Model and True Nonlinearity": nonlinearity_plot
@@ -66,6 +56,13 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
         nonlinearity_plot.close()
         residual_nonlinearity_plot.close()
+
+
+    def visual_normalization(self, x):
+        bound = 10
+        x = x.cpu() - torch.min(x.cpu())
+        x = x.cpu() / torch.max(x.cpu()) * bound
+        return x
 
 
 class LineFitter(nn.Module):
