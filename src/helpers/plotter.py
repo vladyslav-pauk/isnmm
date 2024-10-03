@@ -41,7 +41,7 @@ def plot_components(x, labels=None, scale=False, **kwargs):
             else:
                 y_component = v[..., i].clone().detach().cpu()
                 if (torch.max(y_component) - torch.min(y_component)).any() < 1e-6:
-                    print(v[..., i])
+                    print(f"Warning: y-component {i} is constant")
 
             axes[i].scatter(x_component, visual_normalization(y_component) if scale else y_component, label=k.replace('_', ' ').capitalize())
 
