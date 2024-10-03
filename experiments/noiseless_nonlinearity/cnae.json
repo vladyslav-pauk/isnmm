@@ -69,14 +69,14 @@
     "enable_progress_bar": false
   },
   "checkpoint": {
-    "monitor": "reconstruction",
-    "mode": "min",
+    "monitor": "h_r_square",
+    "mode": "max",
     "save_top_k": 1,
     "verbose": true
   },
   "early_stopping": {
-    "monitor": "reconstruction",
-    "mode": "min",
+    "monitor": "h_r_square",
+    "mode": "max",
     "patience": 10,
     "min_delta": 1e-3
   }
