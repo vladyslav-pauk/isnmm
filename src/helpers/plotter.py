@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import math
+import numpy as torch
+import torch
 
 
 def plot_components(x, labels=None, scale=False, **kwargs):
@@ -31,13 +33,15 @@ def plot_components(x, labels=None, scale=False, **kwargs):
     axes = axes.flatten()
 
     for i in range(num_components):
-        x_component = x[..., i].detach().cpu().numpy()
+        x_component = x[..., i].clone().detach().cpu().numpy()
 
         for k, v in kwargs.items():
             if callable(v):
-                y_component = v(x)[..., i].detach().cpu().numpy()
+                y_component = v(x)[..., i].clone().detach().cpu()
             else:
-                y_component = v[..., i].detach().cpu().numpy()
+                y_component = v[..., i].clone().detach().cpu()
+                if (torch.max(y_component) - torch.min(y_component)).any() < 1e-6:
+                    print(v[..., i])
 
             axes[i].scatter(x_component, visual_normalization(y_component) if scale else y_component, label=k.replace('_', ' ').capitalize())
 
@@ -52,9 +56,9 @@ def plot_components(x, labels=None, scale=False, **kwargs):
 
     return plt
 
+
 def visual_normalization(x):
-    import numpy as np
     bound = 10
-    x = x - np.min(x)  # Min normalization
-    x = x / np.max(x) * bound  # Scale to the range [0, bound]
+    x = x - torch.min(x)
+    x = x / (torch.max(x)) * bound
     return x

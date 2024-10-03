@@ -89,15 +89,17 @@ class GenerativeModel:  # (Distribution)
         self.observed_sample = self.noiseless_sample + self.sigma * noise_sample
         return self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)
         # todo: use dicts instead of tuples for forward method
-    def sample(self, sample_shape=torch.Size([1])):
-        self.latent_sample = self.latent_dist.sample(torch.Size(sample_shape))
-        self.noise_sample = self.noise_dist.sample(torch.Size(sample_shape))
+    def sample(self):
+        sample_shape = torch.Size([self.config["dataset_size"]])
+        self.latent_sample = self.latent_dist.sample(sample_shape)
+        self.noise_sample = self.noise_dist.sample(sample_shape)
         self.latent_sample_qr, _ = np.linalg.qr(self.latent_sample)
         return self.model(self.latent_sample, self.noise_sample)
 
     def plot_sample(self):
         fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-        ax[0].scatter(self.latent_sample[:, 0], self.latent_sample[:, 1], c='b', label='latent')
+        print(self.linearly_mixed_sample.shape)
+        ax[0].scatter(self.linearly_mixed_sample[:, 0], self.linearly_mixed_sample[:, 1], c='b', label='latent')
         ax[1].scatter(self.observed_sample[:, 0], self.observed_sample[:, 1], c='r', label='observed')
         plt.show()
 
@@ -120,3 +122,24 @@ class GenerativeModel:  # (Distribution)
             'linear_mixture': self.linear_mixture.matrix.cpu().numpy(),
             'sigma': self.sigma.cpu().numpy()
         })
+
+
+if __name__ == "__main__":
+
+    config = {
+        "data_model": "nonlinear",
+        "nonlinearity": "sin",
+        "observed_dim": 2,
+        "latent_dim": 3,
+        "dataset_size": 1000,
+        "mixing_matrix_init": "none",
+        "nonlinear_transform_init": "none",
+        "degree": None,
+        "snr_db": 25,
+        "seed": 42
+    }
+
+    model = GenerativeModel(**config)
+    model.sample()
+    model.plot_sample()
+    # model.plot_nonlinearities()

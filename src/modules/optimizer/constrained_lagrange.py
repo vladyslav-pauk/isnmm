@@ -58,6 +58,7 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         idxes = idxes.to(self.mult.device)
 
         mult = self.mult[idxes]
+
         feasible_err = torch.dot(mult, tmp) / batch_size
         augmented_err = (self.rho / 2) * torch.norm(tmp) ** 2 / batch_size
 

@@ -46,16 +46,21 @@ class GenerativeModel:
         # Apply the nonlinearities (same as in SyntheticCNAE)
         nonlinear_mixture[:, 0] = 5 * torch.sigmoid(self.linear_mixture[:, 0]) + 0.3 * self.linear_mixture[:, 0]
         nonlinear_mixture[:, 1] = -3 * torch.tanh(self.linear_mixture[:, 1]) - 0.2 * self.linear_mixture[:, 1]
-        nonlinear_mixture[:, 2] = 0.4 * torch.exp(self.linear_mixture[:, 2])
+        # nonlinear_mixture[:, 2] = 0.4 * torch.exp(self.linear_mixture[:, 2])
 
         return nonlinear_mixture
 
     def model(self):
-        # The model function just returns the generated samples
         return self.nonlinear_mixture, (self.latent_sample, self.linear_mixture, self.q)
 
     def sample(self, sample_shape=torch.Size([1])):
         return self.model()
+
+    def plot_sample(self):
+        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+        ax[0].scatter(self.linear_mixture[:, 0], self.linear_mixture[:, 1], c='b', label='latent')
+        ax[1].scatter(self.nonlinear_mixture[:, 0], self.nonlinear_mixture[:, 1], c='r', label='observed')
+        plt.show()
 
     def plot_nonlinearities(self):
         for i in range(self.observed_dim):
@@ -76,3 +81,16 @@ class GenerativeModel:
             'linear_mixture': self.mixing_matrix.cpu().numpy(),
             'sigma': 1.0  # Can be adjusted if noise is added
         })
+
+
+if __name__ == "__main__":
+    config = {
+        "observed_dim": 2,
+        "latent_dim": 3,
+        "dataset_size": 1000,
+        "mixing_scale_factors": [5.0, 4.0], #, 1.0],
+        "seed": 42
+    }
+    model = GenerativeModel(**config)
+    model.plot_sample()
+    model.plot_nonlinearities()

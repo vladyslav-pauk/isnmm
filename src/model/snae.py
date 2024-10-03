@@ -28,9 +28,9 @@ class Model(AutoEncoderModule):
 
     def loss_function(self, observed_batch, model_output, idxes):
         reconstructed_sample = model_output["reconstructed_sample"].squeeze(0)
-        latent_sample = model_output["latent_sample"].squeeze(0)
+        latent_sample = model_output["latent_sample"]
 
-        loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch)}
+        loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch.squeeze(0))}
 
         regularization_loss = {}
         if hasattr(self.optimizer, "compute_constraint_errors"):
@@ -43,18 +43,21 @@ class Model(AutoEncoderModule):
         if hasattr(self.optimizer, "update_buffers"):
             self.optimizer.update_buffers(batch["idxes"], self(batch["data"])["latent_sample"])
 
+    @staticmethod
+    def reparameterization(sample):
+        sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+        return F.softmax(sample, dim=-1)
+    # todo: make it a part of encoder?
+
     def configure_optimizers(self):
-        self.optimizer = ConstrainedLagrangeOptimizer(
-            params=list(self.parameters()),
-            lr=self.optimizer_config['lr']["encoder"],
-            rho=self.optimizer_config['rho'],
-            inner_iters=self.optimizer_config['inner_iters'],
-            n_sample=self.ground_truth.dataset_size,
-            latent_dim=self.latent_dim,
-            constraint_fn=lambda F: torch.sum(F, dim=1) - 1.0
-        )
+        optimizer_class = getattr(optim, self.optimizer_config["name"])
+        lr = self.optimizer_config["lr"]
+        self.optimizer = optimizer_class([
+            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
+            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
+            {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
+        ], **self.optimizer_config["params"])
         return self.optimizer
-    # todo: check factory signature of optimizer
 
     def setup_metrics(self):
         # constraint_error = metric.ConstraintError(lambda F: torch.sum(F, dim=1) - 1.0)
@@ -100,7 +103,7 @@ class Encoder(nn.Module):
         self.network = None
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(observed_dim, latent_dim, **self.config)
+        self.network = self.constructor(observed_dim, latent_dim - 1, **self.config)
 
     def forward(self, x):
         x = self.network.forward(x)
@@ -116,11 +119,10 @@ class Decoder(nn.Module):
         self.nonlinear_transform = None
 
     def construct(self, latent_dim, observed_dim):
-        # self.linear_mixture = network.LinearPositive(
-        #     torch.eye(observed_dim, latent_dim), **self.config
-        # )
+        self.linear_mixture = network.LinearPositive(
+            torch.eye(observed_dim, latent_dim), **self.config
+        )
         # self.linear_mixture.eval()
-        self.linear_mixture = nn.Identity()
 
         self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
 
@@ -128,3 +130,38 @@ class Decoder(nn.Module):
         x = self.linear_mixture(x)
         x = self.nonlinear_transform(x)
         return x
+
+# class Decoder(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#         self.constructor = getattr(network, config["constructor"])
+#
+#     def construct(self, latent_dim, observed_dim):
+#         self.linear_mixture = network.LinearPositive(
+#             torch.rand(observed_dim, latent_dim), **self.config
+#         )
+#
+#         self.nonlinearity = nn.ModuleList([self.constructor(
+#             input_dim=1, output_dim=1, **self.config
+#         ) for _ in range(observed_dim)])
+#
+#     def nonlinear_transform(self, x):
+#         x = torch.cat([
+#             self.nonlinearity[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
+#             for i in range(x.shape[-1])
+#         ], dim=-1)
+#         return x
+#
+#     def forward(self, z):
+#         y = self.linear_mixture(z)
+#         x = self.nonlinear_transform(y)
+#         return x
+
+# todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
+# fixme: cnae unequal dimensions
+# fixme: experiment cnae on noisy data
+# todo: clean up and readme
+# fixme: make some runs and organize wandb to show Xiao
+# fixme: train cnae with reparametrization
+# fixme: train nisca with constrained optimization

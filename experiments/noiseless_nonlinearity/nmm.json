@@ -7,7 +7,7 @@
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
   "observed_dim": 3,
-  "latent_dim": 4,
+  "latent_dim": 3,
   "dataset_size": 10000,
   "seed": 13
 }

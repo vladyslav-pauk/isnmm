@@ -21,7 +21,7 @@ def train_model(experiment_name, data_model_name, model_name, **kwargs):
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
 
-    logger = _setup_logger(experiment_name, config, kwargs)
+    logger = _setup_logger(experiment_name, config, data_config, kwargs)
 
     datamodule_instance = setup_data_module(data_config, config["data_loader"])
     model = _setup_model(config, datamodule_instance, logger)
@@ -80,7 +80,7 @@ def _setup_trainer(config, logger):
     return trainer
 
 
-def _setup_logger(experiment_name, config, kwargs):
+def _setup_logger(experiment_name, config, data_config, kwargs):
 
     logger = init_logger(
         experiment_name=experiment_name,
@@ -88,7 +88,8 @@ def _setup_logger(experiment_name, config, kwargs):
         run_name=hash_name(kwargs)
     )
     logger.log_hyperparams({
-        'config': config
+        'config': config,
+        'data_config': data_config,
     })
     return logger
 

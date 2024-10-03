@@ -23,10 +23,6 @@ class Model(AutoEncoderModule):
         self.mc_samples = model_config["mc_samples"]
 
     @staticmethod
-    def reparameterization(sample):
-        return sample
-
-    @staticmethod
     def loss_function(data, model_output, idxes):
         reconstructed_sample = model_output["reconstructed_sample"]
         mu, std = model_output["latent_parameterization_batch"]

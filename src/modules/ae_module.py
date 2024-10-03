@@ -28,6 +28,10 @@ class AutoEncoderModule(pl.LightningModule):
             self.encoder.construct(self.latent_dim, self.observed_dim)
             self.decoder.construct(self.latent_dim, self.observed_dim)
 
+    @staticmethod
+    def reparameterization(sample):
+        return sample
+
     def forward(self, observed_batch):
         latent_parameterization_batch = self.encoder(observed_batch)
         latent_sample = self.sample_latent(latent_parameterization_batch)

@@ -35,6 +35,10 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
     def plot(self, show_plot=False):
 
+        test = self.noiseless_sample
+        if (torch.max(test) - torch.min(test)).any() < 1e-6:
+            print(torch.max(test) - torch.min(test))
+
         nonlinearity_plot = plot_components(
             self.linearly_mixed_sample,
             inferred_nonlinearity=self.model_sample,

@@ -46,6 +46,7 @@ class Network(nn.Module):
 
             x = x + diff * 0.1
         return x
+
     # def inverse(self, y, num_iterations=1000):
     #     """ Numerically approximate the inverse transformation using Newton's method """
     #     x_approx = y.clone()
