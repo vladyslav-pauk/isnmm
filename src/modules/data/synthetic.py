@@ -14,7 +14,7 @@ class DataModule(LightningDataModule):
         self.dataset_size = data_config["dataset_size"]
         self.latent_dim = data_config["latent_dim"]
         self.observed_dim = data_config["observed_dim"]
-        self.snr_db = data_config["snr_db"]
+        self.snr_db = data_config["snr"]
         self.seed = data_config["seed"]
         self.sigma = None
 

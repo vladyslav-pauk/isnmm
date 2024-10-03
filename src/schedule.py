@@ -4,7 +4,7 @@ import argparse
 
 from train import train_model
 from src.helpers.utils import load_experiment_config, get_parameter_combinations
-from src.modules.data_module import DataModule
+from src.generate_data import initialize_data_model
 
 # todo: fix and run schedule with 100 MC runs.
 # todo: implement saving of multiple run results mean and vars and comparison of models
@@ -36,9 +36,6 @@ if __name__ == '__main__':
     print(f"Starting experiment '{experiment}'")
 
     for dataset in datasets:
-        data_config = load_experiment_config(experiment, dataset)
-        datamodule = DataModule(data_config)
-
         for model in models:
             config = load_experiment_config(experiment, model)
             param_dict = get_parameter_combinations(config["schedule"]["parameters"])
@@ -51,10 +48,14 @@ if __name__ == '__main__':
             for param_combination in parameter_combinations:
                 kwargs = dict(zip(param_keys, param_combination))
 
-                print(f"Training '{model}' with parameters: \n\t{kwargs}")
+                print(f"Generating dataset '{dataset}'")
+                data_model = initialize_data_model(experiment, dataset, **kwargs)
+                data_model.sample()
+                data_model.save_data()
 
+                print(f"Training '{model}' with parameters: \n\t{kwargs}")
                 for iteration in range(config["schedule"]['repeats']):
-                    train_model(experiment, config, datamodule, **kwargs)
+                    train_model(experiment, dataset, model, **kwargs)
 
                 wandb.finish()
 

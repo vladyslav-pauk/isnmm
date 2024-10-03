@@ -2,6 +2,7 @@ import torch.nn as nn
 import torchmetrics
 import torch.optim as optim
 import torch
+import torch.nn.functional as F
 
 import src.modules.network as network
 from src.model.vasca import Model as VASCA
@@ -19,6 +20,13 @@ class Model(VASCA):
         self.optimizer = None
 
         self.setup_metrics()
+
+
+    @staticmethod
+    def reparameterization(z):
+        z = torch.cat((z, torch.zeros_like(z[..., :1])), dim=-1)
+        return F.softmax(z, dim=-1)
+
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])
@@ -53,6 +61,26 @@ class Model(VASCA):
         self.metrics['h_r_square'].update(
             data, reconstructed_sample, linearly_mixed_sample
         )
+
+
+class Encoder(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+        self.constructor = getattr(network, config["constructor"])
+
+        self.mu_network = None
+        self.log_var_network = None
+
+    def construct(self, latent_dim, observed_dim):
+        self.mu_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
+        self.log_var_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
+
+    def forward(self, x):
+        mu = self.mu_network.forward(x)
+        log_var = self.log_var_network.forward(x)
+        std = torch.exp(0.5 * log_var)
+        return mu, std
 
 
 class Decoder(nn.Module):

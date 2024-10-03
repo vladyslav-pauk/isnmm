@@ -34,7 +34,7 @@ class GenerativeModel:  # (Distribution)
 
         self.nonlinearity = config["nonlinearity"]
         self.degree = config["degree"]
-        self.snr_db = config["snr_db"]
+        self.snr_db = config["snr"]
         self.sigma = None
         self.mixing_matrix_init = config["mixing_matrix_init"]
         self.nonlinear_transform_init = config["nonlinear_transform_init"]
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         "mixing_matrix_init": "none",
         "nonlinear_transform_init": "none",
         "degree": None,
-        "snr_db": 25,
+        "snr": 25,
         "seed": 42
     }
 

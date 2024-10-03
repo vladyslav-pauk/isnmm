@@ -8,7 +8,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.helpers.callbacks import EarlyStoppingCallback
-from src.helpers.utils import init_logger, load_experiment_config, unflatten_dict, hash_name
+from src.helpers.utils import init_logger, load_experiment_config, hash_name
+from src.helpers.utils import update_hyperparameters
 
 
 def train_model(experiment_name, data_model_name, model_name, **kwargs):
@@ -16,7 +17,7 @@ def train_model(experiment_name, data_model_name, model_name, **kwargs):
     config = load_experiment_config(experiment_name, model_name)
     data_config = load_experiment_config(experiment_name, data_model_name)
 
-    _update_hyperparameters(config, kwargs)
+    data_config = update_hyperparameters(data_config, kwargs)
 
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
@@ -92,16 +93,6 @@ def _setup_logger(experiment_name, config, data_config, kwargs):
         'data_config': data_config,
     })
     return logger
-
-
-def _update_hyperparameters(config, kwargs):
-    unflattened_kwargs = unflatten_dict(kwargs)
-    data_config = config.get('data', {})
-    for key, value in unflattened_kwargs.items():
-        if key in config:
-            config[key].update(value)
-        if key in data_config:
-            data_config[key].update(value)
 
 
 if __name__ == "__main__":

@@ -68,6 +68,19 @@ def init_logger(experiment_name=None, model=None, run_name=None):
     # todo: add logging messages for the command line output
 
 
+def update_hyperparameters(config, kwargs):
+    unflattened_kwargs = unflatten_dict(kwargs)
+
+    for key, value in unflattened_kwargs.items():
+        if key in config:
+            if isinstance(config[key], dict) and isinstance(value, dict):
+                config[key].update(value)
+            else:
+                config[key] = value
+
+    return config
+
+
 def hash_name(kwargs):
 
     import hashlib
