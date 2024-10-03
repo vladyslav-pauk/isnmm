@@ -6,7 +6,7 @@
   "snr_db": 50,
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
-  "observed_dim": 5,
+  "observed_dim": 4,
   "latent_dim": 4,
   "dataset_size": 10000,
   "seed": 21

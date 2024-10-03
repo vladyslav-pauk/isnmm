@@ -124,3 +124,5 @@ if __name__ == "__main__":
         model_name=args.model_name,
         **hyperparameters
     )
+
+# todo: names for experiments!
