@@ -84,8 +84,8 @@ class Model(AutoEncoderModule):
         }
 
     def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
-        true_latent_sample = labels["latent_sample"]
+        latent_sample = model_output["latent_sample"]
+        latent_sample_qr = labels["latent_sample_qr"]
 
         self.metrics['mixture_mse_db'].update(
             self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
@@ -93,6 +93,7 @@ class Model(AutoEncoderModule):
         self.metrics['mixture_sam'].update(
             self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
         )
+        # todo: fix mixture sam
         self.metrics['mixture_log_volume'].update(
             self.decoder.linear_mixture.matrix
         )
@@ -100,7 +101,7 @@ class Model(AutoEncoderModule):
             self.decoder.linear_mixture.matrix
         )
         self.metrics['subspace_distance'].update(
-            idxes, reconstructed_sample, true_latent_sample
+            idxes, latent_sample.mean(0), latent_sample_qr
         )
 
     def configure_optimizers(self):

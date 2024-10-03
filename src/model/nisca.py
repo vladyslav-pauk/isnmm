@@ -43,15 +43,15 @@ class Model(VASCA):
 
     def update_metrics(self, data, model_output, labels, idxes):
         reconstructed_sample = model_output["reconstructed_sample"].mean(0)
-        true_latent_sample = labels["latent_sample"]
+        latent_sample = model_output["latent_sample"]
+        linearly_mixed_sample = labels["linearly_mixed_sample"]
+        latent_sample_qr = labels["latent_sample_qr"]
 
         self.metrics['subspace_distance'].update(
-            idxes, reconstructed_sample, true_latent_sample
+            idxes, latent_sample.mean(0), latent_sample_qr
         )
         self.metrics['h_r_square'].update(
-            self.decoder.nonlinear_transform,
-            self.ground_truth.linearly_mixed_sample,
-            self.ground_truth.noiseless_sample
+            data, reconstructed_sample, linearly_mixed_sample
         )
 
 
