@@ -32,8 +32,8 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
         nonlinearity_plot = plot_components(
             self.linearly_mixed_sample,
-            inferred_nonlinearity=self.visual_normalization(self.reconstructed_sample),
-            true_nonlinearity=self.visual_normalization(self.data),
+            inferred_nonlinearity=self.reconstructed_sample,
+            true_nonlinearity=self.data,
             scale=True
         )
         residual_nonlinearity_plot = plot_components(
@@ -56,13 +56,6 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
         nonlinearity_plot.close()
         residual_nonlinearity_plot.close()
-
-
-    def visual_normalization(self, x):
-        bound = 10
-        x = x.cpu() - torch.min(x.cpu())
-        x = x.cpu() / torch.max(x.cpu()) * bound
-        return x
 
 
 class LineFitter(nn.Module):

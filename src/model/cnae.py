@@ -50,18 +50,20 @@ class Model(AutoEncoderModule):
             inner_iters=self.optimizer_config['inner_iters'],
             n_sample=self.ground_truth.dataset_size,
             latent_dim=self.latent_dim,
-            constraint_fn=lambda F: torch.sum(F, dim=1) - 1.0
+            constraint_fn=self.constraint
         )
         return self.optimizer
     # todo: check factory signature of optimizer
 
+    def constraint(self, F):
+        return torch.sum(F, dim=1) - 1.0
+
     def setup_metrics(self):
-        # constraint_error = metric.ConstraintError(lambda F: torch.sum(F, dim=1) - 1.0)
 
         self.metrics = torchmetrics.MetricCollection({
             'subspace_distance': metric.SubspaceDistance(),
             'h_r_square': metric.ResidualNonlinearity(),
-            # 'constraint': constraint_error
+            'constraint': metric.ConstraintError(self.constraint)
         })
         self.metrics.eval()
         self.log_monitor = {
@@ -72,16 +74,15 @@ class Model(AutoEncoderModule):
     def update_metrics(self, data, model_output, labels, idxes):
         reconstructed_sample = model_output["reconstructed_sample"].mean(0)
         latent_sample = model_output["latent_sample"]
-
         linearly_mixed_sample = labels["linearly_mixed_sample"]
-        true_latent_sample = labels["latent_sample"]
         latent_sample_qr = labels["latent_sample_qr"]
 
         self.metrics['subspace_distance'].update(
-            idxes, reconstructed_sample, true_latent_sample
+            idxes, latent_sample.mean(0), latent_sample_qr
         )
-        # self.metrics['subspace_distance'].update(idxes, self.optimizer.latent_sample_buffer, latent_sample_qr)
-        # self.metrics['constraint'].update(idxes, self.optimizer.latent_sample_buffer)
+        self.metrics['constraint'].update(
+            idxes, latent_sample.mean(0)
+        )
         self.metrics['h_r_square'].update(
             data, reconstructed_sample, linearly_mixed_sample
         )
