@@ -6,7 +6,6 @@ from torch import optim
 
 from src.modules.ae_module import AutoEncoderModule
 import src.modules.metric as metric
-from src.modules.metric import EvaluateMetric
 from src.modules.optimizer.constrained_lagrange import ConstrainedLagrangeOptimizer
 import src.modules.network as network
 
@@ -65,7 +64,6 @@ class Model(AutoEncoderModule):
         self.metrics = torchmetrics.MetricCollection({
             'subspace_distance': metric.SubspaceDistance(),
             'h_r_square': metric.ResidualNonlinearity(),
-            'evaluate_metric': EvaluateMetric(),
             # 'constraint': constraint_error
         })
         self.metrics.eval()
@@ -82,9 +80,6 @@ class Model(AutoEncoderModule):
         true_latent_sample = labels["latent_sample"]
         latent_sample_qr = labels["latent_sample_qr"]
 
-        self.metrics['evaluate_metric'].update(
-            data, linearly_mixed_sample, latent_sample
-        )
         self.metrics['subspace_distance'].update(
             idxes, reconstructed_sample, true_latent_sample
         )

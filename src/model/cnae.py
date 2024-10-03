@@ -61,7 +61,6 @@ class Model(AutoEncoderModule):
         self.metrics = torchmetrics.MetricCollection({
             'subspace_distance': metric.SubspaceDistance(),
             'h_r_square': metric.ResidualNonlinearity(),
-            # 'evaluate_metric': metric.EvaluateMetric(),
             # 'constraint': constraint_error
         })
         self.metrics.eval()
@@ -86,9 +85,6 @@ class Model(AutoEncoderModule):
         self.metrics['h_r_square'].update(
             data, reconstructed_sample, linearly_mixed_sample
         )
-        # self.metrics['evaluate_metric'].update(
-        #     data, reconstructed_sample, linearly_mixed_sample
-        # )
 
 
 class Encoder(nn.Module):
