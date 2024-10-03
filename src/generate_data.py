@@ -17,4 +17,4 @@ if __name__ == "__main__":
     sample, (latent, linearly_mixed, noiseless) = model.sample()
     model.save_data()
 
-    model.plot_nonlinearities()
+    # model.plot_nonlinearities()

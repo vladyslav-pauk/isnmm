@@ -29,7 +29,7 @@ class CNNConstructor(nn.Module):
 
         for i in range(1, len(conv_dims) - 1):
             layers.append(
-                self.init_weights(nn.Conv1d(conv_dims[i - 1] * input_dim, conv_dims[i] * input_dim, kernel_size=1, groups=input_dim))
+                self.init_weights(nn.Conv1d(conv_dims[i - 1] * input_dim, conv_dims[i] * input_dim, kernel_size=1, groups=1))
             )
             layers.append(
                 nn.BatchNorm1d(conv_dims[i], eps=bn_eps, momentum=bn_momentum) if bn_eps else nn.Identity()
@@ -41,7 +41,7 @@ class CNNConstructor(nn.Module):
                 nn.Dropout(dropout_rate if dropout_rate else 0) if dropout_rate else nn.Identity()
             )
 
-        layers.append(nn.Conv1d(conv_dims[-1] * input_dim, output_dim, kernel_size=1, groups=input_dim))
+        layers.append(nn.Conv1d(conv_dims[-1] * input_dim, output_dim, kernel_size=1, groups=1))
         layers.append(output_activation())
 
         return nn.Sequential(*layers)

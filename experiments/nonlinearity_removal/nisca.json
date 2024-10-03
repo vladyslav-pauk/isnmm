@@ -13,7 +13,7 @@
     "sigma": null
   },
   "encoder": {
-    "constructor": "CNN",
+    "constructor": "FCN",
     "hidden_layers": {
       "h1":  128,
       "h2":  128,
@@ -27,7 +27,7 @@
     "bn_momentum": 0.1
   },
   "decoder": {
-    "constructor": "CNN",
+    "constructor": "FCN",
     "hidden_layers": {
       "h1":  128,
       "h2":  128,
@@ -65,14 +65,14 @@
     }
   },
   "checkpoint": {
-    "monitor": "validation_loss",
-    "mode": "min",
+    "monitor": "h_r_square",
+    "mode": "max",
     "save_top_k": 1,
     "verbose": true
   },
   "early_stopping": {
-    "monitor": "validation_loss",
-    "mode": "min",
+    "monitor": "h_r_square",
+    "mode": "max",
     "patience": 20,
     "min_delta": 1e-3
   },
