@@ -18,6 +18,7 @@ def train_model(experiment_name, data_model_name, model_name, **kwargs):
     data_config = load_experiment_config(experiment_name, data_model_name)
 
     data_config = update_hyperparameters(data_config, kwargs)
+    config = update_hyperparameters(config, kwargs)
 
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
