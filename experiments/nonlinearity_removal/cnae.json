@@ -83,7 +83,7 @@
   "schedule": {
     "repeats": 10,
     "parameters": {
-      "snr": [10, 20, 30],
+      "snr": [10, 20, 25, 30],
       "seed": [29, 0, 42, 1, 2]
     }
   }

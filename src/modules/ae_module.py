@@ -87,3 +87,5 @@ class AutoEncoderModule(pl.LightningModule):
 # todo: all hyperparameters that affect outcome of training are passed in **config["train"].
 #  Ideally, I save these as hyperparameters, and the rest as config.
 #  self.save_hyperparameters(ignore=['encoder', 'decoder', 'ground_truth_model'])
+# todo: i can also check variance of the residual, that's more statistical metric
+# todo: use expectation of the reconstructed x for each z_mc instead of using z_mean

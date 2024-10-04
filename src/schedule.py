@@ -55,7 +55,8 @@ if __name__ == '__main__':
 
                 print(f"Training '{model}' with parameters: \n\t{kwargs}")
                 for iteration in range(config["schedule"]['repeats']):
-                    train_model(experiment, dataset, model, **kwargs)
+                    model = train_model(experiment, dataset, model, **kwargs)
+                    # load each model and model.test() to get the results, collect the results and plot: snr x-axis, seeds are giving variance of the shaded area
 
                 wandb.finish()
 

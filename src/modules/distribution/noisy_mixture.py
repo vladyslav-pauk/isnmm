@@ -28,7 +28,7 @@ class GenerativeModel:  # (Distribution)
         # snr = None,
         # seed = None,
         self.config = config
-        self.seed = config["seed"]
+        self.seed = config["data_seed"]
         if self.seed:
             seed_everything(self.seed, workers=True)
 

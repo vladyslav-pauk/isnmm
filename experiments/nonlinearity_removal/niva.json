@@ -1,5 +1,5 @@
 {
-  "model_name": "nisca",
+  "model_name": "niva",
   "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
@@ -9,16 +9,14 @@
     "num_workers": 4
   },
   "model": {
-    "mc_samples": 10,
+    "mc_samples": 1,
     "sigma": null
   },
   "encoder": {
-    "constructor": "FCN",
+    "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128,
-      "h4":  128
+      "h1":  32,
+      "h2":  32
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -29,10 +27,8 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128,
-      "h4":  128
+      "h1":  32,
+      "h2":  32
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -61,7 +57,10 @@
         "linear": 0.001,
         "nonlinear": 0.001
       },
-      "encoder": 0.001
+      "encoder": {
+        "linear": 0.001,
+        "nonlinear": 0.001
+      }
     }
   },
   "checkpoint": {
