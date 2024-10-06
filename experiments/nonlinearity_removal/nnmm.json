@@ -1,12 +1,12 @@
 {
-  "model_name": "noisy_mixture",
+  "data_module_name": "noisy_mixture",
   "data_model": "nonlinear",
   "nonlinearity": "sin",
   "degree": null,
   "snr": 25,
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
-  "observed_dim": 50,
+  "observed_dim": 3,
   "latent_dim": 3,
   "dataset_size": 10000,
   "data_seed": 21

@@ -29,13 +29,11 @@ def dict_to_str(d):
     return '_'.join([f'{value}' for key, value in d.items() if value is not None])
 
 
-def init_logger(experiment_name=None, model=None, run_name=None):
+def login_wandb():
     os.environ["WANDB_API_KEY"] = "fcf64607eeb9e076d3cbfdfe0ea3532621753d78"
     os.environ['WANDB_SILENT'] = 'true'
     wandb.require("core")
     wandb.login()
-
-    project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0].split("/")[-2]
 
     # log_format = "%(asctime)s - %(levelname)s - %(message)s"
     # logging.basicConfig(
@@ -51,6 +49,10 @@ def init_logger(experiment_name=None, model=None, run_name=None):
         message=".*GPU available but not used.*",
         category=UserWarning
     )
+
+def init_logger(experiment_name=None, model=None, run_name=None):
+
+    project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0].split("/")[-2]
 
     wandb_logger = WandbLogger(
         entity=project_root,
@@ -68,18 +70,26 @@ def init_logger(experiment_name=None, model=None, run_name=None):
     # todo: add logging messages for the command line output
 
 
-def update_hyperparameters(config, kwargs):
+def update_hyperparameters(config, kwargs, show_log=True):
     unflattened_kwargs = unflatten_dict(kwargs)
+
+    def print_flattened_dict(parent_key, flattened_dict):
+        for flat_key, flat_value in flattened_dict.items():
+            print(f"\t{parent_key}.{flat_key} = {flat_value}")
 
     for key, value in unflattened_kwargs.items():
         if key in config:
             if isinstance(config[key], dict) and isinstance(value, dict):
                 config[key].update(value)
+                flattened_value_dict = flatten_dict(value)
+                if show_log:
+                    print_flattened_dict(key, flattened_value_dict)
             else:
                 config[key] = value
+                if show_log:
+                    print(f"\t{key} = {value}")
 
     return config
-
 
 def hash_name(kwargs):
 
@@ -110,7 +120,7 @@ def get_parameter_combinations(config, prefix="", sep="_"):
     return params
 
 
-def unflatten_dict(d, sep='_'):
+def unflatten_dict(d, sep='.'):
     """
     Unflattens a dictionary with keys containing separators (e.g., 'lr.th').
     Converts {'lr.th': 0.001, 'lr.ph': 0.005} into {'lr': {'th': 0.001, 'ph': 0.005}}.
@@ -125,3 +135,18 @@ def unflatten_dict(d, sep='_'):
             d_ref = d_ref[part]
         d_ref[parts[-1]] = value
     return result
+
+
+def flatten_dict(d, parent_key='', sep='.'):
+    """
+    Flattens a nested dictionary.
+    Converts {'lr': {'th': 0.001, 'ph': 0.005}} into {'lr.th': 0.001, 'lr.ph': 0.005}.
+    """
+    items = []
+    for key, value in d.items():
+        new_key = f"{parent_key}{sep}{key}" if parent_key else key
+        if isinstance(value, dict):
+            items.extend(flatten_dict(value, new_key, sep=sep).items())
+        else:
+            items.append((new_key, value))
+    return dict(items)

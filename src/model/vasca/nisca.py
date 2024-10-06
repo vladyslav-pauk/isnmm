@@ -5,8 +5,8 @@ import torch
 import torch.nn.functional as F
 
 import src.modules.network as network
-from src.model.vasca import Model as VASCA
-from src.model.vasca import Encoder
+from src.model.vasca.vasca import Model as VASCA
+from src.model.vasca.vasca import Encoder
 import src.modules.metric as metric
 
 

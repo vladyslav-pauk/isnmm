@@ -71,7 +71,11 @@ class AutoEncoderModule(pl.LightningModule):
         model_outputs = self(data)
         self.update_metrics(data, model_outputs, labels, idxes)
         # self.metrics['evaluate_metric'].toggle_show_plot(True)
-        print(self.metrics.compute())
+
+        final_metrics = self.metrics.compute()
+        print("Final metrics:")
+        for key, value in final_metrics.items():
+            print(f"\t{key} = {value.detach().cpu().numpy()}")
 
     def summary(self):
         summary(self.encoder, (self.observed_dim,))

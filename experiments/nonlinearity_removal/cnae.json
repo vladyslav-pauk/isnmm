@@ -14,10 +14,7 @@
   "encoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128,
-      "h4":  128
+      "h1":  12
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -31,10 +28,7 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128,
-      "h4":  128
+      "h1":  12
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -61,7 +55,7 @@
   "trainer": {
     "accelerator": "auto",
     "devices": 1,
-    "max_epochs": 500,
+    "max_epochs": 5,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
     "log_every_n_steps": 10,
@@ -79,12 +73,5 @@
     "mode": "max",
     "patience": 20,
     "min_delta": 1e-3
-  },
-  "schedule": {
-    "repeats": 10,
-    "parameters": {
-      "snr": [10, 20, 25, 30],
-      "seed": [29, 0, 42, 1, 2]
-    }
   }
 }

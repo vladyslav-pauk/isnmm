@@ -1,5 +1,7 @@
 import argparse
 import ast
+
+import wandb
 # import logging
 
 from pytorch_lightning import Trainer, seed_everything
@@ -8,22 +10,26 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.helpers.callbacks import EarlyStoppingCallback
-from src.helpers.utils import init_logger, load_experiment_config, hash_name
+from src.helpers.utils import init_logger, load_experiment_config, hash_name, login_wandb
 from src.helpers.utils import update_hyperparameters
 
 
-def train_model(experiment_name, data_model_name, model_name, **kwargs):
+def train_model(experiment_name, data_model_name, model_name, logger, **kwargs):
 
     config = load_experiment_config(experiment_name, model_name)
     data_config = load_experiment_config(experiment_name, data_model_name)
 
-    data_config = update_hyperparameters(data_config, kwargs)
     config = update_hyperparameters(config, kwargs)
+    data_config = update_hyperparameters(data_config, kwargs, show_log=False)
+    logger.log_hyperparams({
+        'config': config,
+        'data_config': data_config,
+    })
 
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
 
-    logger = _setup_logger(experiment_name, config, data_config, kwargs)
+    # logger = _setup_logger(experiment_name, config, data_config, kwargs)
 
     datamodule_instance = setup_data_module(data_config, config["data_loader"])
     model = _setup_model(config, datamodule_instance, logger)
@@ -48,7 +54,7 @@ def setup_data_module(data_config, config):
 
 
 def _setup_model(config, datamodule, logger):
-    model_module = getattr(model_package, config['model_name'])
+    model_module = getattr(model_package, config['model_name'].upper())
     encoder = model_module.Encoder(config=config['encoder'])
     decoder = model_module.Decoder(config=config['decoder'])
     model = model_module.Model(
@@ -110,10 +116,18 @@ if __name__ == "__main__":
     else:
         hyperparameters = {}
 
+    login_wandb()
+    logger = init_logger(
+        experiment_name=args.experiment_name,
+        model=args.model_name,
+        run_name=hash_name(hyperparameters)
+    )
+
     train_model(
         experiment_name=args.experiment_name,
         data_model_name=args.data_name,
         model_name=args.model_name,
+        logger=logger,
         **hyperparameters
     )
 

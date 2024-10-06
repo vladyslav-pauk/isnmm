@@ -12,7 +12,7 @@ def initialize_data_model(experiment_name, data_model_name, **kwargs):
 
     linear_mixture_matrix = torch.randn(config["observed_dim"], config["latent_dim"])
 
-    generative_model = getattr(distribution_package, config["model_name"])
+    generative_model = getattr(distribution_package, config["data_module_name"])
     model = generative_model(linear_mixture_matrix, data_model_name, **config)
 
     return model

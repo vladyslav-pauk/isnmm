@@ -1,0 +1,40 @@
+{
+  "method": "grid",
+  "metric": {
+    "goal": "minimize",
+    "name": "loss"
+  },
+  "parameters": {
+    "experiment_name": {
+      "value": "nonlinearity_removal"
+    },
+    "data_model_name": {
+      "values": [
+        "nnmm"
+      ]
+    },
+    "model_name": {
+      "values": [
+        "nisca",
+        "cnae"
+      ]
+    },
+    "snr": {
+      "values": [
+        10,
+        20
+      ]
+    },
+    "torch_seed": {
+      "values": [
+        29,
+        0
+      ]
+    },
+    "data_loader.batch_size": {
+      "values": [
+        1000
+      ]
+    }
+  }
+}

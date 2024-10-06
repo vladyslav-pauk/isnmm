@@ -1,5 +1,5 @@
 {
-  "model_name": "niva",
+  "model_name": "inisca",
   "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
@@ -15,8 +15,9 @@
   "encoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  32,
-      "h2":  32
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -27,8 +28,9 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  32,
-      "h2":  32
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,

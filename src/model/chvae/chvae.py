@@ -39,10 +39,10 @@ class Model(AutoEncoderModule):
 
         return loss
 
-    @staticmethod
-    def reparameterization(z):
-        z = torch.cat((z, torch.zeros_like(z[..., :1])), dim=-1)
-        return F.softmax(z, dim=-1)
+    def reparameterization(self, y):
+        y = self.encoder.linear_mixture_inv(y)
+        y = torch.cat((y, torch.zeros_like(y[..., :1])), dim=-1)
+        return F.softmax(y, dim=-1)
 
     @staticmethod
     def _reconstruction(data, reconstructed_sample):
@@ -52,19 +52,21 @@ class Model(AutoEncoderModule):
         # recon_loss += self.sigma ** 2 * data.size(-1) / 2 * torch.log(torch.tensor(2 * torch.pi))
         return recon_loss
 
-    @staticmethod
-    def _entropy(latent_sample, variational_parameters):
+    def _entropy(self, latent_sample, variational_parameters):
         mean, std = variational_parameters
-
+        # mean = self.encoder.linear_mixture_inv(mean)
+        std = self.encoder.linear_mixture_inv(std)
         log_var = 2 * torch.log(std + 1e-12)
         sigma_diag_inv = 1 / (std + 1e-12)
 
-        projected_latent = torch.log(latent_sample[:, :, :-1] / latent_sample[:, :, -1:]) - mean
+        projected_latent = self.encoder.linear_mixture_inv(latent_sample - mean)
+        # latent_sample = torch.cat((latent_sample, torch.zeros_like(latent_sample[..., :1])), dim=-1)
+        # projected_latent = torch.log(latent_sample[..., :-1] / latent_sample[..., -1:]) - mean
 
         log_2pi = torch.log(torch.tensor(2 * torch.pi))
         entropy = 0.5 * (latent_sample.size(-1) - 1) * log_2pi
         entropy += (projected_latent ** 2 * sigma_diag_inv.unsqueeze(0)).sum(dim=-1).mean() / 2
-        entropy += log_var[:, :-1].sum(dim=-1).mean() / 2
+        entropy += std.pow(2).log().sum(dim=-1).mean() / 2
         entropy += torch.log(latent_sample).sum(dim=-1).mean()
 
         return entropy
@@ -100,7 +102,7 @@ class Model(AutoEncoderModule):
             {'params': self.encoder.parameters(), 'lr': lr["encoder"]["nonlinear"]},
             {'params': self.decoder.parameters(), 'lr': lr["decoder"]["nonlinear"]},
             # {'params': self.encoder.linear_mixture_inv.parameters(), 'lr': lr["encoder"]["linear"]},
-            # {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
+            # {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]}
         ], **self.optimizer_config["params"])
         return optimizer
 
@@ -129,14 +131,14 @@ class Encoder(nn.Module):
     def construct(self, latent_dim, observed_dim):
         self.mu_nonlinear = self.constructor(observed_dim, observed_dim, **self.config)
         self.log_var_nonlinear = self.constructor(observed_dim, observed_dim, **self.config)
-        self.linear_mixture_inv = network.LinearPositive(torch.rand(latent_dim-1, observed_dim), **self.config)
+        self.linear_mixture_inv = network.Affine(torch.rand(observed_dim - 1, observed_dim), **self.config)
 
     def forward(self, x):
         mu = self.mu_nonlinear.forward(x)
-        mu = self.linear_mixture_inv.forward(mu)
+        # mu = self.linear_mixture_inv.forward(mu)
 
         var = self.log_var_nonlinear.forward(x).exp()
-        var = self.linear_mixture_inv.forward(var)
+        # var = self.linear_mixture_inv.forward(var)
 
         return mu, var
 
@@ -158,7 +160,7 @@ class Decoder(nn.Module):
         self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
 
     def forward(self, x):
-        x = self.linear_mixture(x)
+        # x = self.linear_mixture(x)
         x = self.nonlinear_transform(x)
         return x
 
