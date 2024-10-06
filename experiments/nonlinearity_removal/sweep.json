@@ -1,8 +1,8 @@
 {
   "method": "grid",
   "metric": {
-    "goal": "minimize",
-    "name": "loss"
+    "goal": "maximize",
+    "name": "h_r_square"
   },
   "parameters": {
     "experiment_name": {
@@ -16,24 +16,28 @@
     "model_name": {
       "values": [
         "nisca",
-        "cnae"
+        "inisca",
+        "cnae",
+        "snae"
       ]
     },
     "snr": {
       "values": [
         10,
-        20
+        20,
+        30
       ]
     },
     "torch_seed": {
       "values": [
         29,
-        0
+        0,
+        42
       ]
     },
-    "data_loader.batch_size": {
+    "trainer.max_epochs": {
       "values": [
-        1000
+        100
       ]
     }
   }

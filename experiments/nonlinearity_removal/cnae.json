@@ -14,7 +14,9 @@
   "encoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  12
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -28,7 +30,9 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  12
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,

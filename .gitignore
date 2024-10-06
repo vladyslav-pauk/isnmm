@@ -166,3 +166,4 @@ datasets/*
 models/
 resources/
 /src/res/
+wandb/

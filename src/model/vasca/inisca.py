@@ -104,17 +104,6 @@ class Model(AutoEncoderModule):
         ], **self.optimizer_config["params"])
         return optimizer
 
-    def on_after_backward(self):
-        valid_gradients = True
-        for name, param in self.named_parameters():
-            if param.grad is not None:
-                valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
-                if not valid_gradients:
-                    break
-
-        if not valid_gradients:
-            self.zero_grad()
-
 
 class Encoder(nn.Module):
     def __init__(self, config):

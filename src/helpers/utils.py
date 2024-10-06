@@ -2,9 +2,35 @@ import os
 import sys
 import json
 import logging
+import argparse
 
-import wandb
-from pytorch_lightning.loggers import WandbLogger
+
+def parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--experiment',
+        type=str,
+        default='train_schedule',
+        help='Experiment name (e.g., simplex_recovery)'
+    )
+    parser.add_argument(
+        '--sweep',
+        type=str,
+        default='sweep',
+        help='Sweep name (e.g., sweep)'
+    )
+    # parser.add_argument(
+    #     '--data',
+    #     nargs='+', default='lmm',
+    #     help='List of datasets separated by space (e.g., lmm)'
+    # )
+    # parser.add_argument(
+    #     '--models',
+    #     nargs='+', default='vasca',
+    #     help='List of models separated by space (e.g., vasca)'
+    # )
+    args = parser.parse_args()
+    return args
 
 # todo: clean up utils
 # def load_config():
@@ -29,45 +55,8 @@ def dict_to_str(d):
     return '_'.join([f'{value}' for key, value in d.items() if value is not None])
 
 
-def login_wandb():
-    os.environ["WANDB_API_KEY"] = "fcf64607eeb9e076d3cbfdfe0ea3532621753d78"
-    os.environ['WANDB_SILENT'] = 'true'
-    wandb.require("core")
-    wandb.login()
 
-    # log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    # logging.basicConfig(
-    #     level=logging.INFO,
-    #     format=log_format,
-    #     datefmt="%Y-%m-%d %H:%M:%S",
-    # )
-    # logging.basicConfig(level=logging.INFO)
-    # logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
-    import warnings
-    warnings.filterwarnings(
-        "ignore",
-        message=".*GPU available but not used.*",
-        category=UserWarning
-    )
-
-def init_logger(experiment_name=None, model=None, run_name=None):
-
-    project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0].split("/")[-2]
-
-    wandb_logger = WandbLogger(
-        entity=project_root,
-        project=experiment_name,
-        group=model,
-        name=run_name,
-        # tags=[model],
-        save_dir=f"../models/{model}",
-        log_model=True,
-        resume="allow",
-        # config={}
-    )
-
-    return wandb_logger
-    # todo: add logging messages for the command line output
+# todo: add logging messages for the command line output
 
 
 def update_hyperparameters(config, kwargs, show_log=True):

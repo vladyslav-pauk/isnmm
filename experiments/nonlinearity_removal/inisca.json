@@ -76,12 +76,5 @@
     "mode": "max",
     "patience": 20,
     "min_delta": 1e-3
-  },
-  "schedule": {
-    "repeats": 10,
-    "parameters": {
-      "snr": [10, 20, 25, 30],
-      "seed": [29, 0, 42, 1, 2]
-    }
   }
 }

@@ -23,6 +23,12 @@ class Model(AutoEncoderModule):
         self.log_monitor = None
         self.setup_metrics()
 
+    @staticmethod
+    def reparameterization(z):
+        z = torch.cat((z, torch.zeros_like(z[..., :1])), dim=-1)
+        return F.softmax(z, dim=-1)
+
+
     def loss_function(self, data, model_output, idxes):
         if not self.sigma:
             self.sigma = self.ground_truth.sigma
@@ -38,11 +44,6 @@ class Model(AutoEncoderModule):
         loss.update({"kl_posterior_prior": self.sigma ** 2 * kl_posterior_prior})
 
         return loss
-
-    @staticmethod
-    def reparameterization(z):
-        z = torch.cat((z, torch.zeros_like(z[..., :1])), dim=-1)
-        return F.softmax(z, dim=-1)
 
     @staticmethod
     def _reconstruction(data, reconstructed_sample):
@@ -112,17 +113,6 @@ class Model(AutoEncoderModule):
             {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]}
         ], **self.optimizer_config["params"])
         return optimizer
-
-    def on_after_backward(self):
-        valid_gradients = True
-        for name, param in self.named_parameters():
-            if param.grad is not None:
-                valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
-                if not valid_gradients:
-                    break
-
-        if not valid_gradients:
-            self.zero_grad()
 
 
 class Encoder(nn.Module):

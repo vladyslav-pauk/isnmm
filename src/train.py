@@ -10,11 +10,18 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.helpers.callbacks import EarlyStoppingCallback
-from src.helpers.utils import init_logger, load_experiment_config, hash_name, login_wandb
+from src.helpers.utils import load_experiment_config, hash_name
+from src.helpers.wandb import init_logger, login_wandb
 from src.helpers.utils import update_hyperparameters
 
 
-def train_model(experiment_name, data_model_name, model_name, logger, **kwargs):
+def train_model(experiment_name, data_model_name, model_name, **kwargs):
+
+    logger = init_logger(
+        experiment_name=experiment_name,
+        model=model_name,
+        run_name=hash_name(kwargs)
+    )
 
     config = load_experiment_config(experiment_name, model_name)
     data_config = load_experiment_config(experiment_name, data_model_name)
@@ -117,18 +124,10 @@ if __name__ == "__main__":
         hyperparameters = {}
 
     login_wandb()
-    logger = init_logger(
-        experiment_name=args.experiment_name,
-        model=args.model_name,
-        run_name=hash_name(hyperparameters)
-    )
 
     train_model(
         experiment_name=args.experiment_name,
         data_model_name=args.data_name,
         model_name=args.model_name,
-        logger=logger,
         **hyperparameters
     )
-
-# todo: names for experiments!

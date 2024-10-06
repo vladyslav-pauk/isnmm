@@ -77,6 +77,17 @@ class AutoEncoderModule(pl.LightningModule):
         for key, value in final_metrics.items():
             print(f"\t{key} = {value.detach().cpu().numpy()}")
 
+    def on_after_backward(self):
+        valid_gradients = True
+        for name, param in self.named_parameters():
+            if param.grad is not None:
+                valid_gradients = not (torch.isnan(param.grad).any() or torch.isinf(param.grad).any())
+                if not valid_gradients:
+                    break
+
+        if not valid_gradients:
+            self.zero_grad()
+
     def summary(self):
         summary(self.encoder, (self.observed_dim,))
         summary(self.decoder, (self.latent_dim,))
