@@ -47,8 +47,8 @@ class AutoEncoderModule(pl.LightningModule):
     def sample_latent(self, variational_parameters):
         mean, std = variational_parameters
         eps = torch.randn(self.mc_samples, *std.shape).to(std.device)
-        variational_sample = eps.mul(std.unsqueeze(0)).add_(mean.unsqueeze(0))
-        return self.reparameterization(variational_sample)
+        normal_sample = eps.mul(std.unsqueeze(0)).add_(mean.unsqueeze(0))
+        return self.reparameterization(normal_sample)
 
     def on_train_start(self) -> None:
         wandb.define_metric(name=self.log_monitor["monitor"], summary=self.log_monitor["mode"])

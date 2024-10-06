@@ -41,12 +41,7 @@ if __name__ == '__main__':
 
     sweep_data = fetch_wandb_sweep(experiment, 'pbgaxukm')
     import json
-    with open(f"experiments/{experiment}/{sweep}.json", "w") as f:
+    with open(f"../experiments/{experiment}/sweeps/{sweep_id}.json", "w") as f:
         json.dump(sweep_data, f)
-    for run in sweep_data:
-        print(run["run_id"])
-        metrics = run["metrics"]
-        config = run["config"]
-        print(metrics['h_r_square'])
 
 # todo: model using schedule script, for each model a sweep?

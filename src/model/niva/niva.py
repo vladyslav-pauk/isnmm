@@ -1,27 +1,26 @@
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchmetrics
 import torch.optim as optim
+import torch
+import torch.nn.functional as F
 
 import src.modules.network as network
-from src.modules.ae_module import AutoEncoderModule
+from src.model.vasca.vasca import Model as VASCA
+from src.model.vasca.vasca import Encoder
 import src.modules.metric as metric
 
 
-class Model(AutoEncoderModule):
+class Model(VASCA):
     def __init__(self, ground_truth_model=None, encoder=None, decoder=None, model_config=None, optimizer_config=None):
-        super().__init__(encoder, decoder)
+        super().__init__(ground_truth_model, encoder, decoder, model_config, optimizer_config)
 
         self.ground_truth = ground_truth_model
-        self.optimizer_config = optimizer_config
-        self.mc_samples = model_config["mc_samples"]
-
-        self.sigma = model_config["sigma"]
-
         self.metrics = None
         self.log_monitor = None
+        self.optimizer = None
+
         self.setup_metrics()
+
 
     @staticmethod
     def reparameterization(z):
@@ -29,46 +28,15 @@ class Model(AutoEncoderModule):
         return F.softmax(z, dim=-1)
 
 
-    def loss_function(self, data, model_output, idxes):
-        if not self.sigma:
-            self.sigma = self.ground_truth.sigma
-
-        reconstructed_sample = model_output["reconstructed_sample"]
-        latent_sample = model_output["latent_sample"]
-        variational_parameters = model_output["latent_parameterization_batch"]
-
-        loss = {"reconstruction": self._reconstruction(data, reconstructed_sample)}
-
-        neg_entropy_latent = - self._entropy(latent_sample, variational_parameters)
-        kl_posterior_prior = neg_entropy_latent - torch.lgamma(torch.tensor(latent_sample.size(-1)))
-        loss.update({"kl_posterior_prior": self.sigma ** 2 * kl_posterior_prior})
-
-        return loss
-
-    @staticmethod
-    def _reconstruction(data, reconstructed_sample):
-        recon_loss = data.size(-1) / 2 * F.mse_loss(
-            reconstructed_sample, data.expand_as(reconstructed_sample), reduction='mean'
-        )
-        # recon_loss += self.sigma ** 2 * data.size(-1) / 2 * torch.log(torch.tensor(2 * torch.pi))
-        return recon_loss
-
-    @staticmethod
-    def _entropy(latent_sample, variational_parameters):
-        mean, std = variational_parameters
-
-        log_var = 2 * torch.log(std + 1e-12)
-        sigma_diag_inv = 1 / (std + 1e-12)
-
-        projected_latent = torch.log(latent_sample[:, :, :-1] / latent_sample[:, :, -1:]) - mean
-
-        log_2pi = torch.log(torch.tensor(2 * torch.pi))
-        entropy = 0.5 * (latent_sample.size(-1) - 1) * log_2pi
-        entropy += (projected_latent ** 2 * sigma_diag_inv.unsqueeze(0)).sum(dim=-1).mean() / 2
-        entropy += log_var[:, :-1].sum(dim=-1).mean() / 2
-        entropy += torch.log(latent_sample).sum(dim=-1).mean()
-
-        return entropy
+    def configure_optimizers(self):
+        optimizer_class = getattr(optim, self.optimizer_config["name"])
+        lr = self.optimizer_config["lr"]
+        self.optimizer = optimizer_class([
+            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
+            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
+            {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
+        ], **self.optimizer_config["params"])
+        return self.optimizer
 
     def setup_metrics(self):
         self.metrics = torchmetrics.MetricCollection({
@@ -94,15 +62,6 @@ class Model(AutoEncoderModule):
             data, reconstructed_sample, linearly_mixed_sample
         )
 
-    def configure_optimizers(self):
-        lr = self.optimizer_config["lr"]
-        optimizer_class = getattr(optim, self.optimizer_config["name"])
-        optimizer = optimizer_class([
-            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
-            {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]}
-        ], **self.optimizer_config["params"])
-        return optimizer
-
 
 class Encoder(nn.Module):
     def __init__(self, config):
@@ -126,14 +85,54 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(self, config):
-        super(Decoder, self).__init__()
+        super().__init__()
         self.config = config
+        self.constructor = getattr(network, config["constructor"])
         self.linear_mixture = None
+        self.nonlinear_transform = None
 
     def construct(self, latent_dim, observed_dim):
-        self.linear_mixture = network.LinearPositive(torch.rand(observed_dim, latent_dim), **self.config)
-        return self
+        self.linear_mixture = network.LinearPositive(
+            torch.eye(observed_dim, latent_dim), **self.config
+        )
+        # self.linear_mixture.eval()
 
-    def forward(self, z):
-        x = self.linear_mixture(z)
+        self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
+
+    def forward(self, x):
+        x = self.linear_mixture(x)
+        x = self.nonlinear_transform(x)
         return x
+
+# class Decoder(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#         self.constructor = getattr(network, config["constructor"])
+#
+#     def construct(self, latent_dim, observed_dim):
+#         self.linear_mixture = network.LinearPositive(
+#             torch.rand(observed_dim, latent_dim), **self.config
+#         )
+#
+#         self.nonlinearity = nn.ModuleList([self.constructor(
+#             input_dim=1, output_dim=1, **self.config
+#         ) for _ in range(observed_dim)])
+#
+#     def nonlinear_transform(self, x):
+#         x = torch.cat([
+#             self.nonlinearity[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
+#             for i in range(x.shape[-1])
+#         ], dim=-1)
+#         return x
+#
+#     def forward(self, z):
+#         y = self.linear_mixture(z)
+#         x = self.nonlinear_transform(y)
+#         return x
+
+
+# todo: sometimes during training get nan, right now skipped
+# todo: mc and batch in fcnconstructor, activation argument (to config?)
+# todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
+# todo: clean up and test nisca model.

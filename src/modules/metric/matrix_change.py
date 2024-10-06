@@ -35,6 +35,3 @@ class MatrixChange(torchmetrics.Metric):
     #     # norm = torch.linalg.matrix_norm(x, ord='fro')
     #     norm = (torch.sum(x ** 2) / x.numel()).pow(0.5)
     #     return norm
-
-# discuss: relative change starts oscillating too early (use matrix volume? as we know it's equiv to it)
-# todo: compute running average over last 100 epochs, if it's not changing stop

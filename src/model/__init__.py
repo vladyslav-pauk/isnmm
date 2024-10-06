@@ -9,6 +9,7 @@ import src.model.vasca.inisca as INISCA
 import src.model.nae.cnae as CNAE
 import src.model.nae.snae as SNAE
 
+import src.model.niva.iva as IVA
 import src.model.niva.niva as NIVA
 import src.model.niva.cniva as CNIVA
 import src.model.niva.iniva as INIVA

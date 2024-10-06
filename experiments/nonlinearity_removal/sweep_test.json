@@ -16,8 +16,6 @@
     "model_name": {
       "values": [
         "nisca",
-        "inisca",
-        "cnae",
         "snae"
       ]
     },
@@ -31,13 +29,26 @@
     "torch_seed": {
       "values": [
         29,
-        0,
-        42
+        0
       ]
     },
     "trainer.max_epochs": {
       "values": [
-        500
+        5
+      ]
+    },
+    "decoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 12
+        }
+      ]
+    },
+    "encoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 12
+        }
       ]
     }
   }

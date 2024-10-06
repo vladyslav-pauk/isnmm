@@ -146,9 +146,6 @@ class Decoder(nn.Module):
 #         return x
 
 # todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
-# fixme: cnae unequal dimensions
-# fixme: experiment cnae on noisy data
+
+
 # todo: clean up and readme
-# fixme: make some runs and organize wandb to show Xiao
-# fixme: train cnae with reparametrization
-# fixme: train nisca with constrained optimization

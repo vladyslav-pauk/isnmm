@@ -1,5 +1,6 @@
 import wandb
 from pytorch_lightning.loggers import WandbLogger
+from src.helpers.utils import flatten_dict
 import os
 
 
@@ -67,9 +68,12 @@ def fetch_wandb_sweep(project_name, sweep_id):
     sweep = api.sweep(f"{project_root.split("/")[-2]}/{project_name}/{sweep_id}")
     runs = sweep.runs
 
-    sweep_data = []
+    all_runs_data = {}
     for run in runs:
-        metrics = run.summary
         config = run.config
-        sweep_data.append({"run_id": run.id, "metrics": metrics, "config": config})
-    return sweep_data
+        metrics = run.summary._json_dict
+        all_runs_data[run.id] = {
+            "metrics": metrics,
+            "config": config
+        }
+    return all_runs_data

@@ -8,7 +8,7 @@ import src.modules.network as network
 from src.modules.ae_module import AutoEncoderModule
 import src.modules.metric as metric
 
-
+# fixme: cnisca with constrained optimization
 # fixme: implement this. if i do Aithison first, implement on that. After that can try on VASCA too CINASCA
 class Model(AutoEncoderModule):
     def __init__(self, ground_truth_model=None, encoder=None, decoder=None, model_config=None, optimizer_config=None):

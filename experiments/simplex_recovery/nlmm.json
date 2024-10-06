@@ -1,6 +1,6 @@
 {
   "model_name": "noisy_mixture",
-  "data_model": "linear",
+  "data_module_name": "linear",
   "nonlinearity": null,
   "degree": null,
   "snr": 25,
@@ -9,5 +9,5 @@
   "observed_dim": 50,
   "latent_dim": 3,
   "dataset_size": 10000,
-  "seed": null
+  "data_seed": null
 }

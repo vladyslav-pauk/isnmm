@@ -124,3 +124,5 @@ class Decoder(nn.Module):
         x = self.linear_mixture(x)
         x = self.nonlinear_transform(x)
         return x
+
+# fixme: cnae unequal dimensions (as in paper with blocks)

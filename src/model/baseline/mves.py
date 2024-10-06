@@ -139,7 +139,6 @@
 #     # 7. Visualize the true and estimated vertices
 #     plot_simplex(transformation_matrix, estimated_vertices, X)
 #
-#     # todo: implement mves
 #
 #
 # import numpy as np
@@ -213,4 +212,4 @@
 # vertices = estimate_simplex_vertices(X)
 # print(vertices)
 #
-# # todo: implement cnae
+# # todo: implement mves

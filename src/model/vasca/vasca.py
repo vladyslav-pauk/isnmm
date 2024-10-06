@@ -57,8 +57,9 @@ class Model(AutoEncoderModule):
     def _entropy(latent_sample, variational_parameters):
         mean, std = variational_parameters
 
-        log_var = 2 * torch.log(std + 1e-12)
-        sigma_diag_inv = 1 / (std + 1e-12)
+        epsilon = 1e-12
+        log_var = 2 * torch.log(std + epsilon)
+        sigma_diag_inv = 1 / (std + epsilon)
 
         projected_latent = torch.log(latent_sample[:, :, :-1] / latent_sample[:, :, -1:]) - mean
 
