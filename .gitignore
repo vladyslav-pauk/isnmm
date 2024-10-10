@@ -167,3 +167,4 @@ models/
 resources/
 /src/res/
 wandb/
+experiments/*/sweeps
