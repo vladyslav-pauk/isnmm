@@ -3,7 +3,8 @@ import torch.nn as nn
 
 class FCNConstructor(nn.Module):
     def __init__(self,
-                 input_dim, output_dim,
+                 input_dim,
+                 output_dim,
                  hidden_layers=None,
                  hidden_activation=None,
                  output_activation=None,

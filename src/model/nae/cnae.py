@@ -1,42 +1,17 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
-import torchmetrics
-from torch import optim
 
-from src.modules.ae_module import AutoEncoderModule
-import src.modules.metric as metric
+from .nae import NAE
 from src.modules.optimizer.constrained_lagrange import ConstrainedLagrangeOptimizer
 import src.modules.network as network
 
 
-class Model(AutoEncoderModule):
-    def __init__(self, ground_truth_model, encoder, decoder, model_config, optimizer_config):
-        super().__init__(encoder, decoder)
+class Model(NAE):
+    def __init__(self, encoder, decoder, model_config, optimizer_config):
+        super().__init__(encoder, decoder, model_config)
 
-        self.ground_truth = ground_truth_model
         self.optimizer_config = optimizer_config
-        self.optimizer = None
-        self.observed_dim = self.ground_truth.observed_dim
-        self.sigma = 0
-        self.mc_samples = 1
-
-        self.metrics = None
-        self.log_monitor = None
-        self.setup_metrics()
-
-    def loss_function(self, observed_batch, model_output, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"].squeeze(0)
-        latent_sample = model_output["latent_sample"].squeeze(0)
-
-        loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch)}
-
-        regularization_loss = {}
-        if hasattr(self.optimizer, "compute_constraint_errors"):
-            regularization_loss = self.optimizer.compute_constraint_errors(latent_sample, idxes, observed_batch)
-        loss.update(regularization_loss)
-
-        return loss
+        self.latent_dim = model_config["latent_dim"]
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
         if hasattr(self.optimizer, "update_buffers"):
@@ -45,47 +20,13 @@ class Model(AutoEncoderModule):
     def configure_optimizers(self):
         self.optimizer = ConstrainedLagrangeOptimizer(
             params=list(self.parameters()),
-            lr=self.optimizer_config['lr']["encoder"],
-            rho=self.optimizer_config['rho'],
-            inner_iters=self.optimizer_config['inner_iters'],
-            n_sample=self.ground_truth.dataset_size,
-            latent_dim=self.latent_dim,
-            constraint_fn=self.constraint
+            constraint_fn=self.constraint,
+            optimizer_config=self.optimizer_config
         )
         return self.optimizer
-    # todo: check factory signature of optimizer
 
     def constraint(self, F):
-        return torch.sum(F, dim=1) - 1.0
-
-    def setup_metrics(self):
-
-        self.metrics = torchmetrics.MetricCollection({
-            'subspace_distance': metric.SubspaceDistance(),
-            'h_r_square': metric.ResidualNonlinearity(),
-            'constraint': metric.ConstraintError(self.constraint)
-        })
-        self.metrics.eval()
-        self.log_monitor = {
-            "monitor": "validation_loss",
-            "mode": "min"
-        }
-
-    def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
-        latent_sample = model_output["latent_sample"]
-        linearly_mixed_sample = labels["linearly_mixed_sample"]
-        latent_sample_qr = labels["latent_sample_qr"]
-
-        self.metrics['subspace_distance'].update(
-            idxes, latent_sample.mean(0), latent_sample_qr
-        )
-        self.metrics['constraint'].update(
-            idxes, latent_sample.mean(0)
-        )
-        self.metrics['h_r_square'].update(
-            data, reconstructed_sample, linearly_mixed_sample
-        )
+        return torch.sum(F, dim=-1) - 1.0
 
 
 class Encoder(nn.Module):
@@ -93,13 +34,21 @@ class Encoder(nn.Module):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
-        self.network = None
+        self.linear_mixture_inv = nn.Identity()
+        self.nonlinear_transform = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(observed_dim, latent_dim, **self.config)
+        if latent_dim != observed_dim:
+            self.linear_mixture_inv = network.LinearPositive(
+                torch.eye(latent_dim, observed_dim), **self.config
+            )
+        self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
+        # self.nonlinear_transform = self.constructor(observed_dim, latent_dim, **self.config)
+
 
     def forward(self, x):
-        x = self.network.forward(x)
+        x = self.nonlinear_transform(x)
+        x = self.linear_mixture_inv(x)
         return x, torch.zeros_like(x).to(x.device)
 
 
@@ -108,17 +57,16 @@ class Decoder(nn.Module):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
-        self.linear_mixture = None
-        self.nonlinear_transform = None
+        self.linear_mixture = nn.Identity()
+        self.nonlinear_transform = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
-        # self.linear_mixture = network.LinearPositive(
-        #     torch.eye(observed_dim, latent_dim), **self.config
-        # )
-        # self.linear_mixture.eval()
-        self.linear_mixture = nn.Identity()
-
+        if latent_dim != observed_dim:
+            self.linear_mixture = network.LinearPositive(
+                torch.eye(observed_dim, latent_dim), **self.config
+            )
         self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
+        # self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
 
     def forward(self, x):
         x = self.linear_mixture(x)

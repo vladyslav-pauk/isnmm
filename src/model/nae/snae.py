@@ -4,48 +4,22 @@ from torch.nn import functional as F
 import torchmetrics
 from torch import optim
 
-from src.modules.ae_module import AutoEncoderModule
+from .nae import NAE
 import src.modules.metric as metric
 import src.modules.network as network
 
 
-class Model(AutoEncoderModule):
-    def __init__(self, ground_truth_model, encoder, decoder, model_config, optimizer_config):
-        super().__init__(encoder, decoder)
+class Model(NAE):
+    def __init__(self, encoder, decoder, model_config, optimizer_config):
+        super().__init__(encoder, decoder, model_config)
 
-        self.ground_truth = ground_truth_model
         self.optimizer_config = optimizer_config
-        self.optimizer = None
-        self.observed_dim = self.ground_truth.observed_dim
-        self.sigma = 0
-        self.mc_samples = 1
-
-        self.metrics = None
-        self.log_monitor = None
-        self.setup_metrics()
-
-    def loss_function(self, observed_batch, model_output, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"].squeeze(0)
-        latent_sample = model_output["latent_sample"]
-
-        loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch.squeeze(0))}
-
-        regularization_loss = {}
-        if hasattr(self.optimizer, "compute_constraint_errors"):
-            regularization_loss = self.optimizer.compute_constraint_errors(latent_sample, idxes, observed_batch)
-        loss.update(regularization_loss)
-
-        return loss
-
-    def on_train_batch_end(self, outputs, batch, batch_idx):
-        if hasattr(self.optimizer, "update_buffers"):
-            self.optimizer.update_buffers(batch["idxes"], self(batch["data"])["latent_sample"])
+        self.latent_dim = model_config["latent_dim"]
 
     @staticmethod
     def reparameterization(sample):
         sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
         return F.softmax(sample, dim=-1)
-    # todo: make it a part of encoder?
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])
@@ -56,30 +30,6 @@ class Model(AutoEncoderModule):
             {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
         ], **self.optimizer_config["params"])
         return self.optimizer
-
-    def setup_metrics(self):
-        self.metrics = torchmetrics.MetricCollection({
-            'subspace_distance': metric.SubspaceDistance(),
-            'h_r_square': metric.ResidualNonlinearity(),
-        })
-        self.metrics.eval()
-        self.log_monitor = {
-            "monitor": "validation_loss",
-            "mode": "min"
-        }
-
-    def update_metrics(self, data, model_output, labels, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
-        latent_sample = model_output["latent_sample"]
-        linearly_mixed_sample = labels["linearly_mixed_sample"]
-        latent_sample_qr = labels["latent_sample_qr"]
-
-        self.metrics['subspace_distance'].update(
-            idxes, latent_sample.mean(0), latent_sample_qr
-        )
-        self.metrics['h_r_square'].update(
-            data, reconstructed_sample, linearly_mixed_sample
-        )
 
 
 class Encoder(nn.Module):
@@ -110,7 +60,6 @@ class Decoder(nn.Module):
             torch.eye(observed_dim, latent_dim), **self.config
         )
         # self.linear_mixture.eval()
-
         self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
 
     def forward(self, x):

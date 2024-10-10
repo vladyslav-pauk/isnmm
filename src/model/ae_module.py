@@ -6,7 +6,6 @@ import torch
 
 
 class AutoEncoderModule(pl.LightningModule):
-    # todo: AutoEncoder
     def __init__(self, encoder, decoder):
         super().__init__()
 
@@ -16,43 +15,27 @@ class AutoEncoderModule(pl.LightningModule):
         self.observed_dim = None
         self.noise_level = 1.0
 
-    def setup(self, stage):
-        if stage == 'fit' or stage is None:
-            train_loader = self.trainer.datamodule.train_dataloader()
-            sample_batch = next(iter(train_loader))
-            data_sample = sample_batch
-            self.observed_dim = data_sample["data"].shape[1]
-            if self.latent_dim is None:
-                self.latent_dim = data_sample["labels"]["latent_sample"].shape[1]
-
-            self.encoder.construct(self.latent_dim, self.observed_dim)
-            self.decoder.construct(self.latent_dim, self.observed_dim)
-
-    @staticmethod
-    def reparameterization(sample):
-        return sample
-
     def forward(self, observed_batch):
-        latent_parameterization_batch = self.encoder(observed_batch)
-        latent_sample = self.sample_latent(latent_parameterization_batch)
+        posterior_parameterization_batch = self.encoder(observed_batch)
+        latent_sample = self.sample_posterior(posterior_parameterization_batch)
         reconstructed_sample = self.decoder(latent_sample)
 
         model_output = {
             "reconstructed_sample": reconstructed_sample,
             "latent_sample": latent_sample,
-            "latent_parameterization_batch": latent_parameterization_batch
+            "latent_parameterization_batch": posterior_parameterization_batch
         }
         return model_output
 
-    def sample_latent(self, variational_parameters):
+    def sample_posterior(self, variational_parameters):
         mean, std = variational_parameters
         eps = torch.randn(self.mc_samples, *std.shape).to(std.device)
         normal_sample = eps.mul(std.unsqueeze(0)).add_(mean.unsqueeze(0))
         return self.reparameterization(normal_sample)
 
-    def on_train_start(self) -> None:
-        wandb.define_metric(name=self.log_monitor["monitor"], summary=self.log_monitor["mode"])
-        # todo: move it out so i don't drag monitor config through classes
+    @staticmethod
+    def reparameterization(sample):
+        return sample
 
     def training_step(self, batch, batch_idx):
         data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
@@ -88,6 +71,20 @@ class AutoEncoderModule(pl.LightningModule):
         if not valid_gradients:
             self.zero_grad()
 
+    def setup(self, stage):
+        if stage == 'fit' or stage is None:
+            self.ground_truth = self.trainer.datamodule
+            data_sample = next(iter(self.ground_truth.train_dataloader()))
+
+            self.observed_dim = data_sample["data"].shape[1]
+            if self.latent_dim is None:
+                self.latent_dim = self.observed_dim
+
+            self.encoder.construct(self.latent_dim, self.observed_dim)
+            self.decoder.construct(self.latent_dim, self.observed_dim)
+
+            self.setup_metrics()
+
     def summary(self):
         summary(self.encoder, (self.observed_dim,))
         summary(self.decoder, (self.latent_dim,))
@@ -97,8 +94,6 @@ class AutoEncoderModule(pl.LightningModule):
 # todo: check if (independent on data) is the same as the best value in the validation wandb
 # loss = self.loss_function(x.view(-1, x[0].numel()), x_hat, z_hat, encoder_params, sigma)
 # posterior_params = self.encoder(x.view(-1, x[0].numel()))
-# todo: move x = x.view(-1, x[0].numel()) to MNIST transform
-# todo: log or monitor averaged loss? is it accumulating?
 # todo: all hyperparameters that affect outcome of training are passed in **config["train"].
 #  Ideally, I save these as hyperparameters, and the rest as config.
 #  self.save_hyperparameters(ignore=['encoder', 'decoder', 'ground_truth_model'])

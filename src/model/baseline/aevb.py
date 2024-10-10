@@ -4,7 +4,7 @@ import torchmetrics
 import torch.nn.functional as F
 import torch.optim as optim
 
-from src.modules.ae_module import AutoEncoderModule
+from src.model.ae_module import AutoEncoderModule
 from src.modules.network import FCN
 
 

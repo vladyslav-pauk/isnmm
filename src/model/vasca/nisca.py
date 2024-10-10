@@ -136,3 +136,5 @@ class Decoder(nn.Module):
 # todo: mc and batch in fcnconstructor, activation argument (to config?)
 # todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
 # todo: clean up and test nisca model.
+
+# todo: SVMAX initialization

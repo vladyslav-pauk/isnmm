@@ -1,1 +1,2 @@
 from .nonlinear_component_wise import Network as NonlinearComponentWise
+from .nonlinear_dimension_reduction import Network as NonlinearDimensionReduction

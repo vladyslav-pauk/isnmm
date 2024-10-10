@@ -5,7 +5,7 @@ import torchmetrics
 import torch.optim as optim
 
 import src.modules.network as network
-from src.modules.ae_module import AutoEncoderModule
+from src.model.ae_module import AutoEncoderModule
 import src.modules.metric as metric
 
 # fixme: cnisca with constrained optimization

@@ -8,8 +8,9 @@ from torch.distributions import Distribution, constraints
 from pytorch_lightning import seed_everything
 
 from src.modules.transform import NonlinearComponentWise as NonlinearTransform
+# from src.modules.transform import NonlinearDimensionReduction as NonlinearTransform
 from src.modules.network.linear_positive import Network as LinearPositive
-from src.helpers.utils import dict_to_str
+from ..utils import dict_to_str
 
 
 class GenerativeModel:  # (Distribution)
@@ -55,6 +56,7 @@ class GenerativeModel:  # (Distribution)
         ).requires_grad_(False)
 
         nonlinear_transform = NonlinearTransform(
+            self.latent_dim,
             self.observed_dim,
             self.degree,
             self.nonlinearity,

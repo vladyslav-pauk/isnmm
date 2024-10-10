@@ -1,9 +1,11 @@
-import wandb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
-from src.helpers.plotter import plot_components
+import matplotlib.pyplot as plt
+import math
+import torch
+import wandb
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
@@ -15,12 +17,17 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
         self.show_plot = show_plot
 
-    def update(self, data, reconstructed_sample, linearly_mixed_sample):
-        self.data = data
-        self.reconstructed_sample = reconstructed_sample
-        self.linearly_mixed_sample = linearly_mixed_sample
+    def update(self, model_output, labels, linearly_mixed_sample, observed_sample):
 
-        r_squared_values = self.fitter.fit(self.reconstructed_sample, data)
+        self.reconstructed_sample = model_output["reconstructed_sample"].mean(0)
+        self.linearly_mixed_sample_true = labels["linearly_mixed_sample"]
+        self.latent_sample_qr = labels["latent_sample_qr"]
+        self.latent_sample = model_output["latent_sample"].mean(0)
+        self.latent_sample_true = labels["latent_sample"]
+        self.linearly_mixed_sample = linearly_mixed_sample
+        self.observed_sample = observed_sample
+
+        r_squared_values = self.fitter.fit(self.linearly_mixed_sample, self.linearly_mixed_sample_true)
         self.sum_r_squared += r_squared_values.sum()
         self.count += r_squared_values.shape[0]
 
@@ -30,32 +37,30 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
     def plot(self, show_plot=False):
 
-        nonlinearity_plot = plot_components(
-            self.linearly_mixed_sample,
-            inferred_nonlinearity=self.reconstructed_sample,
-            true_nonlinearity=self.data,
-            scale=True
+        plot_components(
+            self.observed_sample,
+            model=self.linearly_mixed_sample,
+            true=self.linearly_mixed_sample_true,
+            scale=True,
+            show_plot=show_plot,
+            name=f"Model vs True Nonlinearity"
         )
-        residual_nonlinearity_plot = plot_components(
-            self.data,
-            residual_nonlinearity=self.reconstructed_sample,
+        plot_components(
+            self.linearly_mixed_sample_true,
+            model=self.linearly_mixed_sample,
             fitter=self.fitter,
             labels=self.fitter.rsquared,
+            scale=True,
+            show_plot=show_plot,
+            name=f"Residual Nonlinearity"
         )
-
-        if show_plot:
-            nonlinearity_plot.show()
-            residual_nonlinearity_plot.show()
-        else:
-            wandb.log({
-                f"Residual Nonlinearity": residual_nonlinearity_plot
-            })
-            wandb.log({
-                "Model and True Nonlinearity": nonlinearity_plot
-            })
-
-        nonlinearity_plot.close()
-        residual_nonlinearity_plot.close()
+        # plot_components(
+        #     self.latent_sample_true,
+        #     model=self.latent_sample,
+        #     scale=True,
+        #     show_plot=show_plot,
+        #     name=f"Latent Correlation"
+        # )
 
 
 class LineFitter(nn.Module):
@@ -102,96 +107,82 @@ class LineFitter(nn.Module):
         transformed_components = [self.slopes[i] * x[:, i:i + 1] + self.intercepts[i] for i in range(x.shape[-1])]
         return torch.cat(transformed_components, dim=-1)
 
-#
-#
-# def mse_matrix_db(A0, A_hat):
-#     min_mse = torch.tensor(float('inf'))
-#     perms = itertools.permutations(range(A0.shape[0]))
-#     for perm in perms:
-#         A_hat_permuted = A_hat[list(perm), :]
-#         mse = torch.mean(torch.sum((A0 - A_hat_permuted) ** 2, dim=1))
-#         if mse < min_mse:
-#             min_mse = mse
-#
-#     mse_dB = 10 * torch.log10(min_mse)
-#     return mse_dB
-#
-#
-# def spectral_angle_distance(A0, A_hat):
-#     A0 = A0 / torch.norm(A0, dim=1, keepdim=True)
-#     A_hat = A_hat / torch.norm(A_hat, dim=1, keepdim=True)
-#     cosines = torch.sum(A0 * A_hat, dim=1)
-#     return torch.acos(cosines).mean()
-#
-#
-# def subspace_distance(S, U):
-#     import torch
-#
-#     S_pseudo_inv = torch.linalg.pinv(S)
-#
-#     I = torch.eye(S.shape[-1], device=S.device)
-#     P_s_orth = I - S_pseudo_inv @ S
-#
-#     U_u, Q, V_u = torch.linalg.svd(U.T, full_matrices=False)
-#     Q_u = V_u.T
-#
-#     matrix_product = Q_u @ P_s_orth
-#
-#     singular_values = torch.linalg.svd(matrix_product)[1]
-#
-#     norm_2 = torch.max(singular_values)
-#     return norm_2
+
+def plot_components(x, labels=None, scale=False, show_plot=False, name=None, **kwargs):
+    # todo: make it a line instead of scatter
+    # todo: adjust styling for the paper
+    import warnings
+    warnings.filterwarnings("ignore", message=".*path .*")
+    font_size = 12
+    plt.rcParams.update({
+        "text.usetex": True,
+        "font.family": "serif",
+        "font.serif": ["Computer Modern Roman"],
+        "axes.labelsize": font_size,
+        "font.size": font_size,
+        "legend.fontsize": font_size,
+        "xtick.labelsize": font_size,
+        "ytick.labelsize": font_size,
+        "figure.dpi": 300,
+        "savefig.dpi": 300,
+        "text.latex.preamble": r"\usepackage{amsmath}"
+    })
+    num_components = x.shape[-1]
+
+    n_cols = math.ceil(math.sqrt(num_components))
+    n_rows = math.ceil(num_components / n_cols)
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
+    axes = axes.flatten()
+
+    for i in range(num_components):
+        x_component = x[..., i].clone().detach().cpu().numpy()
+
+        for k, v in kwargs.items():
+            if callable(v):
+                y_component = v(x)[..., i].clone().detach().cpu()
+            else:
+                y_component = v[..., i].clone().detach().cpu()
+                if (torch.max(y_component) - torch.min(y_component)).any() < 1e-6:
+                    print(f"Warning: y-component {i} is constant")
+
+            axes[i].scatter(x_component, visual_normalization(y_component) if scale else y_component, label=k.replace('_', ' ').capitalize())
+
+        if labels is not None:
+            axes[i].text(0.5, 0.1, f"R-squared: {labels[i]:.4f}", horizontalalignment='center', verticalalignment='center',
+                     transform=axes[i].transAxes)
+        # axes[i].set_title(f'Component {i + 1} Nonlinearity')
+        # axes[i].set_xlabel(f'Linearly mixed component {i + 1}')
+        # axes[i].set_ylabel(f'Nonlinearly transformed component {i + 1}')
+        # axes[i].set_yticklabels([])
+        # axes[i].set_xticklabels([])
+        # axes[i].set_xticks([])
+        # axes[i].set_yticks([])
+
+    # axes[0].legend()
+
+    plt.tight_layout()
+
+    if show_plot:
+        plt.show()
+    else:
+        wandb.log({
+            name: plt
+        })
+    plt.close()
+
+    return plt
+
+
+def visual_normalization(x):
+    bound = 10
+    x = x - torch.min(x)
+    x = x / (torch.max(x)) * bound
+    return x
+
 
 # todo: residual nonlinearity and plot components shall go under the Fitter class
 # todo: matrix distance class; vector (sub)space (set) distance class
-# def plot_components(x, **kwargs):
-#     import warnings
-#     warnings.filterwarnings("ignore", message=".*path .*")
-#     plt.rcParams.update({
-#         "text.usetex": True,
-#         "font.family": "serif",
-#         "font.serif": ["Computer Modern Roman"],
-#         "axes.labelsize": 20,
-#         "font.size": 20,
-#         "legend.fontsize": 20,
-#         "xtick.labelsize": 20,
-#         "ytick.labelsize": 20,
-#         "figure.dpi": 300,
-#         "savefig.dpi": 300,
-#         "text.latex.preamble": r"\usepackage{amsmath}"
-#     })
-#
-#     num_components = x.shape[-1]
-#     n_cols = math.ceil(math.sqrt(num_components))
-#     n_rows = math.ceil(num_components / n_cols)
-#
-#     # Create a figure and a set of subplots
-#     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
-#     axes = axes.flatten()  # Flatten the axes for easier iteration
-#
-#     for i in range(num_components):
-#         x_component = x[:, i:i + 1]  # Select the i-th component of x
-#
-#         for k, v in kwargs.items():
-#             if callable(v):
-#                 # Apply the function v (e.g., fitter or residual_nonlinearity) on x_component
-#                 v_result = v(x_component)
-#             else:
-#                 v_result = v[:, i:i + 1]  # If not callable, assume it's a tensor
-#
-#             label = k.replace('_', ' ').capitalize()
-#             axes[i].scatter(x_component.detach().cpu().numpy(), v_result.detach().cpu().numpy(), label=label)
-#
-#         axes[i].set_title(f'Component {i + 1} Nonlinearity')
-#         axes[i].legend()
-#
-#     # Remove any unused axes
-#     for j in range(num_components, len(axes)):
-#         fig.delaxes(axes[j])
-#
-#     plt.tight_layout()
-#
-#     return plt
-#     # todo: crop outliers
-        # todo: make ResNon not depend on the function, but rather on the values for z_true
-        #    i.e. pass not f_true and A_true, but the values for f_true(A_true @ z_true), and A_true @ z_true
+# todo: crop outliers
+# todo: make ResNon not depend on the function, but rather on the values for z_true
+#    i.e. pass not f_true and A_true, but the values for f_true(A_true @ z_true), and A_true @ z_true

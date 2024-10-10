@@ -35,6 +35,7 @@ def init_logger(experiment_name=None, model=None, run_name=None):
         group=model,
         name=run_name,
         # tags=[model],
+        notes="notes for the model",
         save_dir=f"../models/{model}",
         log_model=True,
         resume="allow",
@@ -54,6 +55,7 @@ def init_wandb(experiment):
         project=experiment,
         dir=project_root
     )
+    print(f"--- Run ID: {wandb.run.id} ---")
     config = wandb.config
     model_name = config.model_name
     dataset_name = config.data_model_name

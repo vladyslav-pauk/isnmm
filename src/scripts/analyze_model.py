@@ -3,7 +3,7 @@ import torch
 import src.model as model_package
 from src.helpers.utils import load_experiment_config
 from src.train import train_model
-from src.modules.data_module import DataModule
+from src.data.data_module import DataModule
 from src.helpers.metrics import mse_matrix_db
 
 

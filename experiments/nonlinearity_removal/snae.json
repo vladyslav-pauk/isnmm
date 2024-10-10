@@ -9,7 +9,7 @@
     "num_workers": 4
   },
   "model": {
-    "mc_samples": 1
+    "latent_dim": 3
   },
   "encoder": {
     "constructor": "CNN",
@@ -67,13 +67,13 @@
     "enable_progress_bar": false
   },
   "checkpoint": {
-    "monitor": "h_r_square",
+    "monitor": "r_square",
     "mode": "max",
     "save_top_k": 1,
     "verbose": true
   },
   "early_stopping": {
-    "monitor": "h_r_square",
+    "monitor": "r_square",
     "mode": "max",
     "patience": 20,
     "min_delta": 1e-3

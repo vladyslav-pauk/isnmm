@@ -16,6 +16,8 @@
     "model_name": {
       "values": [
         "nisca",
+        "inisca",
+        "cnae",
         "snae"
       ]
     },
@@ -28,8 +30,8 @@
     },
     "torch_seed": {
       "values": [
-        29,
-        0
+        0,
+        29
       ]
     },
     "trainer.max_epochs": {

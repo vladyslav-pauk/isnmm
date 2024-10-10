@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from pytorch_lightning import seed_everything
 import matplotlib.pyplot as plt
 
-from src.helpers.utils import dict_to_str
+from ..utils import dict_to_str
 
 
 class GenerativeModel:

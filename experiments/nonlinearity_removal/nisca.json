@@ -9,7 +9,7 @@
     "num_workers": 4
   },
   "model": {
-    "mc_samples": 10,
+    "mc_samples": 100,
     "sigma": null
   },
   "encoder": {

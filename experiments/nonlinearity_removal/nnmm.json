@@ -3,11 +3,11 @@
   "data_model": "nonlinear",
   "nonlinearity": "sin",
   "degree": null,
-  "snr": 25,
+  "snr": 100,
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
-  "observed_dim": 3,
+  "observed_dim": 2,
   "latent_dim": 3,
   "dataset_size": 10000,
-  "data_seed": 21
+  "data_seed": 9
 }

@@ -1,11 +1,10 @@
 import os
-import sys
 import json
-import logging
 import argparse
+import hashlib
 
 
-def parser():
+def sweep_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--experiment',
@@ -32,31 +31,13 @@ def parser():
     args = parser.parse_args()
     return args
 
-# todo: clean up utils
-# def load_config():
-#     experiment = sys.argv[1]
-#
-#     with open(f'experiments/{experiment}.json', 'r') as f:
-#         return json.load(f)
-
 
 def load_experiment_config(experiment, config_name):
     path = f'../experiments/{experiment}/{config_name}.json'
 
     if os.path.exists(path):
         with open(path, 'r') as f:
-            config = json.load(f)
-
-    with open(path, 'r') as f:
-        return json.load(f)
-
-
-def dict_to_str(d):
-    return '_'.join([f'{value}' for key, value in d.items() if value is not None])
-
-
-
-# todo: add logging messages for the command line output
+            return json.load(f)
 
 
 def update_hyperparameters(config, kwargs, show_log=True):
@@ -80,19 +61,6 @@ def update_hyperparameters(config, kwargs, show_log=True):
 
     return config
 
-def hash_name(kwargs):
-
-    import hashlib
-    if kwargs:
-        kwargs_str = str(sorted(kwargs.items()))
-        run_name = hashlib.md5(kwargs_str.encode()).hexdigest()
-    else:
-        run_name = None
-    # if any(value is not None for value in kwargs.values()):
-    #     run_name = "-".join([f"{key}_{value}" for key, value in kwargs.items() if value is not None])
-    # else:
-    #     run_name = None
-
 
 def get_parameter_combinations(config, prefix="", sep="_"):
     params = {}
@@ -109,11 +77,20 @@ def get_parameter_combinations(config, prefix="", sep="_"):
     return params
 
 
+def hash_name(kwargs):
+    if kwargs:
+        kwargs_str = str(sorted(kwargs.items()))
+        run_name = hashlib.md5(kwargs_str.encode()).hexdigest()
+    else:
+        run_name = None
+    return run_name
+    # if any(value is not None for value in kwargs.values()):
+    #     run_name = "-".join([f"{key}_{value}" for key, value in kwargs.items() if value is not None])
+    # else:
+    #     run_name = None
+
+
 def unflatten_dict(d, sep='.'):
-    """
-    Unflattens a dictionary with keys containing separators (e.g., 'lr.th').
-    Converts {'lr.th': 0.001, 'lr.ph': 0.005} into {'lr': {'th': 0.001, 'ph': 0.005}}.
-    """
     result = {}
     for key, value in d.items():
         parts = key.split(sep)
@@ -127,10 +104,6 @@ def unflatten_dict(d, sep='.'):
 
 
 def flatten_dict(d, parent_key='', sep='.'):
-    """
-    Flattens a nested dictionary.
-    Converts {'lr': {'th': 0.001, 'ph': 0.005}} into {'lr.th': 0.001, 'lr.ph': 0.005}.
-    """
     items = []
     for key, value in d.items():
         new_key = f"{parent_key}{sep}{key}" if parent_key else key

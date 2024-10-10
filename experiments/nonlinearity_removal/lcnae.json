@@ -1,6 +1,6 @@
 {
   "model_name": "cnae",
-  "torch_seed": 0,
+  "torch_seed": null,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 1000,
@@ -9,10 +9,10 @@
     "num_workers": 4
   },
   "model": {
-    "latent_dim": null
+    "latent_dim": 3
   },
   "encoder": {
-    "constructor": "CNN",
+    "constructor": "CFCN",
     "hidden_layers": {
       "h1":  128
     },
@@ -26,7 +26,7 @@
     "groups": null
   },
   "decoder": {
-    "constructor": "CNN",
+    "constructor": "CFCN",
     "hidden_layers": {
       "h1":  128
     },
@@ -43,7 +43,10 @@
     "params": {
     },
     "lr": {
-      "decoder": 0.001,
+      "decoder": {
+        "linear": 0.001,
+        "nonlinear": 0.001
+      },
       "encoder": 0.001
     },
     "rho": 100.0,
@@ -52,7 +55,7 @@
   "trainer": {
     "accelerator": "auto",
     "devices": 1,
-    "max_epochs": 2000,
+    "max_epochs": 500,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
     "log_every_n_steps": 10,
@@ -68,7 +71,7 @@
   "early_stopping": {
     "monitor": "r_square",
     "mode": "max",
-    "patience": 200,
-    "min_delta": 1e-4
+    "patience": 500,
+    "min_delta": 1e-3
   }
 }

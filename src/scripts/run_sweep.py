@@ -1,13 +1,12 @@
 import wandb
 
 from train import train_model
-from src.helpers.utils import load_experiment_config, parser
+from src.helpers.utils import load_experiment_config, sweep_parser
 from src.helpers.wandb import login_wandb, init_wandb, fetch_wandb_sweep
-from src.generate_data import initialize_data_model
+from src.scripts.generate_data import initialize_data_model
 
 
 def run():
-    print("--- New run ---")
     model_name, dataset_name, config = init_wandb(experiment)
 
     print(f"Dataset '{dataset_name}':")
@@ -21,7 +20,7 @@ def run():
 
 
 if __name__ == '__main__':
-    args = parser()
+    args = sweep_parser()
 
     experiment = args.experiment
     sweep = args.sweep

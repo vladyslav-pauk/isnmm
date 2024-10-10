@@ -1,7 +1,6 @@
 import argparse
 import ast
 
-import wandb
 # import logging
 
 from pytorch_lightning import Trainer, seed_everything
@@ -9,7 +8,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 
 import src.modules.data as data_package
 import src.model as model_package
-from src.helpers.callbacks import EarlyStoppingCallback
+from src.modules.callback import EarlyStoppingCallback
 from src.helpers.utils import load_experiment_config, hash_name
 from src.helpers.wandb import init_logger, login_wandb
 from src.helpers.utils import update_hyperparameters
@@ -17,55 +16,39 @@ from src.helpers.utils import update_hyperparameters
 
 def train_model(experiment_name, data_model_name, model_name, **kwargs):
 
-    logger = init_logger(
-        experiment_name=experiment_name,
-        model=model_name,
-        run_name=hash_name(kwargs)
-    )
-
     config = load_experiment_config(experiment_name, model_name)
     data_config = load_experiment_config(experiment_name, data_model_name)
 
     config = update_hyperparameters(config, kwargs)
     data_config = update_hyperparameters(data_config, kwargs, show_log=False)
-    logger.log_hyperparams({
-        'config': config,
-        'data_config': data_config,
-    })
 
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
 
-    # logger = _setup_logger(experiment_name, config, data_config, kwargs)
-
-    datamodule_instance = setup_data_module(data_config, config["data_loader"])
-    model = _setup_model(config, datamodule_instance, logger)
+    logger = _setup_logger(experiment_name, config, data_config, kwargs)
+    datamodule = _setup_data_module(data_config, config["data_loader"])
+    model = _setup_model(config, logger)
     trainer = _setup_trainer(config, logger)
 
     # logging.info(f"Training model {model_name} with data model {data_model_name}")
-    trainer.fit(model, datamodule_instance)
-    trainer.test(model, datamodule_instance)
+    trainer.fit(model, datamodule)
+    trainer.test(model, datamodule)
     # model.summary()
     # logger.experiment.finish()
 
     return logger.experiment.id
 
 
-def setup_data_module(data_config, config):
-    # logging.info(f"Setting up data module {data_config['module_name']} with data model {data_config['data_model']}")
-
+def _setup_data_module(data_config, config):
     datamodule_class = getattr(data_package, config["module_name"]).DataModule
-    datamodule_instance = datamodule_class(data_config, **config)
-
-    return datamodule_instance
+    return datamodule_class(data_config, **config)
 
 
-def _setup_model(config, datamodule, logger):
+def _setup_model(config, logger):
     model_module = getattr(model_package, config['model_name'].upper())
     encoder = model_module.Encoder(config=config['encoder'])
     decoder = model_module.Decoder(config=config['decoder'])
     model = model_module.Model(
-        ground_truth_model=datamodule,
         encoder=encoder,
         decoder=decoder,
         optimizer_config=config['optimizer'],

@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 from src.modules.network import LinearPositive
 from torch.distributions import Dirichlet, LogNormal, Normal
-from src.modules.ae_module import AutoEncoderModule
+from src.model.ae_module import AutoEncoderModule
 
 # todo: implement prism-vae
 

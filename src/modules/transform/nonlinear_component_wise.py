@@ -4,7 +4,7 @@ import torch.nn as nn
 
 
 class Network(nn.Module):
-    def __init__(self, observed_dim, degree, nonlinearity, init_weights=None):
+    def __init__(self, latent_dim, observed_dim, degree, nonlinearity, init_weights=None):
         super(Network, self).__init__()
         self.model = nonlinearity
         self.degree = degree if degree is not None else 0

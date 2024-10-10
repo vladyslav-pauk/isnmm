@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, Dataset
 from pytorch_lightning import LightningDataModule
 import scipy.io as sio
 
-from src.helpers.utils import dict_to_str
+from ..utils import dict_to_str
 
 
 class DataModule(LightningDataModule):
