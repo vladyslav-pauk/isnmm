@@ -44,6 +44,7 @@ class DataModule(LightningDataModule):
         self.latent_data_qr = torch.tensor(data['latent_sample_qr'][:self.dataset_size], dtype=torch.float32)
         self.linear_mixture = torch.tensor(data['linear_mixture'], dtype=torch.float32)
         self.sigma = data['sigma'][0, 0]
+
         # todo: might use self.data and call whatever needed from the model
 
     def setup(self, stage=None):
@@ -78,7 +79,6 @@ class MyDataset(Dataset):
 
     def __getitem__(self, idx):
         indexed_labels = {key: value[idx] for key, value in self.labels.items()}
-
         return {
             "data": self.data[idx],
             "labels": indexed_labels,

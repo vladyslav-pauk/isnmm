@@ -10,7 +10,6 @@ from src.scripts.generate_data import initialize_data_model
 
 class Sweep:
     def __init__(self, sweep_config, trainer):
-        self.sweep_config = sweep_config
         self.experiment = sweep_config["parameters"]["experiment_name"]["value"]
         self.train_model = trainer
 
@@ -18,12 +17,9 @@ class Sweep:
         self.experiment_dir = f"../experiments/{self.experiment}/results"
 
         login_wandb(self.experiment_dir)
-        self.id = wandb.sweep(sweep=self.sweep_config, project=self.experiment)
+        self.id = wandb.sweep(sweep=sweep_config, project=self.experiment)
 
     def run(self):
-        # models = "_".join(sweep_config["parameters"]["model_name"]["values"])
-        # data = "_".join(sweep_config["parameters"]["data_model_name"]["values"])
-        # wandb.sweep.name = f'{self.sweep_config["name"]}-{self.id}'
         wandb.agent(self.id, function=self.step)
 
     def step(self):
@@ -48,5 +44,5 @@ class Sweep:
     def save_data(self, sweep_data):
         if not os.path.exists(self.experiment_dir):
             os.makedirs(self.experiment_dir)
-        with open(f"{self.experiment_dir}/sweep-{self.id}.json", "w") as f:
+        with open(f"{self.experiment_dir}/{self.id}.json", "w") as f:
             json.dump(sweep_data, f)

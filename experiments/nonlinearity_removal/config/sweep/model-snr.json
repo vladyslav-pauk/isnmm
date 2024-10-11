@@ -41,6 +41,20 @@
       "values": [
         500
       ]
+    },
+    "decoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 128
+        }
+      ]
+    },
+    "encoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 128
+        }
+      ]
     }
   }
 }

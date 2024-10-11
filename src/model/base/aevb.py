@@ -4,11 +4,11 @@ import torchmetrics
 import torch.nn.functional as F
 import torch.optim as optim
 
-from src.model.ae_module import AutoEncoderModule
+from src.model.ae_module import AE
 from src.modules.network import FCN
 
 
-class Model(AutoEncoderModule):
+class Model(AE):
     def __init__(self, encoder=None, decoder=None, model_config=None, optimizer_config=None, **kwargs):
         super().__init__(encoder=encoder, decoder=decoder)
 
@@ -22,8 +22,7 @@ class Model(AutoEncoderModule):
         self.latent_dim = model_config["latent_dim"]
         self.mc_samples = model_config["mc_samples"]
 
-    @staticmethod
-    def loss_function(data, model_output, idxes):
+    def _loss_function(self, data, model_output, idxes):
         reconstructed_sample = model_output["reconstructed_sample"]
         mu, std = model_output["latent_parameterization_batch"]
 
@@ -40,7 +39,7 @@ class Model(AutoEncoderModule):
         ], **self.optimizer_config["params"])
         return optimizer
 
-    def update_metrics(self, data, model_output, labels, idxes):
+    def _update_metrics(self, data, model_output, labels, idxes):
         pass
 
 

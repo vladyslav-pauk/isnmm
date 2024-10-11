@@ -8,12 +8,12 @@ import torch.nn.functional as F
 
 from src.modules.network import LinearPositive
 from torch.distributions import Dirichlet, LogNormal, Normal
-from src.model.ae_module import AutoEncoderModule
+from src.model.ae_module import AE
 
 # todo: implement prism-vae
 
 
-class Model(AutoEncoderModule):
+class Model(AE):
     def __init__(self, encoder=None, decoder=None, data_model=None, mc_samples=1, lr=None, metrics=None, monitor=None, config=None, data_config=None):
         super().__init__(encoder=encoder, decoder=decoder, lr=lr)
 

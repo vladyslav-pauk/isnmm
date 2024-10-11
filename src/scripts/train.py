@@ -108,7 +108,6 @@ if __name__ == "__main__":
 
     train_model(
         experiment_name=args.experiment_name,
-        data_model_name=args.data_name,
         model_name=args.model_name,
         **hyperparameters
     )

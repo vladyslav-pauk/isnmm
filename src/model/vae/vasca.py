@@ -3,15 +3,18 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
 import torch.optim as optim
+import wandb
 
 import src.modules.network as network
-from src.model.ae_module import AutoEncoderModule
+from src.model.ae_module import AE
+from src.model.lmm_module import LMM
 import src.modules.metric as metric
 
 # fixme: organize models
+# fixme: program simplex recovery experiment: vasca / cnae+mves / nisca
 
 
-class Model(AutoEncoderModule):
+class Model(AE, LMM):
     def __init__(self, encoder=None, decoder=None, model_config=None, optimizer_config=None):
         super().__init__(encoder, decoder)
 
@@ -19,34 +22,19 @@ class Model(AutoEncoderModule):
         self.mc_samples = model_config["mc_samples"]
         self.sigma = model_config["sigma"]
         self.latent_dim = model_config["latent_dim"]
-        # fixme: if ground_truth sigma and latent_dim are not provided in the dataset, fix this case
-        self.linear_mixture_true = None
-        self.metrics = None
 
     @staticmethod
-    def reparameterization(z):
+    def _reparameterization(z):
         z = torch.cat((z, torch.zeros_like(z[..., :1])), dim=-1)
         return F.softmax(z, dim=-1)
 
-    def loss_function(self, data, model_output, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"]
+    def _regularization_loss(self, model_output, data, idxes):
         latent_sample = model_output["latent_sample"]
         variational_parameters = model_output["latent_parameterization_batch"]
 
-        loss = {"reconstruction": self._reconstruction(data, reconstructed_sample)}
-
         neg_entropy_latent = - self._entropy(latent_sample, variational_parameters)
         kl_posterior_prior = neg_entropy_latent - torch.lgamma(torch.tensor(latent_sample.size(-1)))
-        loss.update({"kl_posterior_prior": self.sigma ** 2 * kl_posterior_prior})
-        return loss
-
-    @staticmethod
-    def _reconstruction(data, reconstructed_sample):
-        recon_loss = data.size(-1) / 2 * F.mse_loss(
-            reconstructed_sample, data.expand_as(reconstructed_sample), reduction='mean'
-        )
-        # recon_loss += self.sigma ** 2 * data.size(-1) / 2 * torch.log(torch.tensor(2 * torch.pi))
-        return recon_loss
+        return {"kl_posterior_prior": self.sigma ** 2 * kl_posterior_prior}
 
     @staticmethod
     def _entropy(latent_sample, variational_parameters):
@@ -65,40 +53,6 @@ class Model(AutoEncoderModule):
         entropy += torch.log(latent_sample).sum(dim=-1).mean()
 
         return entropy
-
-    def setup_metrics(self):
-        if self.ground_truth:
-            self.latent_dim = self.ground_truth.latent_dim
-            self.sigma = self.ground_truth.sigma
-            self.linear_mixture_true = self.ground_truth.linear_mixture
-
-        self.metrics = torchmetrics.MetricCollection({
-            'mixture_mse_db': metric.MatrixMse(),
-            'mixture_sam': metric.SpectralAngle(),
-            'mixture_log_volume': metric.MatrixVolume(),
-            'mixture_matrix_change': metric.MatrixChange(),
-            'subspace_distance': metric.SubspaceDistance(),
-            'latent_mse': metric.MatrixMse()
-        })
-        self.metrics.eval()
-        self.log_monitor = {
-            "monitor": "mixture_mse_db",
-            "mode": "min"
-        }
-
-    def update_metrics(self, data, model_output, labels, idxes):
-        latent_sample = model_output["latent_sample"].mean(0)
-        latent_sample_true = labels["latent_sample"]
-        latent_sample_qr = labels["latent_sample_qr"]
-        linear_mixture_true = self.linear_mixture_true
-        linear_mixture = self.decoder.linear_mixture.matrix
-
-        self.metrics['mixture_mse_db'].update(linear_mixture_true, linear_mixture)
-        self.metrics['mixture_sam'].update(linear_mixture_true, linear_mixture)
-        self.metrics['mixture_log_volume'].update(linear_mixture)
-        self.metrics['mixture_matrix_change'].update(linear_mixture)
-        self.metrics['subspace_distance'].update(idxes, latent_sample, latent_sample_qr)
-        self.metrics['latent_mse'].update(latent_sample, latent_sample_true)
 
     def configure_optimizers(self):
         lr = self.optimizer_config["lr"]

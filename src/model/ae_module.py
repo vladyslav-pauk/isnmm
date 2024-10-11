@@ -1,11 +1,10 @@
-import wandb
 import pytorch_lightning as pl
 from torchsummary import summary
-import torch.nn.functional as F
 import torch
+from torch.nn import functional as F
 
 
-class AutoEncoderModule(pl.LightningModule):
+class AE(pl.LightningModule):
     def __init__(self, encoder, decoder):
         super().__init__()
 
@@ -17,7 +16,7 @@ class AutoEncoderModule(pl.LightningModule):
 
     def forward(self, observed_batch):
         posterior_parameterization_batch = self.encoder(observed_batch)
-        latent_sample = self.sample_posterior(posterior_parameterization_batch)
+        latent_sample = self._sample_posterior(posterior_parameterization_batch)
         reconstructed_sample = self.decoder(latent_sample)
 
         model_output = {
@@ -27,32 +26,49 @@ class AutoEncoderModule(pl.LightningModule):
         }
         return model_output
 
-    def sample_posterior(self, variational_parameters):
+    def _sample_posterior(self, variational_parameters):
         mean, std = variational_parameters
         eps = torch.randn(self.mc_samples, *std.shape).to(std.device)
         normal_sample = eps.mul(std.unsqueeze(0)).add_(mean.unsqueeze(0))
-        return self.reparameterization(normal_sample)
+        return self._reparameterization(normal_sample)
 
     @staticmethod
-    def reparameterization(sample):
+    def _reparameterization(sample):
         return sample
+
+    @staticmethod
+    def _reconstruction(data, reconstructed_sample):
+        recon_loss = data.size(-1) / 2 * F.mse_loss(
+            reconstructed_sample, data.expand_as(reconstructed_sample), reduction='mean'
+        )
+        # recon_loss += self.sigma ** 2 * data.size(-1) / 2 * torch.log(torch.tensor(2 * torch.pi))
+        return recon_loss
+
+    def _loss_function(self, observed_batch, model_output, idxes):
+        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
+        loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch)}
+        loss.update(self._regularization_loss(model_output, observed_batch, idxes))
+        return loss
+
+    def _regularization_loss(self, model_output, observed_batch, idxes):
+        return {}
 
     def training_step(self, batch, batch_idx):
         data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
-        loss = self.loss_function(data, self(data), idxes)
+        loss = self._loss_function(data, self(data), idxes)
         self.log_dict(loss)
         return sum(loss.values())
 
     def validation_step(self, batch, batch_idx):
         data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
-        validation_loss = {"validation_loss": sum(self.loss_function(data, self(data), idxes).values())}
-        self.update_metrics(data, self(data), labels, idxes)
+        validation_loss = {"validation_loss": sum(self._loss_function(data, self(data), idxes).values())}
+        self._update_metrics(data, self(data), labels, idxes)
         self.log_dict({**validation_loss, **self.metrics.compute()})
 
     def test_step(self, batch, batch_idx):
         data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
         model_outputs = self(data)
-        self.update_metrics(data, model_outputs, labels, idxes)
+        self._update_metrics(data, model_outputs, labels, idxes)
         # self.metrics['evaluate_metric'].toggle_show_plot(True)
 
         final_metrics = self.metrics.compute()
@@ -73,19 +89,25 @@ class AutoEncoderModule(pl.LightningModule):
 
     def setup(self, stage):
         if stage == 'fit' or stage is None:
-            self.ground_truth = self.trainer.datamodule
-            data_sample = next(iter(self.ground_truth.train_dataloader()))
+            datamodule = self.trainer.datamodule
 
+            data_sample = next(iter(datamodule.train_dataloader()))
             self.observed_dim = data_sample["data"].shape[1]
             if self.latent_dim is None:
-                self.latent_dim = self.observed_dim
+                # self.latent_dim = self.observed_dim
+                self.latent_dim = data_sample["labels"]["latent_sample"].shape[1]
 
             self.encoder.construct(self.latent_dim, self.observed_dim)
             self.decoder.construct(self.latent_dim, self.observed_dim)
 
-            self.setup_metrics()
+            if data_sample["labels"]:
+                ground_truth = datamodule
+                print("Ground truth model found.")
+            else:
+                ground_truth = None
+            self._setup_metrics(ground_truth)
 
-    def summary(self):
+    def _summary(self):
         summary(self.encoder, (self.observed_dim,))
         summary(self.decoder, (self.latent_dim,))
 
@@ -99,3 +121,4 @@ class AutoEncoderModule(pl.LightningModule):
 #  self.save_hyperparameters(ignore=['encoder', 'decoder', 'ground_truth_model'])
 # todo: i can also check variance of the residual, that's more statistical metric
 # todo: use expectation of the reconstructed x for each z_mc instead of using z_mean
+# todo: assign self.latent_dim and self.sigma in ae_module.setup

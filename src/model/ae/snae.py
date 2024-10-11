@@ -1,24 +1,23 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-import torchmetrics
 from torch import optim
 
-from .nae import NAE
-import src.modules.metric as metric
+from src.model.pnl_module import PNL
+from src.model.ae_module import AE
 import src.modules.network as network
 
 
-class Model(NAE):
+class Model(AE, PNL):
     def __init__(self, encoder, decoder, model_config, optimizer_config):
-        super().__init__(encoder, decoder, model_config)
+        super().__init__(encoder, decoder)
 
         self.optimizer_config = optimizer_config
         self.latent_dim = model_config["latent_dim"]
 
     @staticmethod
-    def reparameterization(sample):
-        sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+    def _reparameterization(sample):
+        # sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
         return F.softmax(sample, dim=-1)
 
     def configure_optimizers(self):
@@ -40,11 +39,11 @@ class Encoder(nn.Module):
         self.network = None
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(observed_dim, latent_dim - 1, **self.config)
+        self.network = self.constructor(observed_dim, latent_dim, **self.config)
 
     def forward(self, x):
-        x = self.network.forward(x)
-        return x, torch.zeros_like(x).to(x.device)
+        z = self.network.forward(x)
+        return z, torch.zeros_like(z).to(z.device)
 
 
 class Decoder(nn.Module):
@@ -52,19 +51,19 @@ class Decoder(nn.Module):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
-        self.linear_mixture = None
+        self.linear_mixture = nn.Identity()
         self.nonlinear_transform = None
 
     def construct(self, latent_dim, observed_dim):
-        self.linear_mixture = network.LinearPositive(
-            torch.eye(observed_dim, latent_dim), **self.config
-        )
+        # self.linear_mixture = network.LinearPositive(
+        #     torch.eye(observed_dim, latent_dim), **self.config
+        # )
         # self.linear_mixture.eval()
-        self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
+        self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
 
-    def forward(self, x):
-        x = self.linear_mixture(x)
-        x = self.nonlinear_transform(x)
+    def forward(self, z):
+        y = self.linear_mixture(z)
+        x = self.nonlinear_transform(y)
         return x
 
 # class Decoder(nn.Module):

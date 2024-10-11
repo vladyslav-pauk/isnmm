@@ -9,7 +9,7 @@
     "num_workers": 4
   },
   "model": {
-    "latent_dim": 3
+    "latent_dim": null
   },
   "encoder": {
     "constructor": "CNN",
@@ -59,7 +59,7 @@
   "trainer": {
     "accelerator": "auto",
     "devices": 1,
-    "max_epochs": 500,
+    "max_epochs": 2000,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
     "log_every_n_steps": 10,
@@ -75,7 +75,7 @@
   "early_stopping": {
     "monitor": "r_square",
     "mode": "max",
-    "patience": 20,
-    "min_delta": 1e-3
+    "patience": 500,
+    "min_delta": 1e-5
   }
 }

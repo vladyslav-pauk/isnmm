@@ -9,9 +9,9 @@ if __name__ == '__main__':
     experiment = args.experiment
     sweep = args.sweep
     sweep_config = load_sweep_config(experiment, sweep)
+    # sweep_config["name"] = f"{sweep}"
 
     print(f"Experiment '{experiment}'")
-    # sweep_config["name"] = f"{sweep}"
 
     sweep = Sweep(sweep_config, train_model)
     sweep.run()

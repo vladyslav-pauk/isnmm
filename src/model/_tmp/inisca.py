@@ -5,11 +5,11 @@ import torchmetrics
 import torch.optim as optim
 
 import src.modules.network as network
-from src.model.ae_module import AutoEncoderModule
+from src.model.ae_module import AE
 import src.modules.metric as metric
 
 
-class Model(AutoEncoderModule):
+class Model(AE):
     def __init__(self, ground_truth_model=None, encoder=None, decoder=None, model_config=None, optimizer_config=None):
         super().__init__(encoder, decoder)
 

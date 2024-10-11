@@ -103,7 +103,7 @@ class CSVTimeSeriesDataset(Dataset):
         x = self.data[idx]
         # Apply the normalization transform
         x_normalized = self.transform(x)
-        return x_normalized, x_normalized
+        return x_normalized, torch.nan_like(x_normalized)
 
 
 class NormalizeTabular:
