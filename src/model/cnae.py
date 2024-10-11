@@ -1,8 +1,8 @@
 import torch
 from torch import nn
 
-from src.model.pnl_module import PNL
-from src.model.ae_module import AE
+from src.model.modules.post_nonlinear import PNL
+from src.model.modules.autoencoder import AE
 from src.modules.optimizer.constrained_lagrange import ConstrainedLagrangeOptimizer
 import src.modules.network as network
 

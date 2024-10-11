@@ -5,8 +5,8 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import ExponentialLR, ReduceLROnPlateau
 
 import src.modules.network as network
-from src.model.ae_module import AE
-from src.model.pnl_module import PNL
+from src.model.modules.autoencoder import AE
+from src.model.modules.post_nonlinear import PNL
 
 
 class Model(AE, PNL):

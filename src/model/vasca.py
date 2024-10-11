@@ -1,14 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torchmetrics
 import torch.optim as optim
-import wandb
 
 import src.modules.network as network
-from src.model.ae_module import AE
-from src.model.lmm_module import LMM
-import src.modules.metric as metric
+from src.model.modules.autoencoder import AE
+from src.model.modules.linear_mixture import LMM
 
 # fixme: organize models
 # fixme: program simplex recovery experiment: vasca / cnae+mves / nisca

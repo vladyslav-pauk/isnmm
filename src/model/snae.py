@@ -3,8 +3,8 @@ from torch import nn
 from torch.nn import functional as F
 from torch import optim
 
-from src.model.pnl_module import PNL
-from src.model.ae_module import AE
+from src.model.modules.post_nonlinear import PNL
+from src.model.modules.autoencoder import AE
 import src.modules.network as network
 
 
