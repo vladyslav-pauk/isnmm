@@ -9,15 +9,15 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.modules.callback import EarlyStoppingCallback
-from src.helpers.utils import load_experiment_config, hash_name
+from src.helpers.utils import load_model_config, load_data_config, hash_name
 from src.helpers.wandb import init_logger, login_wandb
 from src.helpers.utils import update_hyperparameters
 
 
-def train_model(experiment_name, data_model_name, model_name, **kwargs):
+def train_model(experiment_name, model_name, **kwargs):
 
-    config = load_experiment_config(experiment_name, model_name)
-    data_config = load_experiment_config(experiment_name, data_model_name)
+    config = load_model_config(experiment_name, model_name)
+    data_config = load_data_config(experiment_name)
 
     config = update_hyperparameters(config, kwargs)
     data_config = update_hyperparameters(data_config, kwargs, show_log=False)

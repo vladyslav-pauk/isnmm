@@ -1,13 +1,13 @@
 import torch
 from pytorch_lightning import seed_everything
 
-from src.helpers.utils import load_experiment_config, update_hyperparameters
+from src.helpers.utils import load_data_config, update_hyperparameters
 import src.modules.distribution as distribution_package
 
 
 def initialize_data_model(experiment_name, data_model_name, **kwargs):
 
-    config = load_experiment_config(experiment_name, data_model_name)
+    config = load_data_config(experiment_name)
     config = update_hyperparameters(config, kwargs)
 
     linear_mixture_matrix = torch.randn(config["observed_dim"], config["latent_dim"])

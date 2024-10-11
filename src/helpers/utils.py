@@ -32,8 +32,24 @@ def sweep_parser():
     return args
 
 
-def load_experiment_config(experiment, config_name):
-    path = f'../experiments/{experiment}/{config_name}.json'
+def load_model_config(experiment, config_name):
+    path = f'../experiments/{experiment}/config/model/{config_name}.json'
+
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return json.load(f)
+
+
+def load_sweep_config(experiment, config_name):
+    path = f'../experiments/{experiment}/config/sweep/{config_name}.json'
+
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return json.load(f)
+
+
+def load_data_config(experiment):
+    path = f'../experiments/{experiment}/config/data.json'
 
     if os.path.exists(path):
         with open(path, 'r') as f:
@@ -112,3 +128,12 @@ def flatten_dict(d, parent_key='', sep='.'):
         else:
             items.append((new_key, value))
     return dict(items)
+
+# log_format = "%(asctime)s - %(levelname)s - %(message)s"
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format=log_format,
+#     datefmt="%Y-%m-%d %H:%M:%S",
+# )
+# logging.basicConfig(level=logging.INFO)
+# logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)

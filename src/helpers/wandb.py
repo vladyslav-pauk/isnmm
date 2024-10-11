@@ -10,20 +10,13 @@ def login_wandb():
     wandb.require("core")
     wandb.login()
 
-    # log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    # logging.basicConfig(
-    #     level=logging.INFO,
-    #     format=log_format,
-    #     datefmt="%Y-%m-%d %H:%M:%S",
-    # )
-    # logging.basicConfig(level=logging.INFO)
-    # logging.getLogger("pytorch_lightning").setLevel(logging.WARNING)
     import warnings
     warnings.filterwarnings(
         "ignore",
         message=".*GPU available but not used.*",
         category=UserWarning
     )
+
 
 def init_logger(experiment_name=None, model=None, run_name=None):
 
@@ -38,22 +31,25 @@ def init_logger(experiment_name=None, model=None, run_name=None):
         notes="notes for the model",
         save_dir=f"../models/{model}",
         log_model=True,
-        resume="allow",
-        # config={}
+        resume="allow"
     )
 
     return wandb_logger
 
 
-def init_wandb(experiment):
+def init_wandb(experiment, sweep_id):
     import os
     project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
     project_name = project_root.split("/")[-2]
 
+    wandb_sweep_dir = f'{project_root}/experiments/{experiment}/results/sweeps/{sweep_id}'
+    if not os.path.exists(wandb_sweep_dir):
+        os.makedirs(wandb_sweep_dir)
+
     wandb.init(
         entity=project_name,
         project=experiment,
-        dir=project_root
+        dir=wandb_sweep_dir
     )
     print(f"--- Run ID: {wandb.run.id} ---")
     config = wandb.config
