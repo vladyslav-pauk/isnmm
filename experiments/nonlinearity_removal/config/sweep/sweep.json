@@ -15,8 +15,6 @@
     },
     "model_name": {
       "values": [
-        "nisca",
-        "inisca",
         "cnae",
         "snae"
       ]

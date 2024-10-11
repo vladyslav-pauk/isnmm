@@ -7,9 +7,8 @@ import torch.optim as optim
 import src.modules.network as network
 from src.model.ae_module import AutoEncoderModule
 import src.modules.metric as metric
-# fixme: names for individual runs wandb
-# fixme: organize the experiment folder structure, sweep_logs, sweep_configs, model_configs, nnmm (or just call it data_config)
-# fixme: experiment description (docs.md? and log it to wandb or make experiments.md in docs/)
+
+# fixme: organize models
 
 
 class Model(AutoEncoderModule):

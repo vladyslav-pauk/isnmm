@@ -9,8 +9,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.modules.callback import EarlyStoppingCallback
-from src.helpers.utils import load_model_config, load_data_config, hash_name
-from src.helpers.wandb import init_logger, login_wandb
+from src.helpers.utils import load_model_config, load_data_config
+from src.helpers.wandb_tools import init_logger, login_wandb
 from src.helpers.utils import update_hyperparameters
 
 
@@ -79,11 +79,9 @@ def _setup_trainer(config, logger):
 
 
 def _setup_logger(experiment_name, config, data_config, kwargs):
-
     logger = init_logger(
         experiment_name=experiment_name,
-        model=config['model_name'],
-        run_name=hash_name(kwargs)
+        config=kwargs
     )
     logger.log_hyperparams({
         'config': config,

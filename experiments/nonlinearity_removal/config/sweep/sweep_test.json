@@ -2,7 +2,7 @@
   "method": "grid",
   "metric": {
     "goal": "maximize",
-    "name": "h_r_square"
+    "name": "r_square"
   },
   "parameters": {
     "experiment_name": {
@@ -15,18 +15,20 @@
     },
     "model_name": {
       "values": [
-        "cnae"
+        "cnae",
+        "snae"
       ]
     },
     "snr": {
       "values": [
-        10
+        10,
+        20
       ]
     },
     "torch_seed": {
       "values": [
         0,
-        29
+        10
       ]
     },
     "trainer.max_epochs": {
