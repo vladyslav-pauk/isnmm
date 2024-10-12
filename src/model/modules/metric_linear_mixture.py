@@ -20,8 +20,6 @@ class LMM(pl.LightningModule):
             'mixture_matrix_change': metric.MatrixChange()
         }
         if ground_truth:
-            self.latent_dim = ground_truth.latent_dim
-            self.sigma = ground_truth.sigma
             self.linear_mixture_true = ground_truth.linear_mixture
 
             metrics.update({

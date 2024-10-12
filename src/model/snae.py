@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 from torch import optim
 
-from src.model.modules.post_nonlinear import PNL
+from src.model.modules.metric_post_nonlinear import PNL
 from src.model.modules.autoencoder import AE
 import src.modules.network as network
 
@@ -14,11 +14,15 @@ class Model(AE, PNL):
 
         self.optimizer_config = optimizer_config
         self.latent_dim = model_config["latent_dim"]
+        self.mc_samples = 1
+        self.sigma = 0
 
     @staticmethod
     def _reparameterization(sample):
-        # sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
-        return F.softmax(sample, dim=-1)
+        sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+        F.softmax(sample, dim=-1)
+        # sample = sample / sample.sum(dim=-1).unsqueeze(-1)
+        return sample
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])
@@ -39,7 +43,7 @@ class Encoder(nn.Module):
         self.network = None
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(observed_dim, latent_dim, **self.config)
+        self.network = self.constructor(observed_dim, latent_dim - 1, **self.config)
 
     def forward(self, x):
         z = self.network.forward(x)
@@ -52,7 +56,7 @@ class Decoder(nn.Module):
         self.config = config
         self.constructor = getattr(network, config["constructor"])
         self.linear_mixture = nn.Identity()
-        self.nonlinear_transform = None
+        self.nonlinear_transform = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
         # self.linear_mixture = network.LinearPositive(
@@ -94,6 +98,4 @@ class Decoder(nn.Module):
 #         return x
 
 # todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
-
-
 # todo: clean up and readme

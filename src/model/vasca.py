@@ -5,10 +5,7 @@ import torch.optim as optim
 
 import src.modules.network as network
 from src.model.modules.autoencoder import AE
-from src.model.modules.linear_mixture import LMM
-
-# fixme: organize models
-# fixme: program simplex recovery experiment: vasca / cnae+mves / nisca
+from src.model.modules.metric_linear_mixture import LMM
 
 
 class Model(AE, LMM):
@@ -95,4 +92,4 @@ class Decoder(nn.Module):
         x = self.linear_mixture(z)
         return x
 
-# todo: separate universal scripts run_sweep, train, analyze_sweep, generate_data from experiments (each experiment folder has a script)
+# fixme: program simplex recovery experiment: vasca / cnae+mves / nisca

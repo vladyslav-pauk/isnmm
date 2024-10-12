@@ -1,6 +1,6 @@
 {
   "model_name": "nisca",
-  "torch_seed": 0,
+  "torch_seed": null,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 100,
@@ -9,7 +9,7 @@
     "num_workers": 4
   },
   "model": {
-    "mc_samples": 1,
+    "mc_samples": 100,
     "latent_dim": null,
     "sigma": null
   },
@@ -44,7 +44,7 @@
     "limit_val_batches": 1,
     "val_check_interval": 1.0,
     "limit_test_batches": 1,
-    "gradient_clip_val": 0.5,
+    "gradient_clip_val": null,
     "enable_progress_bar": false
   },
   "optimizer": {

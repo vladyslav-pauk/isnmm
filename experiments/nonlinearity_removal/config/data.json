@@ -3,7 +3,7 @@
   "data_model": "nonlinear",
   "nonlinearity": "sin",
   "degree": null,
-  "snr": 100,
+  "snr": 25,
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
   "observed_dim": 3,

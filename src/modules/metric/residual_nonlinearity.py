@@ -26,6 +26,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
         self.latent_sample_true = labels["latent_sample"]
         self.linearly_mixed_sample = linearly_mixed_sample
         self.observed_sample = observed_sample
+        self.noiseless_sample_true = labels["noiseless_sample"]
 
         r_squared_values = self.fitter.fit(self.linearly_mixed_sample, self.linearly_mixed_sample_true)
         self.sum_r_squared += r_squared_values.sum()
@@ -38,17 +39,22 @@ class ResidualNonlinearity(torchmetrics.Metric):
     def plot(self, show_plot=False):
 
         plot_components(
-            self.observed_sample,
-            model=self.linearly_mixed_sample,
-            true=self.linearly_mixed_sample_true,
+            model=(self.reconstructed_sample, self.linearly_mixed_sample),
+            true=(self.noiseless_sample_true, self.linearly_mixed_sample_true),
             scale=True,
             show_plot=show_plot,
             name=f"Model vs True Nonlinearity"
         )
+        # plot_components(
+        #     model=(self.linearly_mixed_sample, self.reconstructed_sample),
+        #     true=(self.linearly_mixed_sample_true, self.noiseless_sample_true),
+        #     scale=True,
+        #     show_plot=show_plot,
+        #     name=f"Reconstruction vs True Noiseless"
+        # )
         plot_components(
-            self.linearly_mixed_sample_true,
-            model=self.linearly_mixed_sample,
-            fitter=self.fitter,
+            model=(self.linearly_mixed_sample_true, self.linearly_mixed_sample),
+            fitter=(self.linearly_mixed_sample_true, self.fitter),
             labels=self.fitter.rsquared,
             scale=True,
             show_plot=show_plot,
@@ -108,7 +114,7 @@ class LineFitter(nn.Module):
         return torch.cat(transformed_components, dim=-1)
 
 
-def plot_components(x, labels=None, scale=False, show_plot=False, name=None, **kwargs):
+def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwargs):
     # todo: make it a line instead of scatter
     # todo: adjust styling for the paper
     import warnings
@@ -127,18 +133,16 @@ def plot_components(x, labels=None, scale=False, show_plot=False, name=None, **k
         "savefig.dpi": 300,
         "text.latex.preamble": r"\usepackage{amsmath}"
     })
-    num_components = x.shape[-1]
+    num_components = kwargs[list(kwargs.keys())[0]][0].shape[-1]
 
     n_cols = math.ceil(math.sqrt(num_components))
     n_rows = math.ceil(num_components / n_cols)
 
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
     axes = axes.flatten()
-
     for i in range(num_components):
-        x_component = x[..., i].clone().detach().cpu().numpy()
-
-        for k, v in kwargs.items():
+        for k, (x, v) in kwargs.items():
+            x_component = x[..., i].clone().detach().cpu().numpy()
             if callable(v):
                 y_component = v(x)[..., i].clone().detach().cpu()
             else:
@@ -146,11 +150,11 @@ def plot_components(x, labels=None, scale=False, show_plot=False, name=None, **k
                 if (torch.max(y_component) - torch.min(y_component)).any() < 1e-6:
                     print(f"Warning: y-component {i} is constant")
 
-            axes[i].scatter(x_component, visual_normalization(y_component) if scale else y_component, label=k.replace('_', ' ').capitalize())
+            axes[i].scatter(visual_normalization(torch.tensor(x_component)), visual_normalization(y_component) if scale else y_component, label=k.replace('_', ' ').capitalize())
 
-        if labels is not None:
-            axes[i].text(0.5, 0.1, f"R-squared: {labels[i]:.4f}", horizontalalignment='center', verticalalignment='center',
-                     transform=axes[i].transAxes)
+            if labels is not None:
+                axes[i].text(0.5, 0.1, f"R-squared: {labels[i]:.4f}", horizontalalignment='center', verticalalignment='center',
+                         transform=axes[i].transAxes)
         # axes[i].set_title(f'Component {i + 1} Nonlinearity')
         # axes[i].set_xlabel(f'Linearly mixed component {i + 1}')
         # axes[i].set_ylabel(f'Nonlinearly transformed component {i + 1}')

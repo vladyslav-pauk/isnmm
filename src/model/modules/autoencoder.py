@@ -45,7 +45,8 @@ class AE(pl.LightningModule):
         return recon_loss
 
     def _loss_function(self, observed_batch, model_output, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"].mean(0)
+        reconstructed_sample = model_output["reconstructed_sample"]
+        observed_batch = observed_batch.expand_as(reconstructed_sample)
         loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch)}
         loss.update(self._regularization_loss(model_output, observed_batch, idxes))
         return loss
@@ -102,6 +103,8 @@ class AE(pl.LightningModule):
 
             if data_sample["labels"]:
                 ground_truth = datamodule
+                self.latent_dim = ground_truth.latent_dim
+                self.sigma = ground_truth.sigma
                 print("Ground truth model found.")
             else:
                 ground_truth = None

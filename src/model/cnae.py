@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 
-from src.model.modules.post_nonlinear import PNL
+from src.model.modules.metric_post_nonlinear import PNL
 from src.model.modules.autoencoder import AE
 from src.modules.optimizer.constrained_lagrange import ConstrainedLagrangeOptimizer
 import src.modules.network as network
@@ -13,10 +13,12 @@ class Model(AE, PNL):
 
         self.optimizer_config = optimizer_config
         self.latent_dim = model_config["latent_dim"]
+        self.mc_samples = 1
+        self.sigma = 0
 
     def _regularization_loss(self, model_output, observed_batch, idxes):
-        latent_sample = model_output["latent_sample"].mean(0)
-        return self.optimizer.compute_regularization_loss(latent_sample, observed_batch, idxes)
+        latent_sample = model_output["latent_sample"]
+        return self.optimizer.compute_regularization_loss(latent_sample.mean(dim=0), observed_batch.mean(dim=0), idxes)
 
     @staticmethod
     def _constraint(latent_sample):
@@ -32,7 +34,6 @@ class Model(AE, PNL):
 
     def on_train_batch_end(self, outputs, batch, batch_idx):
         self.optimizer.update_buffers(batch["idxes"], self(batch["data"])["latent_sample"])
-
 
 
 class Encoder(nn.Module):

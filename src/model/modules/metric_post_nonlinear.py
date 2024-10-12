@@ -9,10 +9,6 @@ import src.modules.metric as metric
 class PNL(pl.LightningModule):
     def __init__(self):
         super().__init__()
-
-        self.optimizer = None
-        self.sigma = 0
-        self.mc_samples = 1
         self.metrics = None
 
     def _setup_metrics(self, ground_truth=None):

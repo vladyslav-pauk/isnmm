@@ -9,10 +9,11 @@
     "num_workers": 4
   },
   "model": {
-    "latent_dim": null
+    "latent_dim": null,
+    "sigma": null
   },
   "encoder": {
-    "constructor": "CNN",
+    "constructor": "FCN",
     "hidden_layers": {
       "h1":  128,
       "h2":  128,
@@ -52,9 +53,7 @@
         "nonlinear": 0.001
       },
       "encoder": 0.001
-    },
-    "rho": 100.0,
-    "inner_iters": 99
+    }
   },
   "trainer": {
     "accelerator": "auto",
