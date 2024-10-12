@@ -1,6 +1,6 @@
 {
   "model_name": "cnae",
-  "torch_seed": null,
+  "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 100,
@@ -14,8 +14,7 @@
   "encoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  256,
-      "h2":  256
+      "h1":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -29,8 +28,7 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  256,
-      "h2":  256
+      "h1":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
