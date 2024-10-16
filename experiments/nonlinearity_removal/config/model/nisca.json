@@ -1,6 +1,6 @@
 {
   "model_name": "nisca",
-  "torch_seed": 0,
+  "torch_seed": 1,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 100,

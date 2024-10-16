@@ -50,3 +50,5 @@ class LMM(pl.LightningModule):
 
         self.metrics['mixture_log_volume'].update(linear_mixture)
         self.metrics['mixture_matrix_change'].update(linear_mixture)
+
+# todo: move to experiment, make a folder for each experiment (move configs too?)
