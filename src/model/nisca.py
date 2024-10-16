@@ -55,43 +55,66 @@ class Model(AE, PNL):
 
         return entropy
 
+    # def configure_optimizers(self):
+    #     optimizer_class = getattr(optim, self.optimizer_config["name"])
+    #     lr = self.optimizer_config["lr"]
+    #
+    #     optimizer = optimizer_class([
+    #         {'params': self.encoder.mu_network.parameters(), 'lr': lr["encoder"]},
+    #         {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
+    #         {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
+    #     ], **self.optimizer_config["params"])
+    #     scheduler = ExponentialLR(optimizer, gamma=0.99)
+    #     return {
+    #         "optimizer": optimizer,
+    #         "lr_scheduler": {
+    #             "scheduler": scheduler,
+    #             **lr["scheduler"]
+    #         }
+    #     }
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])
         lr = self.optimizer_config["lr"]
-
-        optimizer = optimizer_class([
-            {'params': self.encoder.mu_network.parameters(), 'lr': lr["encoder"]},
+        self.optimizer = optimizer_class([
+            {'params': self.encoder.parameters(), 'lr': lr["encoder"]},
             {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
             {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
         ], **self.optimizer_config["params"])
-        scheduler = ExponentialLR(optimizer, gamma=0.99)
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                **lr["scheduler"]
-            }
-        }
+        return self.optimizer
 
+
+# class Encoder(nn.Module):
+#     def __init__(self, config):
+#         super().__init__()
+#         self.config = config
+#         self.constructor = getattr(network, config["constructor"])
+#         self.mu_network = None
+#         self.log_var_network = None
+#
+#     def construct(self, latent_dim, observed_dim):
+#         self.mu_network = self.constructor(observed_dim, latent_dim, **self.config)
+#         self.log_var_network = self.constructor(observed_dim, latent_dim, **self.config)
+#         self.log_var_network.eval()
+#
+#     def forward(self, x):
+#         mu = self.mu_network.forward(x)
+#         log_var = self.log_var_network.forward(x)
+#         std = torch.exp(0.5 * log_var)
+#         return mu, torch.zeros_like(mu).to(mu.device)
 
 class Encoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
-        self.mu_network = None
-        self.log_var_network = None
+        self.network = None
 
     def construct(self, latent_dim, observed_dim):
-        self.mu_network = self.constructor(observed_dim, latent_dim, **self.config)
-        self.log_var_network = self.constructor(observed_dim, latent_dim, **self.config)
-        self.log_var_network.eval()
+        self.network = self.constructor(observed_dim, latent_dim, **self.config)
 
     def forward(self, x):
-        mu = self.mu_network.forward(x)
-        log_var = self.log_var_network.forward(x)
-        std = torch.exp(0.5 * log_var)
-        return mu, std
+        z = self.network.forward(x)
+        return z, torch.zeros_like(z).to(z.device)
 
 
 class Decoder(nn.Module):

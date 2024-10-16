@@ -1,6 +1,6 @@
 {
   "model_name": "nisca",
-  "torch_seed": null,
+  "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
     "batch_size": 100,
@@ -16,18 +16,25 @@
   "encoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
     "weight_initialization": null,
+    "mixture_initialization": null,
     "bn_eps": null,
-    "bn_momentum": 0.1
+    "bn_momentum": 0.1,
+    "dropout_rate": null,
+    "groups": null
   },
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -36,16 +43,6 @@
     "bn_eps": null,
     "bn_momentum": 0.1,
     "dropout_rate": null
-  },
-  "trainer": {
-    "accelerator": "cpu",
-    "max_epochs": 2000,
-    "log_every_n_steps": 10,
-    "limit_val_batches": 1,
-    "val_check_interval": 1.0,
-    "limit_test_batches": 1,
-    "gradient_clip_val": null,
-    "enable_progress_bar": false
   },
   "optimizer": {
     "name": "Adam",
@@ -64,6 +61,17 @@
         "strict": true
       }
     }
+  },
+  "trainer": {
+    "accelerator": "auto",
+    "devices": 1,
+    "max_epochs": 2000,
+    "gradient_clip_val": null,
+    "limit_val_batches": 1,
+    "limit_test_batches": 1,
+    "log_every_n_steps": 10,
+    "val_check_interval": 1.0,
+    "enable_progress_bar": false
   },
   "checkpoint": {
     "monitor": "r_square",
