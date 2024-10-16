@@ -41,6 +41,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
         plot_components(
             model=(self.reconstructed_sample, self.linearly_mixed_sample),
             true=(self.noiseless_sample_true, self.linearly_mixed_sample_true),
+            nr=(self.reconstructed_sample, self.noiseless_sample_true),
             scale=True,
             show_plot=show_plot,
             name=f"Model vs True Nonlinearity"
