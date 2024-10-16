@@ -18,9 +18,9 @@ class Model(AE, LMM):
         self.latent_dim = model_config["latent_dim"]
 
     @staticmethod
-    def _reparameterization(z):
-        z = torch.cat((z, torch.zeros_like(z[..., :1])), dim=-1)
-        return F.softmax(z, dim=-1)
+    def _reparameterization(sample):
+        sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+        return F.softmax(sample, dim=-1)
 
     def _regularization_loss(self, model_output, data, idxes):
         latent_sample = model_output["latent_sample"]
