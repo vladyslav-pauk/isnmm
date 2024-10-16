@@ -3,10 +3,10 @@ from torch.optim import Optimizer
 from torch.optim import Adam
 
 
-class ConstrainedLagrangeOptimizer(Optimizer):
+class AugmentedLagrangeMultiplier(Optimizer):
     def __init__(self, params=None, constraint_fn=None, optimizer_config=None):
         defaults = dict(**optimizer_config)
-        super(ConstrainedLagrangeOptimizer, self).__init__(params, defaults)
+        super(AugmentedLagrangeMultiplier, self).__init__(params, defaults)
 
         self.rho = optimizer_config['rho']
         self.update_frequency = optimizer_config['update_frequency']
@@ -25,25 +25,37 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         self.base_optimizer.step()
 
         if (self.global_step + 1) % self.update_frequency == 0:
-            self.update_multipliers()
+            self._update_multipliers()
 
         self.global_step += 1
         return loss
 
-    def update_multipliers(self):
+    def _update_multipliers(self):
         idxes = self._buffers["count"].nonzero(as_tuple=True)[0]
         latent_sample = self._buffers["latent_sample"][idxes]
 
-        diff = torch.sum(latent_sample, dim=1) - 1.0
-        self._buffers["mult"][idxes] += self.rho * diff
+        constraint = self.constraint_fn(latent_sample)
+        self._buffers["multiplier"][idxes] += self.rho * constraint
 
         self._buffers["latent_sample"][idxes] = 0.0
         self._buffers["count"][idxes] = 0
 
-    def initialize_buffers(self, n_sample, latent_dim):
-        self.register_buffer("latent_sample", torch.zeros((n_sample, latent_dim)))
-        self.register_buffer("count", torch.zeros(n_sample))
-        self.register_buffer("mult", torch.zeros(n_sample))
+    def compute_regularization_loss(self, latent_sample, observed_sample, idxes):
+        if 'multiplier' not in self._buffers:
+            self._initialize_buffers(
+                latent_dim=latent_sample.shape[-1],
+                # n_sample=latent_sample.shape[0]
+            )
+        batch_size = latent_sample.size(0)
+        constraint = self.constraint_fn(latent_sample).to(self._buffers["multiplier"].device)
+        idxes = idxes.to(self._buffers["multiplier"].device)
+
+        multiplier = self._buffers["multiplier"][idxes]
+
+        feasible_err = torch.dot(multiplier, constraint) / batch_size
+        augmented_err = (self.rho / 2) * torch.norm(constraint) ** 2 / batch_size
+
+        return {"feasible": feasible_err.to(latent_sample.device), "augmented": augmented_err.to(latent_sample.device)}
 
     def update_buffers(self, idxes, latent_sample):
         idxes = idxes.to(self._buffers["latent_sample"].device)
@@ -52,24 +64,12 @@ class ConstrainedLagrangeOptimizer(Optimizer):
         self._buffers["latent_sample"][idxes] = latent_sample
         self._buffers["count"][idxes] += 1
 
-    def compute_regularization_loss(self, latent_sample, observed_sample, idxes):
-        if 'mult' not in self._buffers:
-            self.initialize_buffers(
-                n_sample=observed_sample.shape[0] * self.update_frequency,
-                latent_dim=latent_sample.shape[-1]
-            )
-        batch_size = observed_sample.size(0)
-        tmp = self.constraint_fn(latent_sample).to(self._buffers["mult"].device)
-        idxes = idxes.to(self._buffers["mult"].device)
+    def _initialize_buffers(self, latent_dim, n_sample=100000):
+        self._register_buffer("latent_sample", torch.zeros((n_sample, latent_dim)))
+        self._register_buffer("count", torch.zeros(n_sample))
+        self._register_buffer("multiplier", torch.randn(n_sample))
 
-        mult = self._buffers["mult"][idxes]
-
-        feasible_err = torch.dot(mult, tmp) / batch_size
-        augmented_err = (self.rho / 2) * torch.norm(tmp) ** 2 / batch_size
-
-        return {"feasible": feasible_err.to(latent_sample.device), "augmented": augmented_err.to(latent_sample.device)}
-
-    def register_buffer(self, name, tensor):
+    def _register_buffer(self, name, tensor):
         self._buffers[name] = tensor
 
     def to(self, device):

@@ -1,1 +1,1 @@
-from .constrained_lagrange import ConstrainedLagrangeOptimizer
+from .augmented_lagrange import AugmentedLagrangeMultiplier
