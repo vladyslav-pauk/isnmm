@@ -19,9 +19,9 @@ class Model(AE, PNL):
 
     @staticmethod
     def _reparameterization(sample):
-        sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
-        F.softmax(sample, dim=-1)
-        # sample = sample / sample.sum(dim=-1).unsqueeze(-1)
+        # sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+        # F.softmax(sample, dim=-1)
+        sample = sample / sample.sum(dim=-1).unsqueeze(-1)
         return sample
 
     def configure_optimizers(self):
@@ -43,7 +43,7 @@ class Encoder(nn.Module):
         self.network = None
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(observed_dim, latent_dim - 1, **self.config)
+        self.network = self.constructor(observed_dim, latent_dim, **self.config)
 
     def forward(self, x):
         z = self.network.forward(x)
@@ -97,5 +97,6 @@ class Decoder(nn.Module):
 #         x = self.nonlinear_transform(y)
 #         return x
 
+# fixme: run for 3->4 dims and latent_dim-1 so it has smae structure as vasca
 # todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
 # todo: clean up and readme

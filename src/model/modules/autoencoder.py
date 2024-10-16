@@ -47,7 +47,9 @@ class AE(pl.LightningModule):
     def _loss_function(self, observed_batch, model_output, idxes):
         reconstructed_sample = model_output["reconstructed_sample"]
         observed_batch = observed_batch.expand_as(reconstructed_sample)
-        loss = {"reconstruction": F.mse_loss(reconstructed_sample, observed_batch)}
+        loss = {
+            "reconstruction": F.mse_loss(reconstructed_sample, observed_batch, reduction='sum') / observed_batch.shape[1]
+        }
         loss.update(self._regularization_loss(model_output, observed_batch, idxes))
         return loss
 
@@ -59,6 +61,9 @@ class AE(pl.LightningModule):
         loss = self._loss_function(data, self(data), idxes)
         self.log_dict(loss)
         return sum(loss.values())
+
+    def val_dataloader(self):
+        return self.train_dataloader()
 
     def validation_step(self, batch, batch_idx):
         data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
