@@ -1,11 +1,11 @@
 {
   "model_name": "cnae",
-  "torch_seed": 0,
+  "torch_seed": 1,
   "data_loader": {
     "module_name": "synthetic",
-    "batch_size": 100,
+    "batch_size": 1000,
     "val_batch_size": 1000,
-    "split": [0.8, 0.1, 0.1],
+    "split": [1, 0, 0],
     "num_workers": 4
   },
   "model": {
@@ -14,7 +14,9 @@
   "encoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -28,7 +30,9 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128
+      "h1":  128,
+      "h2":  128,
+      "h3":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -46,8 +50,8 @@
       "decoder": 1e-3,
       "encoder": 1e-3
     },
-    "rho": 100.0,
-    "update_frequency": 100
+    "rho": 1e2,
+    "update_frequency": 1000
   },
   "trainer": {
     "accelerator": "auto",

@@ -9,5 +9,5 @@
   "observed_dim": 3,
   "latent_dim": 3,
   "dataset_size": 10000,
-  "data_seed": 9
+  "data_seed": 1
 }
