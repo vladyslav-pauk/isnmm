@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
 from torch import optim
 
 from src.model.modules.metric_post_nonlinear import PNL
@@ -19,8 +18,6 @@ class Model(AE, PNL):
 
     @staticmethod
     def _reparameterization(sample):
-        # sample = torch.cat((sample[..., :-1], torch.zeros_like(sample[..., :1])), dim=-1)
-        # F.softmax(sample, dim=-1)
         sample = sample / sample.sum(dim=-1).unsqueeze(-1)
         return sample
 
@@ -40,13 +37,18 @@ class Encoder(nn.Module):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
-        self.network = None
+        self.nonlinear_transform = None
+        self.linear_mixture_inv = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
-        self.network = self.constructor(observed_dim, latent_dim, **self.config)
+        self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
+        self.linear_mixture_inv = network.LinearPositive(
+            torch.rand(latent_dim, observed_dim), **self.config
+        )
 
     def forward(self, x):
-        z = self.network.forward(x)
+        y = self.nonlinear_transform.forward(x)
+        z = self.linear_mixture_inv(y)
         return z, torch.zeros_like(z).to(z.device)
 
 
@@ -59,11 +61,10 @@ class Decoder(nn.Module):
         self.nonlinear_transform = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
-        # self.linear_mixture = network.LinearPositive(
-        #     torch.eye(observed_dim, latent_dim), **self.config
-        # )
-        # self.linear_mixture.eval()
-        self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
+        self.linear_mixture = network.LinearPositive(
+            torch.rand(observed_dim, latent_dim), **self.config
+        )
+        self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
 
     def forward(self, z):
         y = self.linear_mixture(z)
@@ -100,3 +101,4 @@ class Decoder(nn.Module):
 # fixme: run for 3->4 dims and latent_dim-1 so it has smae structure as vasca
 # todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
 # todo: clean up and readme
+# fixme: cnae unequal dimensions (as in paper with blocks)
