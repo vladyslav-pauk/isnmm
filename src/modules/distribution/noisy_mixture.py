@@ -52,7 +52,7 @@ class GenerativeModel:  # (Distribution)
 
     def _init_model(self, linear_mixture_matrix):
         linear_mixture = LinearPositive(
-            linear_mixture_matrix, self.mixing_matrix_init
+            linear_mixture_matrix, self.mixing_matrix_init, scale=[5, 5, 5]
         ).requires_grad_(False)
 
         nonlinear_transform = NonlinearTransform(
@@ -100,7 +100,6 @@ class GenerativeModel:  # (Distribution)
 
     def plot_sample(self):
         fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-        print(self.linearly_mixed_sample.shape)
         ax[0].scatter(self.linearly_mixed_sample[:, 0], self.linearly_mixed_sample[:, 1], c='b', label='latent')
         ax[1].scatter(self.observed_sample[:, 0], self.observed_sample[:, 1], c='r', label='observed')
         plt.show()

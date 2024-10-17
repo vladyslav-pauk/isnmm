@@ -1,7 +1,7 @@
 {
   "data_module_name": "noisy_mixture",
   "data_model": "nonlinear",
-  "nonlinearity": "sin",
+  "nonlinearity": "cnae",
   "degree": null,
   "snr": 100,
   "mixing_matrix_init": "normal_",

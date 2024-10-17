@@ -10,6 +10,10 @@ def initialize_data_model(experiment_name, data_model_name, **kwargs):
     config = load_data_config(experiment_name)
     config = update_hyperparameters(config, kwargs)
 
+    seed = config["data_seed"]
+    if seed:
+        seed_everything(seed, workers=True)
+
     linear_mixture_matrix = torch.randn(config["observed_dim"], config["latent_dim"])
 
     generative_model = getattr(distribution_package, config["data_module_name"])
