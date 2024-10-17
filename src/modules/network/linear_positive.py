@@ -1,12 +1,18 @@
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class Network(nn.Linear):
-    def __init__(self, mixing_matrix, mixture_initialization=None, **kwargs):
+    def __init__(self, mixing_matrix, mixture_initialization=None, scale=None, **kwargs):
         super(Network, self).__init__(*mixing_matrix.size(), bias=False)
         self.weight = nn.Parameter(mixing_matrix)
         self.mixture_initialization = mixture_initialization
+
+        if scale:
+            self.scale = torch.tensor(scale)
+        else:
+            self.scale = torch.ones_like(mixing_matrix[0])
 
     def on_train_start(self):
         getattr(nn.init, self.mixture_initialization)(self.weight) if self.mixture_initialization else lambda x: x
@@ -17,7 +23,7 @@ class Network(nn.Linear):
 
     @property
     def matrix(self):
-        return self.weight.abs()
+        return self.weight#.abs()
 
     def forward(self, data):
-        return F.linear(data, self.matrix, None)
+        return F.linear(data, self.matrix, None) * self.scale
