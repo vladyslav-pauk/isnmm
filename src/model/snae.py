@@ -71,34 +71,4 @@ class Decoder(nn.Module):
         x = self.nonlinear_transform(y)
         return x
 
-# class Decoder(nn.Module):
-#     def __init__(self, config):
-#         super().__init__()
-#         self.config = config
-#         self.constructor = getattr(network, config["constructor"])
-#
-#     def construct(self, latent_dim, observed_dim):
-#         self.linear_mixture = network.LinearPositive(
-#             torch.rand(observed_dim, latent_dim), **self.config
-#         )
-#
-#         self.nonlinearity = nn.ModuleList([self.constructor(
-#             input_dim=1, output_dim=1, **self.config
-#         ) for _ in range(observed_dim)])
-#
-#     def nonlinear_transform(self, x):
-#         x = torch.cat([
-#             self.nonlinearity[i](x[..., i:i + 1].view(-1, 1)).view_as(x[..., i:i + 1])
-#             for i in range(x.shape[-1])
-#         ], dim=-1)
-#         return x
-#
-#     def forward(self, z):
-#         y = self.linear_mixture(z)
-#         x = self.nonlinear_transform(y)
-#         return x
-
-# fixme: run for 3->4 dims and latent_dim-1 so it has smae structure as vasca
-# todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
-# todo: clean up and readme
-# fixme: cnae unequal dimensions (as in paper with blocks)
+# todo: unequal dimensions (as in paper with blocks)
