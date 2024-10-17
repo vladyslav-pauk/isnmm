@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from torch.nn import functional as F
 
 from src.model.modules.metric_post_nonlinear import PNL
 from src.model.modules.autoencoder import AE
@@ -43,7 +42,7 @@ class Encoder(nn.Module):
         super().__init__()
         self.config = config
         self.constructor = getattr(network, config["constructor"])
-        # self.linear_mixture_inv = nn.Identity()
+        self.linear_mixture_inv = nn.Identity()
         self.nonlinear_transform = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
@@ -52,11 +51,10 @@ class Encoder(nn.Module):
                 torch.eye(latent_dim, observed_dim), **self.config
             )
         self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
-        # self.nonlinear_transform = self.constructor(observed_dim, latent_dim, **self.config)
 
     def forward(self, x):
         x = self.nonlinear_transform(x)
-        # x = self.linear_mixture_inv(x)
+        x = self.linear_mixture_inv(x)
         return x, torch.zeros_like(x).to(x.device)
 
 
@@ -74,12 +72,8 @@ class Decoder(nn.Module):
                 torch.eye(observed_dim, latent_dim), **self.config
             )
         self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
-        # self.nonlinear_transform = self.constructor(latent_dim, observed_dim, **self.config)
 
     def forward(self, x):
-        # x = self.linear_mixture(x)
+        x = self.linear_mixture(x)
         x = self.nonlinear_transform(x)
         return x
-
-# fixme: run with unequal dims lin_layer
-# fixme: cnae unequal dimensions (as in paper with blocks)
