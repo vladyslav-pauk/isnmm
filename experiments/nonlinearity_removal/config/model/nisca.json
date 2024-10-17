@@ -54,7 +54,8 @@
         "nonlinear": 0.001
       },
       "encoder": 0.001,
-      "scheduler": {
+      "scheduler": null,
+      "scheduler_params": {
         "interval": "epoch",
         "frequency": 1,
         "monitor": "r_square",
@@ -65,7 +66,7 @@
   "trainer": {
     "accelerator": "auto",
     "devices": 1,
-    "max_epochs": 2000,
+    "max_epochs": 10000,
     "gradient_clip_val": null,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
@@ -82,7 +83,7 @@
   "early_stopping": {
     "monitor": "r_square",
     "mode": "max",
-    "patience": 500,
+    "patience": 1000,
     "min_delta": 1e-4
   }
 }

@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import ExponentialLR, ReduceLROnPlateau
+import torch.optim.lr_scheduler as lr_schdulers
 
 import src.modules.network as network
 from src.model.modules.autoencoder import AE
@@ -20,9 +20,9 @@ class Model(AE, PNL):
 
     @staticmethod
     def _reparameterization(sample):
-        sample = torch.cat((sample[..., :-1], torch.zeros_like(sample[..., :1])), dim=-1)
-        sample = F.softmax(sample, dim=-1)
-        # sample = sample / sample.sum(dim=-1).unsqueeze(-1)
+        # sample = torch.cat((sample[..., :-1], torch.zeros_like(sample[..., :1])), dim=-1)
+        # sample = F.softmax(sample, dim=-1)
+        sample = sample / sample.sum(dim=-1).unsqueeze(-1)
         return sample
 
     def _regularization_loss(self, model_output, data, idxes):
@@ -31,7 +31,6 @@ class Model(AE, PNL):
 
         neg_entropy_latent = - self._entropy(latent_sample, variational_parameters)
         kl_posterior_prior = neg_entropy_latent - torch.lgamma(torch.tensor(latent_sample.size(-1)))
-
         return {"kl_posterior_prior": self.sigma ** 2 * kl_posterior_prior}
 
     # @staticmethod
@@ -58,8 +57,6 @@ class Model(AE, PNL):
     #
     #     return entropy
 
-
-
     @staticmethod
     def _entropy(latent_sample, variational_parameters):
         mean, std = variational_parameters
@@ -70,7 +67,7 @@ class Model(AE, PNL):
         log_var = 2 * torch.log(std + epsilon)
         sigma_diag_inv = 1 / (std + epsilon)
 
-        projected_latent = (latent_sample[:, :, :-1] / latent_sample[:, :, -1:]) - mean
+        projected_latent = (latent_sample[..., :-1] / latent_sample[..., -1:]) - mean
 
         log_2pi = torch.log(torch.tensor(2 * torch.pi)).to(latent_sample.device)
         entropy = 0.5 * (latent_sample.size(-1) - 1) * log_2pi
@@ -89,14 +86,19 @@ class Model(AE, PNL):
             {'params': self.decoder.linear_mixture.parameters(), 'lr': lr["decoder"]["linear"]},
             {'params': self.decoder.nonlinear_transform.parameters(), 'lr': lr["decoder"]["nonlinear"]}
         ], **self.optimizer_config["params"])
-        scheduler = ExponentialLR(optimizer, gamma=0.99)
-        return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "scheduler": scheduler,
-                **lr["scheduler"]
+
+        if lr["scheduler"]:
+            scheduler = getattr(lr_schdulers, lr["scheduler"])
+            scheduler = scheduler(optimizer, gamma=0.99)
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {
+                    "scheduler": scheduler,
+                    **lr["scheduler_params"]
+                }
             }
-        }
+        else:
+            return {"optimizer": optimizer}
 
 
 class Encoder(nn.Module):

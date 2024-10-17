@@ -45,10 +45,11 @@ class AE(pl.LightningModule):
         return recon_loss
 
     def _loss_function(self, observed_batch, model_output, idxes):
-        reconstructed_sample = model_output["reconstructed_sample"]
+        reconstructed_sample = model_output["reconstructed_sample"]#.mean(0).unsqueeze(0)
         observed_batch = observed_batch.expand_as(reconstructed_sample)
         loss = {
-            "reconstruction": F.mse_loss(reconstructed_sample, observed_batch, reduction='sum') / observed_batch.shape[1]
+            "reconstruction": F.mse_loss(reconstructed_sample, observed_batch, reduction='sum')
+                              / observed_batch.shape[1] / observed_batch.shape[0]
         }
         loss.update(self._regularization_loss(model_output, observed_batch, idxes))
         return loss
@@ -118,7 +119,6 @@ class AE(pl.LightningModule):
     def _summary(self):
         summary(self.encoder, (self.observed_dim,))
         summary(self.decoder, (self.latent_dim,))
-
 
 # todo: refactor data_model so it has a forward method so i can run inference like on model
 # todo: check if (independent on data) is the same as the best value in the validation wandb

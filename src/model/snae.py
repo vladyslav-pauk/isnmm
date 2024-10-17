@@ -19,7 +19,7 @@ class Model(AE, PNL):
 
     @staticmethod
     def _reparameterization(sample):
-        # sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+        # sample = torch.cat((sample[..., :-1], torch.zeros_like(sample[..., :1])), dim=-1)
         # F.softmax(sample, dim=-1)
         sample = sample / sample.sum(dim=-1).unsqueeze(-1)
         return sample

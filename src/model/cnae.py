@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.nn import functional as F
 
 from src.model.modules.metric_post_nonlinear import PNL
 from src.model.modules.autoencoder import AE

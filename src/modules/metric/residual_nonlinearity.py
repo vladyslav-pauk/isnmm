@@ -57,7 +57,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             model=(self.linearly_mixed_sample_true, self.linearly_mixed_sample),
             fitter=(self.linearly_mixed_sample_true, self.fitter),
             labels=self.fitter.rsquared,
-            scale=True,
+            scale=False,
             show_plot=show_plot,
             name=f"Residual Nonlinearity"
         )
