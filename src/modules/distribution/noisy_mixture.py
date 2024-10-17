@@ -52,7 +52,7 @@ class GenerativeModel:  # (Distribution)
 
     def _init_model(self, linear_mixture_matrix):
         linear_mixture = LinearPositive(
-            linear_mixture_matrix, self.mixing_matrix_init, scale=[5, 5, 5]
+            linear_mixture_matrix, self.mixing_matrix_init, scale=self.config["scale"]
         ).requires_grad_(False)
 
         nonlinear_transform = NonlinearTransform(
@@ -91,6 +91,7 @@ class GenerativeModel:  # (Distribution)
         self.observed_sample = self.noiseless_sample + self.sigma * noise_sample
         return self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)
         # todo: use dicts instead of tuples for forward method
+
     def sample(self):
         sample_shape = torch.Size([self.config["dataset_size"]])
         self.latent_sample = self.latent_dist.sample(sample_shape)
