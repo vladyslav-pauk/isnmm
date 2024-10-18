@@ -31,4 +31,4 @@ if __name__ == "__main__":
     model.sample()
     model.save_data()
 
-    model.plot_nonlinearities()
+    # model.plot_nonlinearities()

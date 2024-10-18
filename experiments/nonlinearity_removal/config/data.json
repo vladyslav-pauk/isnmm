@@ -5,6 +5,7 @@
   "degree": null,
   "snr": 100,
   "mixing_matrix_init": "normal_",
+  "scale": 5,
   "nonlinear_transform_init": null,
   "observed_dim": 3,
   "latent_dim": 3,
