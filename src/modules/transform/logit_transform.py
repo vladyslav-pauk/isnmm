@@ -1,0 +1,35 @@
+import torch
+from torch.distributions import constraints
+from torch.distributions.transforms import Transform
+
+
+class LogitTransform(Transform):
+    def __init__(self, cache_size=1):
+        super().__init__(cache_size=cache_size)
+
+    @property
+    def domain(self):
+        return constraints.simplex
+
+    @property
+    def codomain(self):
+        return constraints.real_vector
+
+    def _call(self, z):
+        epsilon = 1e-12
+        z = torch.clamp(z, min=epsilon, max=1 - epsilon)
+        log_ratio = torch.log(z[..., :-1]) - torch.log(z[..., -1:])
+        return log_ratio
+
+    def _inverse(self, y):
+        exp_y = torch.exp(y)
+        exp_y_sum = torch.sum(exp_y, dim=-1, keepdim=True)
+        last_component = 1.0 / (1.0 + exp_y_sum)
+
+        return torch.cat([exp_y * last_component, last_component], dim=-1)
+
+    def log_abs_det_jacobian(self, z, y):
+        epsilon = 1e-12
+        z = torch.clamp(z, min=epsilon)
+        return -torch.sum(torch.log(z), dim=-1)
+
