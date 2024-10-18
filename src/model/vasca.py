@@ -6,6 +6,10 @@ import torch.optim as optim
 import src.modules.network as network
 from src.model.modules.autoencoder import AE
 from src.model.modules.metric_linear_mixture import LMM
+from src.modules.distribution.transformed_normal import TransformedNormal
+
+from src.modules.transform.logit_transform import LogitTransform
+from torch.distributions import Dirichlet
 
 
 class Model(AE, LMM):
@@ -17,36 +21,25 @@ class Model(AE, LMM):
         self.sigma = model_config["sigma"]
         self.latent_dim = model_config["latent_dim"]
 
-    @staticmethod
-    def _reparameterization(sample):
-        sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
-        return F.softmax(sample, dim=-1)
+        self.posterior = TransformedNormal
+        self.posterior_transform = LogitTransform()
+        self.prior = Dirichlet(torch.ones(self.latent_dim))
+
+    def _reparameterization(self, sample):
+        # sample = torch.cat((sample, torch.zeros_like(sample[..., :1])), dim=-1)
+        # return F.softmax(sample, dim=-1)
+        return self.posterior_transform._inverse(sample)
 
     def _regularization_loss(self, model_output, data, idxes):
         latent_sample = model_output["latent_sample"]
         variational_parameters = model_output["latent_parameterization_batch"]
 
-        neg_entropy_latent = - self._entropy(latent_sample, variational_parameters)
-        kl_posterior_prior = neg_entropy_latent - torch.lgamma(torch.tensor(latent_sample.size(-1)))
+        posterior_distribution = self.posterior(*variational_parameters, self.posterior_transform)
+        neg_entropy_posterior = posterior_distribution.log_prob(latent_sample).mean()
+        log_prior = self.prior.log_prob(latent_sample).mean()
+        kl_posterior_prior = neg_entropy_posterior - log_prior
+
         return {"kl_posterior_prior": self.sigma ** 2 * kl_posterior_prior}
-
-    @staticmethod
-    def _entropy(latent_sample, variational_parameters):
-        mean, std = variational_parameters
-
-        epsilon = 1e-12
-        log_var = 2 * torch.log(std + epsilon)
-        sigma_diag_inv = 1 / (std + epsilon)
-
-        projected_latent = torch.log(latent_sample[:, :, :-1] / latent_sample[:, :, -1:]) - mean
-
-        log_2pi = torch.log(torch.tensor(2 * torch.pi))
-        entropy = 0.5 * (latent_sample.size(-1) - 1) * log_2pi
-        entropy += (projected_latent ** 2 * sigma_diag_inv.unsqueeze(0)).sum(dim=-1).mean() / 2
-        entropy += log_var[:, :-1].sum(dim=-1).mean() / 2
-        entropy += torch.log(latent_sample).sum(dim=-1).mean()
-
-        return entropy
 
     def configure_optimizers(self):
         lr = self.optimizer_config["lr"]
