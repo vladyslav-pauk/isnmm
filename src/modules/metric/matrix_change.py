@@ -12,27 +12,15 @@ class MatrixChange(torchmetrics.Metric):
 
     def update(self, current_value):
         if not torch.isnan(self.prev_value).any():
-
             value_change = current_value - self.prev_value
+            self.relative_change = self._criterion(value_change) / self._criterion(current_value)
 
-            norm = lambda x: (torch.sum(x ** 2) / x.numel()).pow(0.5)
+        self.prev_value = current_value.clone()
 
-            self.relative_change = norm(value_change) / norm(current_value)
-
-        self.prev_value = current_value
+    def _criterion(self, value):
+        # criterion = torch.linalg.matrix_norm(value, ord='fro')
+        criterion = (torch.sum(value ** 2) / value.numel()).pow(0.5)
+        return criterion
 
     def compute(self):
         return self.relative_change # 10 * torch.log10(self.relative_change + 1e-8)
-
-
-    # def update(self, current_value):
-    #     if not torch.isnan(self.prev_value).any():
-    #         value_change = current_value - self.prev_value
-    #         self.relative_change = self._criterion(value_change) / self._criterion(self.prev_value)
-    #     self.prev_value = current_value
-    #
-    # def _criterion(self, x):
-    #     # norm = torch.linalg.matrix_norm(x, ord='fro')
-    #     norm = (torch.sum(x ** 2) / x.numel()).pow(0.5)
-    #     return norm
-# fixme: fix matrix_change metric

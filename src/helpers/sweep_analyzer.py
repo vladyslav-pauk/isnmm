@@ -1,6 +1,7 @@
 import json
 import os
 from src.helpers.wandb_tools import login_wandb, fetch_wandb_sweep
+from src.helpers.utils import font_style, format_string
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
@@ -20,71 +21,99 @@ class SweepAnalyzer:
         self._save_data()
 
     def extract_metrics(self, metric="latent_mse_db", covariate="snr", comparison="model_name"):
-        data = defaultdict(lambda: defaultdict(list))
+        # Refactor the data structure to have three main keys
+        refactored_data = {
+            'covariate': {'name': covariate, 'values': defaultdict(list)},
+            'metric': {'name': metric, 'values': defaultdict(list)},
+            'comparison': {'name': comparison, 'values': defaultdict(list)}
+        }
 
         for run_id, content in self.sweep_data.items():
             seed = content['config']['torch_seed']
 
+            # Check if the metric is a dictionary (e.g., {'max': value})
             metric_value = content['metrics'][metric]
-            covariate_name = content['config'][covariate]
-            comparison_name = content['config'][comparison]
+            if isinstance(metric_value, dict):
+                # Extract the 'max' value if available, or another key if needed
+                if 'max' in metric_value:
+                    metric_value = metric_value['max']
+                else:
+                    raise ValueError(f"Expected 'max' key in metric dictionary, found: {metric_value.keys()}")
 
-            data[comparison_name][covariate].append(covariate_name)
-            data[comparison_name]['metric'].append(metric_value)
-            data[comparison_name]['seed'].append(seed)
+            # For direct numerical values (like reconstruction loss), use them as is
+            covariate_value = content['config'][covariate]
+            comparison_value = content['config'][comparison]
 
-        return data
+            # Assign values to corresponding refactored sections
+            refactored_data['covariate']['values'][comparison_value].append(covariate_value)
+            refactored_data['metric']['values'][comparison_value].append(metric_value)
+            refactored_data['comparison']['values'][comparison_value].append(seed)
 
-    def average_seeds(self, data):
-        averaged_data = {}
-        first_experiment = data[list(data.keys())[0]]
-        covariate = next(key for key in first_experiment if key not in ['metric', 'seed'])
+        return refactored_data
+        # todo: metrix is automatically one with 'max'? 'r_square': {'max': 0.4832684993743897},...
 
-        for model, values in data.items():
-            snr_values = np.array(values[covariate])
-            metric_values = np.array(values['metric'])
+    def average_seeds(self, refactored_data):
+        formatted_data = []
+        covariate_name = refactored_data['covariate']['name']
+        metric_name = refactored_data['metric']['name']
 
-            unique_snrs = np.unique(snr_values)
-            snr_metric_averages = []
-            snr_metric_stddev = []
+        for comparison_value, covariate_values in refactored_data['covariate']['values'].items():
+            metric_values = np.array(refactored_data['metric']['values'][comparison_value])
+            covariate_values = np.array(covariate_values)
 
-            for snr in unique_snrs:
-                indices = np.where(snr_values == snr)
-                snr_metric = metric_values[indices]
-                snr_metric_averages.append(np.mean(snr_metric))
-                snr_metric_stddev.append(np.std(snr_metric))
+            unique_covariates = np.unique(covariate_values)
+            metric_averages = []
+            metric_stddevs = []
 
-            averaged_data[model] = {
-                covariate: unique_snrs,
-                'metric_avg': np.array(snr_metric_averages),
-                'metric_std': np.array(snr_metric_stddev)
-            }
+            for val in unique_covariates:
+                indices = np.where(covariate_values == val)
+                covariate_metric = metric_values[indices]
+                metric_averages.append(np.mean(covariate_metric))
+                metric_stddevs.append(np.std(covariate_metric))
 
-        return averaged_data
+            formatted_data.append({
+                'model_name': comparison_value,
+                covariate_name: unique_covariates,
+                f'{metric_name}_avg': np.array(metric_averages),
+                f'{metric_name}_std': np.array(metric_stddevs)
+            })
+        return formatted_data
 
-    def plot_metric(self, data, save=False):
-        first_experiment = data[list(data.keys())[0]]
-        covariate = next(key for key in first_experiment if key not in ['metric', 'seed'])
+    def plot_metric(self, averaged_data, save=False):
+        font = font_style()
+
+        plt.rc('font', **font)
+
+        first_experiment = averaged_data[0]
+        comparison_name = list(first_experiment.keys())[0]
+        covariate_name = list(first_experiment.keys())[1]
+        metric_name = list(first_experiment.keys())[2].replace('_avg', '')
 
         plt.figure(figsize=(10, 6))
 
-        for model, values in data.items():
-            snr_values = values[covariate]
-            metric_avg = values['metric_avg']
-            metric_std = values['metric_std']
+        for experiment_data in averaged_data:
+            model_name = experiment_data['model_name']
+            covariate_values = experiment_data[covariate_name]
+            metric_avg = experiment_data[f'{metric_name}_avg']
+            metric_std = experiment_data[f'{metric_name}_std']
 
             plt.fill_between(
-                snr_values,
+                covariate_values,
                 metric_avg - metric_std,
                 metric_avg + metric_std,
                 alpha=0.2
             )
 
-            plt.plot(snr_values, metric_avg, label=f'Model {model}')
+            plt.plot(
+                covariate_values,
+                metric_avg,
+                label=f'{format_string(comparison_name)}: {format_string(model_name)}'
+            )
 
-        plt.xlabel(covariate)
-        plt.ylabel('Metric')
-        plt.title('Metric vs SNR (Averaged over Seeds)')
+        plt.subplots_adjust(bottom=0.15)
+        plt.xlabel(format_string(covariate_name))
+        plt.ylabel(format_string(metric_name))
+        plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
         plt.legend()
         plt.show()
 

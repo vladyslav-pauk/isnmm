@@ -20,4 +20,4 @@ class SpectralAngle(torchmetrics.Metric):
     def compute(self):
         return self.sum_spectral_angle / self.count
 
-# fixme: check if this is a correct behavior of SAM
+# todo: check if this is a correct behavior of SAM

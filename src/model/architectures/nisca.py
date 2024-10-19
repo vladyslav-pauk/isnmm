@@ -54,7 +54,7 @@ class Encoder(nn.Module):
         # # std = torch.exp(0.5 * std)
         # std = self.linear_mixture_inv_var(std)
         # std = torch.zeros_like(mu)
-        return loc, scale.clamp(min=1e-12)
+        return loc, scale.exp() #.clamp(min=1e-12)
 
 
 class Decoder(nn.Module):

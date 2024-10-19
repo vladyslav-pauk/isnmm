@@ -128,6 +128,25 @@ def flatten_dict(d, parent_key='', sep='.'):
             items.append((new_key, value))
     return dict(items)
 
+def font_style():
+    font = {
+        'family': 'serif',
+        # 'color': 'black',
+        # 'weight': 'normal',
+        'size': 22,
+    }
+    return font
+
+def format_string(s):
+    s = s.replace('_', ' ').title()
+    abbr = ['Snr', 'Mse', 'Sam', 'Vasca', 'Nisca', 'Snae', 'Cnae']
+    for a in abbr:
+        if a in s:
+            s = s.replace(a, a.upper())
+    if 'Db' in s:
+        s = s.replace('Db', 'dB')
+    return s
+
 # log_format = "%(asctime)s - %(levelname)s - %(message)s"
 # logging.basicConfig(
 #     level=logging.INFO,

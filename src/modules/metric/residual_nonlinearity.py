@@ -118,6 +118,7 @@ class LineFitter(nn.Module):
 def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwargs):
     # task: make it a line instead of scatter
     # todo: adjust styling for the paper
+
     import warnings
     warnings.filterwarnings("ignore", message=".*path .*")
     font_size = 12

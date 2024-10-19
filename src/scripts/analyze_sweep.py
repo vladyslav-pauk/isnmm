@@ -3,7 +3,7 @@ from src.helpers.sweep_analyzer import SweepAnalyzer
 
 if __name__ == "__main__":
     experiment = "simplex_recovery"
-    sweep_id = "4837njto"
+    sweep_id = "g42wx08q"
 
     experiment_analyzer = SweepAnalyzer(experiment, sweep_id)
 
@@ -12,3 +12,5 @@ if __name__ == "__main__":
     )
     averaged_data = experiment_analyzer.average_seeds(data)
     experiment_analyzer.plot_metric(averaged_data)
+
+# todo: covariate, metric, comparison markers to sweep dataset
