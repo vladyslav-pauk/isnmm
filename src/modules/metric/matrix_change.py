@@ -35,3 +35,4 @@ class MatrixChange(torchmetrics.Metric):
     #     # norm = torch.linalg.matrix_norm(x, ord='fro')
     #     norm = (torch.sum(x ** 2) / x.numel()).pow(0.5)
     #     return norm
+# fixme: fix matrix_change metric

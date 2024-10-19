@@ -45,8 +45,6 @@ class DataModule(LightningDataModule):
         self.linear_mixture = torch.tensor(data['linear_mixture'], dtype=torch.float32)
         self.sigma = data['sigma'][0, 0]
 
-        # todo: might use self.data and call whatever needed from the model
-
     def setup(self, stage=None):
         self.dataset = MyDataset(
             data=self.observed_sample,

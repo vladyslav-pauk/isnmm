@@ -20,7 +20,7 @@
     },
     "snr": {
       "values": [
-        10
+        20
       ]
     },
     "torch_seed": {

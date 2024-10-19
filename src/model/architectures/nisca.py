@@ -6,7 +6,6 @@ from src.model.modules.lightning import Module as LightningModule
 from src.model.modules.vae import Module as VariationalAutoencoder
 
 
-# todo: use only simplex_recovery run config with sweep
 class Model(LightningModule, VariationalAutoencoder):
     def __init__(self, encoder=None, decoder=None, model_config=None, optimizer_config=None):
         super().__init__(encoder, decoder)
@@ -45,7 +44,7 @@ class Encoder(nn.Module):
         # self.linear_mixture_inv_var = network.LinearPositive(
         #     torch.rand(latent_dim - 1, observed_dim), **self.config
         # )
-        # todo: change order of observed, latent arguments in constructor
+        # task: change order of observed, latent arguments in constructor
 
     def forward(self, x):
         loc = self.loc_network(x)
@@ -55,7 +54,7 @@ class Encoder(nn.Module):
         # # std = torch.exp(0.5 * std)
         # std = self.linear_mixture_inv_var(std)
         # std = torch.zeros_like(mu)
-        return loc, scale
+        return loc, scale.clamp(min=1e-12)
 
 
 class Decoder(nn.Module):
@@ -77,10 +76,9 @@ class Decoder(nn.Module):
         x = self.nonlinear_transform(y)
         return x
 
-# todo: sometimes during training get nan, right now skipped
-# todo: mc and batch in fcnconstructor, activation argument (to config?)
-# todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
-# todo: clean up and test nisca model.
 # todo: SVMAX initialization
-# todo: experiment parent class setup and update metric, common for all models in an experiment
-# todo: proper cnn with linear layer and proper postnonlinearity (make a separate class PNLConstructor for FCN or CNN)
+# task: clean and squash github commits
+# task: use yaml for config
+# task: move to experiment, make a folder for each experiment (move configs too?)
+# task: check numerical stability of the model, if there are nans or unusual values
+# todo: look into cnae and vasca papers and see what else has to be implemented

@@ -11,7 +11,7 @@ from src.helpers.utils import load_model_config, load_data_config
 from src.helpers.wandb_tools import init_logger, login_wandb
 from src.helpers.utils import update_hyperparameters
 
-# todo: log time epoch
+
 def train_model(experiment_name, model_name, **kwargs):
 
     config = load_model_config(experiment_name, model_name)

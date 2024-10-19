@@ -39,6 +39,7 @@ class Sweep:
         sweep_data = fetch_wandb_sweep(self.experiment, sweep_id)
         if save:
             self.save_data(sweep_data)
+        return sweep_data
         # shutil.rmtree(f"{os.path.dirname(os.path.abspath(__file__)).split("src")[0]}models/nisca/", ignore_errors=True)
 
     def save_data(self, sweep_data):

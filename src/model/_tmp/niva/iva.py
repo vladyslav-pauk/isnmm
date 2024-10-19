@@ -99,7 +99,6 @@ class Model(AutoEncoderModule):
         self.metrics['mixture_sam'].update(
             self.ground_truth.linear_mixture, self.decoder.linear_mixture.matrix
         )
-        # todo: fix mixture sam
         self.metrics['mixture_log_volume'].update(
             self.decoder.linear_mixture.matrix
         )

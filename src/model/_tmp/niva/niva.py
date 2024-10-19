@@ -130,9 +130,3 @@ class Decoder(nn.Module):
 #         y = self.linear_mixture(z)
 #         x = self.nonlinear_transform(y)
 #         return x
-
-
-# todo: sometimes during training get nan, right now skipped
-# todo: mc and batch in fcnconstructor, activation argument (to config?)
-# todo: check the networks once again, make sure everything is consistent and implemented right, ask gpt to improve
-# todo: clean up and test nisca model.

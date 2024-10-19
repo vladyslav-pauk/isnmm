@@ -10,8 +10,8 @@
   },
   "model": {
     "experiment_name": "nonlinearity_removal",
-    "latent_dim": null,
     "mc_samples": 1,
+    "latent_dim": null,
     "sigma": null,
     "distance": "mse_loss",
     "prior": {
@@ -61,10 +61,10 @@
     },
     "lr": {
       "decoder": {
-        "linear_mixture": 0.001,
-        "nonlinear_transform": 0.001
+        "linear_mixture": 1e-3,
+        "nonlinear_transform": 1e-3
       },
-      "encoder": 0.001
+      "encoder": 1e-3
     },
     "scheduler": null,
     "scheduler_params": {
@@ -77,7 +77,7 @@
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
-    "max_epochs": 10000,
+    "max_epochs": 2000,
     "gradient_clip_val": null,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
@@ -94,7 +94,7 @@
   "early_stopping": {
     "monitor": "r_square",
     "mode": "max",
-    "patience": 1000,
-    "min_delta": 1e-4
+    "patience": 500,
+    "min_delta": 1e-5
   }
 }

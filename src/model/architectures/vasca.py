@@ -33,15 +33,18 @@ class Encoder(nn.Module):
         self.loc_network = None
         self.scale_network = None
 
+        # self.save_hyperparameters({
+        #     'config': config
+        # })
+
     def construct(self, latent_dim, observed_dim):
         self.loc_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
         self.scale_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
-        # todo: change order of observed, latent arguments in constructor
 
     def forward(self, x):
         loc = self.loc_network(x)
         scale = self.scale_network(x)
-        return loc, scale #.clamp(min=1e-12).exp().pow(0.5)
+        return loc, scale.clamp(min=1e-12)
 
 
 class Decoder(nn.Module):

@@ -34,7 +34,6 @@ def sweep_parser():
 
 def load_model_config(experiment, config_name):
     path = f'../experiments/{experiment}/config/model/{config_name}.json'
-
     if os.path.exists(path):
         with open(path, 'r') as f:
             return json.load(f)

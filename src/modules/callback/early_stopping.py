@@ -43,7 +43,6 @@ class EarlyStoppingCallback(Callback):
                 # print(
                 #     f"Early stopping: {self.monitor} has reached the threshold of {self.stopping_threshold} for {self.patience} epochs."
                 # )
-                # todo: add logging
         else:
             self.wait_count = 0
 

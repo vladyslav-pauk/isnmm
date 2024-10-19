@@ -1,6 +1,7 @@
 from train import train_model
 from src.helpers.utils import load_sweep_config, sweep_parser
-from src.helpers.sweep import Sweep
+from src.helpers.sweep_runner import Sweep
+from src.helpers.sweep_analyzer import SweepAnalyzer
 
 
 if __name__ == '__main__':
@@ -15,7 +16,15 @@ if __name__ == '__main__':
 
     sweep = Sweep(sweep_config, train_model)
     sweep.run()
-    sweep.fetch_data()
+    sweep.fetch_data(save=True)
 
-# todo: model using schedule script, for each model a sweep?
+    experiment_analyzer = SweepAnalyzer(experiment, sweep.id)
+    data = experiment_analyzer.extract_metrics(
+        metric="latent_mse_db", covariate="snr", comparison="model_name"
+    )
+    averaged_data = experiment_analyzer.average_seeds(data)
+    experiment_analyzer.plot_metric(averaged_data, save=False)
+
 # todo: discard run, if metrics is bad (positive mse_db)
+# todo: save plots
+# fixme: run schedule

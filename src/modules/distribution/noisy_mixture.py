@@ -48,7 +48,6 @@ class GenerativeModel:  # (Distribution)
             linear_mixture_matrix = torch.randn(self.observed_dim, self.latent_dim)
 
         self.latent_dist, self.noise_dist, self.linear_mixture, self.nonlinear_transform = self._init_model(linear_mixture_matrix)
-        # todo: remove unnecessary attributes or arguments, e.g. model_name, or pass directly to _model_init functions
 
     def _init_model(self, linear_mixture_matrix):
         linear_mixture = LinearPositive(
@@ -71,11 +70,9 @@ class GenerativeModel:  # (Distribution)
         noise_dist = torch.distributions.MultivariateNormal(noise_vec, noise_mat)
 
         return latent_dist, noise_dist, linear_mixture, nonlinear_transform
-        # todo: define separate subclasses for each model type, inheriting from a base class.
-        #  separate it into lmm, nmm, pnlmm subclasses (or just make Identity a part of nonlinear transform)
-        #  make a generative_model for mixture models (like vae), then lmm, nmm, pnlmm are in folder generative_models
-        #  use them for synthetic data
-        # todo: inherit from Distribution and Dataset and add __len__ and __getitem__ methods
+        # task: refactor like the model, so i can generate different models with config
+        # task: refactor data_model so it has a forward method so i can run inference like on model
+        # task: inherit from Distribution and Dataset and add __len__ and __getitem__ methods
 
     def model(self, latent_sample, noise_sample):
         self.linearly_mixed_sample = self.linear_mixture(latent_sample)  # latent_sample @ self.lin_transform.matrix.T
@@ -90,7 +87,7 @@ class GenerativeModel:  # (Distribution)
             
         self.observed_sample = self.noiseless_sample + self.sigma * noise_sample
         return self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)
-        # todo: use dicts instead of tuples for forward method
+        # task: use dicts instead of tuples for forward method
 
     def sample(self):
         sample_shape = torch.Size([self.config["dataset_size"]])

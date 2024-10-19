@@ -1,6 +1,7 @@
 from numpy import random
 import torch
 import torch.nn as nn
+# task: make it distributions.transform class
 
 
 class Network(nn.Module):
@@ -64,7 +65,3 @@ class Network(nn.Module):
     #     y = torch.log(2 * y)
     #     return y
 
-
-    # todo: use the same transform as in the network, just randomize weights? proof of principle, then use arbitrary
-    #  nonlinearity
-    # todo: make it distributions.transform class? it has inv and derivative

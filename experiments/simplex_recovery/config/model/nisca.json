@@ -77,7 +77,7 @@
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
-    "max_epochs": 10000,
+    "max_epochs": 1000,
     "gradient_clip_val": 0.5,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
@@ -94,7 +94,7 @@
   "early_stopping": {
     "monitor": "latent_mse_db",
     "mode": "min",
-    "patience": 1000,
+    "patience": 100,
     "min_delta": 1e-4
   }
 }

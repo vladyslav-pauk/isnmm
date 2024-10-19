@@ -14,6 +14,8 @@ class AugmentedLagrangeMultiplier(Optimizer):
         self.constraint_fn = constraint_fn
         self.global_step = 0
         self.base_optimizer = Adam(params, optimizer_config['lr']["encoder"])
+        # task: refactor so the arguments passed as
+        #  {'params': self.encoder.parameters(), 'lr': optimizer_config['lr']["encoder"]}
 
         self._buffers = {}
 
@@ -75,6 +77,3 @@ class AugmentedLagrangeMultiplier(Optimizer):
     def to(self, device):
         for name, buffer in self._buffers.items():
             self._buffers[name] = buffer.to(device)
-
-# todo: refactor so the arguments passed as
-#  {'params': self.encoder.parameters(), 'lr': optimizer_config['lr']["encoder"]}

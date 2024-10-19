@@ -8,4 +8,4 @@ from src.modules.network.component_analytic import Network as NonlinearTransform
 from src.modules.network.linear_positive import Network as LinearPositive
 
 
-# todo: implement usgs semi-real data
+# fixme: implement usgs semi-real data

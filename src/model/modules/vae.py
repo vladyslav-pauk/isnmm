@@ -33,7 +33,7 @@ class Module(AutoEncoder):
         kl_posterior_prior = neg_entropy_posterior - log_prior
 
         return {"kl_posterior_prior": 2 * self.sigma**2 * kl_posterior_prior}
-        # todo: add beta
+        # task: add beta
 
     def _model(self, loc, scale):
         prior = getattr(distribution, self.prior_config['base_distribution'])(zeros(self.latent_dim), ones(self.latent_dim))

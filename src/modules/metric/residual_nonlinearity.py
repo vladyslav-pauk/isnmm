@@ -116,7 +116,7 @@ class LineFitter(nn.Module):
 
 
 def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwargs):
-    # todo: make it a line instead of scatter
+    # task: make it a line instead of scatter
     # todo: adjust styling for the paper
     import warnings
     warnings.filterwarnings("ignore", message=".*path .*")
@@ -186,8 +186,6 @@ def visual_normalization(x):
     return x
 
 
-# todo: residual nonlinearity and plot components shall go under the Fitter class
-# todo: matrix distance class; vector (sub)space (set) distance class
-# todo: crop outliers
-# todo: make ResNon not depend on the function, but rather on the values for z_true
-#    i.e. pass not f_true and A_true, but the values for f_true(A_true @ z_true), and A_true @ z_true
+# task: residual nonlinearity and plot components shall go under the Fitter class
+# task: crop outliers
+# task: i can also check variance of the residual, that's more statistical metric

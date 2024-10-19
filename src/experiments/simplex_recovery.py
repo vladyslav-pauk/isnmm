@@ -12,7 +12,8 @@ class ModelMetrics(MetricCollection):
 
         self.linear_mixture_true = model.linear_mixture if model else None
 
-    def _setup_metrics(self, model=None):
+    @staticmethod
+    def _setup_metrics(model=None):
         metrics = {
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange()
@@ -43,5 +44,3 @@ class ModelMetrics(MetricCollection):
 
         self['mixture_log_volume'].update(linear_mixture)
         self['mixture_matrix_change'].update(linear_mixture)
-
-# todo: move to experiment, make a folder for each experiment (move configs too?)

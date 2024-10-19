@@ -38,7 +38,7 @@ class Encoder(nn.Module):
     def forward(self, x):
         y = self.nonlinear_transform.forward(x)
         z = self.linear_mixture_inv(y)
-        return z    #, torch.zeros_like(z).to(z.device)
+        return z
 
 
 class Decoder(nn.Module):
@@ -59,5 +59,3 @@ class Decoder(nn.Module):
         y = self.linear_mixture(z)
         x = self.nonlinear_transform(y)
         return x
-
-# todo: unequal dimensions (as in paper with blocks)

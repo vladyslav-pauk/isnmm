@@ -69,7 +69,7 @@ class CNNConstructor(nn.Module):
 #             layers.append(nn.Conv1d(in_channels, h * input_dim, kernel_size=1, groups=input_dim))
 #             layers.append(nn.ReLU())
 #             in_channels = h * input_dim
-# todo: use this method in cnn build
+# task: use this method in cnn build
 #
 #         layers.append(nn.Conv1d(in_channels, output_dim, kernel_size=1, groups=input_dim))
 #         self.d_net = nn.Sequential(*layers)

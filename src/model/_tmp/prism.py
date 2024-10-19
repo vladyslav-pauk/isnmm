@@ -10,7 +10,7 @@ from src.modules.network import LinearPositive
 from torch.distributions import Dirichlet, LogNormal, Normal
 from src.model.ae_module import AE
 
-# todo: implement prism-vae
+# task: implement prism-vae
 
 
 class Model(AE):

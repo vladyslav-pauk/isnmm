@@ -9,7 +9,8 @@ class ModelMetrics(MetricCollection):
         metrics = self._setup_metrics(model)
         super().__init__(metrics)
 
-    def _setup_metrics(self, model=None):
+    @staticmethod
+    def _setup_metrics(model=None):
         metrics = {}
         if model:
             metrics.update({

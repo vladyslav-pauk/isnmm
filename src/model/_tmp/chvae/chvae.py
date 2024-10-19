@@ -8,7 +8,6 @@ import src.modules.network as network
 from src.model.ae_module import AutoEncoderModule
 import src.modules.metric as metric
 
-# fixme: convex hull prior model
 
 class Model(AutoEncoderModule):
     def __init__(self, ground_truth_model=None, encoder=None, decoder=None, model_config=None, optimizer_config=None):

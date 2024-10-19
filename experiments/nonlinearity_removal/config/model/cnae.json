@@ -3,17 +3,17 @@
   "torch_seed": 1,
   "data_loader": {
     "module_name": "synthetic",
-    "split": [1, 0, 0],
+    "split": [0.8, 0.1, 0.1],
     "batch_size": 1000,
     "val_batch_size": 1000,
     "num_workers": 4
   },
   "model": {
+    "experiment_name": "nonlinearity_removal",
     "mc_samples": 1,
     "latent_dim": null,
     "sigma": null,
     "distance": "mse_loss",
-    "experiment_name": "nonlinearity_removal",
     "reparameterization": null
   },
   "encoder": {

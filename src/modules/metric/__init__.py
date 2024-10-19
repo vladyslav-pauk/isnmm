@@ -6,7 +6,7 @@ from .matrix_volume import MatrixVolume as MatrixVolume
 from .matrix_change import MatrixChange as MatrixChange
 from .constraint_error import ConstraintError as ConstraintError
 
-# todo: check these
+# task: check these
 # def mse_matrix_db(A0, A_hat):
 #     min_mse = torch.tensor(float('inf'))
 #     perms = itertools.permutations(range(A0.shape[0]))
