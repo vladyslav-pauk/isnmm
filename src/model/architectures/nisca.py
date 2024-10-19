@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 import src.modules.network as network
-from src.model.modules.lightning_module import Module as LightningModule
+from src.model.modules.lightning import Module as LightningModule
 from src.model.modules.vae import Module as VariationalAutoencoder
 
 

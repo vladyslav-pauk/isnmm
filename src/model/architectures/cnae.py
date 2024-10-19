@@ -3,8 +3,7 @@ from torch import nn
 
 from src.modules.optimizer.augmented_lagrange import AugmentedLagrangeMultiplier
 import src.modules.network as network
-import src.experiments as exp
-from src.model.modules.lightning_module import Module as LightningModule
+from src.model.modules.lightning import Module as LightningModule
 from src.model.modules.ae import Module as Autoencoder
 
 
