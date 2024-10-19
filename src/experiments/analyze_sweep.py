@@ -1,12 +1,12 @@
 import json
 import os
-from src.helpers.wandb import login_wandb, fetch_wandb_sweep
+from src.helpers.wandb_tools import login_wandb, fetch_wandb_sweep
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
 
-experiment = "nonlinearity_removal"
-sweep_id = "vfb49e93"
+experiment = "simplex_recovery"
+sweep_id = "jh0xq8w1"
 output_dir = f"../experiments/{experiment}/sweeps"
 output_file = f"{sweep_id}.json"
 
@@ -21,7 +21,7 @@ with open(os.path.join(output_dir, output_file), "w") as f:
 print(f"Saved sweep data to {os.path.join(output_dir, output_file)}")
 
 
-def extract_metrics(json_data, metric="h_r_square", covariate="snr"):
+def extract_metrics(json_data, metric="mixture_mse_db", covariate="snr"):
     data = defaultdict(lambda: defaultdict(list))
 
     for run_id, content in json_data.items():
@@ -81,7 +81,7 @@ def plot_metric_vs_snr(data, covariate="snr"):
         plt.plot(snr_values, metric_avg, label=f'Model {model}')
 
     plt.xlabel(covariate)
-    plt.ylabel('Metric (h_r_square)')
+    plt.ylabel('Metric')
     plt.title('Metric vs SNR (Averaged over Seeds)')
     plt.legend()
     plt.show()

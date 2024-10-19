@@ -1,0 +1,56 @@
+{
+  "method": "grid",
+  "metric": {
+    "goal": "maximize",
+    "name": "r_square"
+  },
+  "parameters": {
+    "experiment_name": {
+      "value": "nonlinearity_removal"
+    },
+    "data_model_name": {
+      "values": [
+        "nonlinear"
+      ]
+    },
+    "model_name": {
+      "values": [
+        "nisca"
+      ]
+    },
+    "snr": {
+      "values": [
+        10
+      ]
+    },
+    "torch_seed": {
+      "values": [
+        0
+      ]
+    },
+    "dataset_size": {
+      "values": [
+        10000
+      ]
+    },
+    "trainer.max_epochs": {
+      "values": [
+        5
+      ]
+    },
+    "decoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 12
+        }
+      ]
+    },
+    "encoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 12
+        }
+      ]
+    }
+  }
+}

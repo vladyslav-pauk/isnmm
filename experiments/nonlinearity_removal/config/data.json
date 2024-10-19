@@ -3,12 +3,12 @@
   "data_model": "nonlinear",
   "nonlinearity": "cnae",
   "degree": null,
-  "snr": 100,
+  "snr": 20,
   "mixing_matrix_init": "normal_",
   "scale": 5,
   "nonlinear_transform_init": null,
   "observed_dim": 3,
   "latent_dim": 3,
-  "dataset_size": 10000,
+  "dataset_size": 100000,
   "data_seed": 1
 }

@@ -3,15 +3,18 @@
   "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
+    "split": [0.8, 0.1, 0.1],
     "batch_size": 100,
     "val_batch_size": 100,
-    "split": [0.8, 0.1, 0.1],
     "num_workers": 4
   },
   "model": {
     "mc_samples": 1,
     "latent_dim": null,
-    "sigma": null
+    "sigma": null,
+    "distance": "mse_loss",
+    "experiment_name": "nonlinearity_removal",
+    "reparameterization": "Transformation"
   },
   "encoder": {
     "constructor": "CNN",
@@ -50,10 +53,17 @@
     },
     "lr": {
       "decoder": {
-        "linear": 0.001,
-        "nonlinear": 0.001
+        "linear_mixture": 0.001,
+        "nonlinear_transform": 0.001
       },
       "encoder": 0.001
+    },
+    "scheduler": null,
+    "scheduler_params": {
+      "interval": "epoch",
+      "frequency": 1,
+      "monitor": "r_square",
+      "strict": true
     }
   },
   "trainer": {

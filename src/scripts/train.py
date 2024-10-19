@@ -1,8 +1,6 @@
 import argparse
 import ast
 
-# import logging
-
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
 
@@ -13,7 +11,7 @@ from src.helpers.utils import load_model_config, load_data_config
 from src.helpers.wandb_tools import init_logger, login_wandb
 from src.helpers.utils import update_hyperparameters
 
-
+# todo: log time epoch
 def train_model(experiment_name, model_name, **kwargs):
 
     config = load_model_config(experiment_name, model_name)
@@ -30,10 +28,8 @@ def train_model(experiment_name, model_name, **kwargs):
     model = _setup_model(config, logger)
     trainer = _setup_trainer(config, logger)
 
-    # logging.info(f"Training model {model_name} with data model {data_model_name}")
     trainer.fit(model, datamodule)
     trainer.test(model, datamodule)
-    # model.summary()
     # logger.experiment.finish()
 
     return logger.experiment.id

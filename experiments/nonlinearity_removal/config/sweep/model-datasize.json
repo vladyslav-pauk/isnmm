@@ -1,0 +1,46 @@
+{
+  "method": "grid",
+  "metric": {
+    "goal": "minimize",
+    "name": "latent_mse_db"
+  },
+  "parameters": {
+    "experiment_name": {
+      "value": "nonlinearity_removal"
+    },
+    "data_model_name": {
+      "values": [
+        "nonlinear"
+      ]
+    },
+    "model_name": {
+      "values": [
+        "cnae",
+        "snae",
+        "nisca"
+      ]
+    },
+    "snr": {
+      "values": [
+        10
+      ]
+    },
+    "torch_seed": {
+      "values": [
+        0,
+        13,
+        34,
+        20,
+        21
+      ]
+    },
+    "dataset_size": {
+      "values": [
+        5000,
+        10000,
+        50000,
+        100000
+      ]
+    }
+  }
+}

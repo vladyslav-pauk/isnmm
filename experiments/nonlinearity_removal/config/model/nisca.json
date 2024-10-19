@@ -3,22 +3,31 @@
   "torch_seed": 1,
   "data_loader": {
     "module_name": "synthetic",
+    "split": [0.8, 0.1, 0.1],
     "batch_size": 100,
     "val_batch_size": 100,
-    "split": [0.8, 0.1, 0.1],
     "num_workers": 4
   },
   "model": {
-    "mc_samples": 1,
+    "experiment_name": "nonlinearity_removal",
     "latent_dim": null,
-    "sigma": null
+    "mc_samples": 1,
+    "sigma": null,
+    "distance": "mse_loss",
+    "prior": {
+      "base_distribution": "Dirichlet"
+    },
+    "posterior": {
+      "base_distribution": "MultivariateNormal"
+    },
+    "reparameterization": "LogitTransform"
   },
   "encoder": {
-    "constructor": "CNN",
+    "constructor": "FCN",
     "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128
+      "h1": 128,
+      "h2": 128,
+      "h3": 128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -27,7 +36,9 @@
     "bn_eps": null,
     "bn_momentum": 0.1,
     "dropout_rate": null,
-    "groups": null
+    "groups": null,
+    "positive": true,
+    "scale": 5
   },
   "decoder": {
     "constructor": "CNN",
@@ -50,21 +61,21 @@
     },
     "lr": {
       "decoder": {
-        "linear": 0.001,
-        "nonlinear": 0.001
+        "linear_mixture": 0.001,
+        "nonlinear_transform": 0.001
       },
-      "encoder": 0.001,
-      "scheduler": null,
-      "scheduler_params": {
-        "interval": "epoch",
-        "frequency": 1,
-        "monitor": "r_square",
-        "strict": true
-      }
+      "encoder": 0.001
+    },
+    "scheduler": null,
+    "scheduler_params": {
+      "interval": "epoch",
+      "frequency": 1,
+      "monitor": "r_square",
+      "strict": true
     }
   },
   "trainer": {
-    "accelerator": "auto",
+    "accelerator": "cpu",
     "devices": 1,
     "max_epochs": 10000,
     "gradient_clip_val": null,

@@ -1,0 +1,96 @@
+{
+  "model_name": "aevb",
+  "torch_seed": 0,
+  "data_loader": {
+    "module_name": "torchvision",
+    "batch_size": 100,
+    "split": [0.8, 0.1, 0.1],
+    "num_workers": 4
+  },
+  "model": {
+    "experiment_name": "vision",
+    "latent_dim": 200,
+    "mc_samples": 1,
+    "sigma": 0.7,
+    "distance": "binary_cross_entropy",
+    "reparameterization": null,
+    "prior": {
+      "base_distribution": "MultivariateNormal"
+    },
+    "posterior": {
+      "base_distribution": "MultivariateNormal"
+    }
+  },
+  "trainer": {
+    "accelerator": "cpu",
+    "max_epochs": 50,
+    "limit_test_batches": 1,
+    "limit_val_batches": 1,
+    "log_every_n_steps": 100,
+    "enable_progress_bar": false
+  },
+  "encoder": {
+    "hidden_layers": {
+      "h1":  400,
+      "h2":  400
+    },
+    "hidden_activation": "LeakyReLU",
+    "output_activation": null,
+    "weight_initialization": null,
+    "bn_eps": null,
+    "bn_momentum": 0.1
+  },
+  "decoder": {
+    "hidden_layers": {
+      "h1":  256,
+      "h2":  512
+      },
+    "hidden_activation": "LeakyReLU",
+    "output_activation": "Sigmoid",
+    "weight_initialization": null
+  },
+  "optimizer": {
+    "name": "Adam",
+    "params": {
+    },
+    "lr": {
+      "decoder": 0.001,
+      "encoder": 0.001
+    },
+    "scheduler": null,
+      "scheduler_params": {
+        "interval": "epoch",
+        "frequency": 1,
+        "monitor": "r_square",
+        "strict": true
+      }
+  },
+  "checkpoint": {
+    "monitor": "validation_loss",
+    "mode": "min",
+    "save_top_k": 1,
+    "verbose": true
+  },
+  "early_stopping": {
+    "monitor": "validation_loss",
+    "mode": "min",
+    "patience": 50,
+    "min_delta": 1e-4
+  },
+  "schedule": {
+    "repeats": 100,
+    "parameters": {
+      "train":
+      {
+        "lr": {
+          "th": [0.001, 0.01],
+          "ph": [0.01, 0.005]
+        }
+      },
+      "data": {
+        "SNR": [10, 20, 30],
+        "seed": [29, 0, 42, 1, 2]
+      }
+    }
+  }
+}

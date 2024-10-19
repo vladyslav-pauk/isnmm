@@ -1,0 +1,37 @@
+{
+  "method": "grid",
+  "metric": {
+    "goal": "minimize",
+    "name": "latent_mse_db"
+  },
+  "parameters": {
+    "experiment_name": {
+      "value": "simplex_recovery"
+    },
+    "data_model_name": {
+      "values": [
+        "linear"
+      ]
+    },
+    "model_name": {
+      "values": [
+        "vasca"
+      ]
+    },
+    "snr": {
+      "values": [
+        10
+      ]
+    },
+    "torch_seed": {
+      "values": [
+        0
+      ]
+    },
+    "dataset_size": {
+      "values": [
+        10000
+      ]
+    }
+  }
+}

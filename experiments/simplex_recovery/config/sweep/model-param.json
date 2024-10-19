@@ -1,0 +1,62 @@
+{
+  "method": "grid",
+  "metric": {
+    "goal": "minimize",
+    "name": "latent_mse_db"
+  },
+  "parameters": {
+    "experiment_name": {
+      "value": "simplex_recovery"
+    },
+    "data_model_name": {
+      "values": [
+        "linear"
+      ]
+    },
+    "model_name": {
+      "values": [
+        "vasca",
+        "nisca"
+      ]
+    },
+    "snr": {
+      "values": [
+        20
+      ]
+    },
+    "torch_seed": {
+      "values": [
+        0,
+        13,
+        34,
+        20,
+        21
+      ]
+    },
+    "dataset_size": {
+      "values": [
+        10000
+      ]
+    },
+    "decoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 128
+        },
+        {
+          "h1": 256
+        }
+      ]
+    },
+    "encoder.hidden_layers": {
+      "values": [
+        {
+          "h1": 128
+        },
+        {
+          "h1": 256
+        }
+      ]
+    }
+  }
+}

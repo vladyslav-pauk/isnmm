@@ -18,3 +18,4 @@ if __name__ == '__main__':
     sweep.fetch_data()
 
 # todo: model using schedule script, for each model a sweep?
+# todo: discard run, if metrics is bad (positive mse_db)

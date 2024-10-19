@@ -15,18 +15,18 @@ class LogitTransform(Transform):
     def codomain(self):
         return constraints.real_vector
 
-    def _call(self, z):
+    def __call__(self, sample):
+        exp_y = torch.exp(sample)
+        last_component = 1.0 / (1.0 + torch.sum(exp_y, dim=-1, keepdim=True))
+
+        return torch.cat([exp_y * last_component, last_component], dim=-1)
+
+
+    def _inverse(self, z):
         epsilon = 1e-12
         z = torch.clamp(z, min=epsilon, max=1 - epsilon)
         log_ratio = torch.log(z[..., :-1]) - torch.log(z[..., -1:])
         return log_ratio
-
-    def _inverse(self, y):
-        exp_y = torch.exp(y)
-        exp_y_sum = torch.sum(exp_y, dim=-1, keepdim=True)
-        last_component = 1.0 / (1.0 + exp_y_sum)
-
-        return torch.cat([exp_y * last_component, last_component], dim=-1)
 
     def log_abs_det_jacobian(self, z, y):
         epsilon = 1e-12

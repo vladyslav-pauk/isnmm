@@ -10,18 +10,19 @@
     },
     "data_model_name": {
       "values": [
-        "nnmm"
+        "nonlinear"
       ]
     },
     "model_name": {
       "values": [
         "cnae",
-        "snae"
+        "snae",
+        "nisca"
       ]
     },
     "snr": {
       "values": [
-        25
+        20
       ]
     },
     "torch_seed": {
@@ -33,9 +34,9 @@
         3
       ]
     },
-    "trainer.max_epochs": {
+    "dataset_size": {
       "values": [
-        500
+        10000
       ]
     },
     "decoder.hidden_layers": {
