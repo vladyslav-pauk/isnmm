@@ -13,6 +13,7 @@ class SweepAnalyzer:
         self.sweep_id = sweep_id
         self.output_dir = f"../experiments/{experiment}/sweeps"
         self.output_file = f"{sweep_id}.json"
+        # todo: fix directories, run from project root
 
         os.makedirs(self.output_dir, exist_ok=True)
 
@@ -111,6 +112,7 @@ class SweepAnalyzer:
             )
 
         plt.subplots_adjust(bottom=0.15)
+        plt.subplots_adjust(left=0.15)
         plt.xlabel(format_string(covariate_name))
         plt.ylabel(format_string(metric_name))
         plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')

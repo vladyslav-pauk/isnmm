@@ -15,12 +15,12 @@
     },
     "model_name": {
       "values": [
-        "nisca"
+        "snae"
       ]
     },
     "snr": {
       "values": [
-        10
+        20
       ]
     },
     "torch_seed": {
@@ -35,20 +35,20 @@
     },
     "trainer.max_epochs": {
       "values": [
-        5
+        1000
       ]
     },
     "decoder.hidden_layers": {
       "values": [
         {
-          "h1": 12
+          "h1": 128
         }
       ]
     },
     "encoder.hidden_layers": {
       "values": [
         {
-          "h1": 12
+          "h1": 128
         }
       ]
     }

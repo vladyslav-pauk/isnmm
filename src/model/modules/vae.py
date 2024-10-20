@@ -1,5 +1,4 @@
 from torch import zeros, ones, randn
-import numpy as np
 
 import src.modules.transform as t
 from src.modules.distribution.location_scale import LocationScale

@@ -82,3 +82,5 @@ class Decoder(nn.Module):
         x = self.linear_mixture(x)
         x = self.nonlinear_transform(x)
         return x
+
+# fixme: latent mse pipeline for cnae model with mves

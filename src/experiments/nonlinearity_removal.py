@@ -16,7 +16,7 @@ class ModelMetrics(MetricCollection):
             metrics.update({
                 'subspace_distance': metric.SubspaceDistance(),
                 'r_square': metric.ResidualNonlinearity(),
-                'latent_mse': metric.matrix_mse.MatrixMse()
+                'latent_mse_db': metric.matrix_mse.MatrixMse()
             })
 
         wandb.define_metric(name="r_square", summary='max')
@@ -35,6 +35,6 @@ class ModelMetrics(MetricCollection):
             self['r_square'].update(
                 model_output, labels, linearly_mixed_sample, observed_sample
             )
-            self['latent_mse'].update(
+            self['latent_mse_db'].update(
                 latent_sample, latent_sample_true
             )

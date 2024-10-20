@@ -8,18 +8,6 @@ class Module(LightningModule):
     def __init__(self):
         super().__init__()
 
-    def forward(self, observed_batch):
-        posterior_parameterization = self.encoder(observed_batch)
-        latent_sample = self._reparameterization(posterior_parameterization)
-        reconstructed_sample = self.decoder(latent_sample)
-
-        model_output = {
-            "reconstructed_sample": reconstructed_sample,
-            "latent_sample": latent_sample,
-            "posterior_parameterization": posterior_parameterization
-        }
-        return model_output
-
     def _reparameterization(self, sample):
         if self.encoder_transform is None:
             self.transform = t.Identity()

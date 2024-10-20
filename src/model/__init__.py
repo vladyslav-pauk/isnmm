@@ -15,3 +15,4 @@ import src.model.architectures.snae as SNAE
 # import src.model.niva.iniva as INIVA
 #
 # import src.model.chvae.chvae as CHVAE
+# todo: architectures to experiments, make metric and config folders, modules to modules/autoencoder, later add diffusion...

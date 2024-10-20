@@ -12,6 +12,7 @@
     "experiment_name": "nonlinearity_removal",
     "mc_samples": 1,
     "latent_dim": null,
+    "num_subsets": 1,
     "sigma": null,
     "distance": "mse_loss",
     "reparameterization": "Transformation"
@@ -67,7 +68,7 @@
     }
   },
   "trainer": {
-    "accelerator": "auto",
+    "accelerator": "cpu",
     "devices": 1,
     "max_epochs": 2000,
     "limit_val_batches": 1,
