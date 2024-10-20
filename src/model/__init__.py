@@ -1,6 +1,6 @@
 import src.model.architectures.aevb as AEVB
 # import src.model.base.prism as PRISM
-# import src.model.base.mves as MVES
+import src.model.base.mves as MVES
 
 import src.model.architectures.vasca as VASCA
 import src.model.architectures.nisca as NISCA

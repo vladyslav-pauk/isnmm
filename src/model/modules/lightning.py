@@ -77,34 +77,9 @@ class Module(LightningModule):
                 self.sigma = datamodule.sigma
                 print("Ground truth model found.")
 
-            self.subsets = self._create_random_subsets(self.observed_dim, self.latent_dim, self.num_subsets)
-
             self.encoder.construct(self.latent_dim, self.observed_dim)
             self.decoder.construct(self.latent_dim, self.observed_dim)
             self.metrics = getattr(exp_module, self.experiment_metrics).ModelMetrics(datamodule).eval()
-
-    def _create_random_subsets(self, total_dim, latent_dim, num_subsets):
-        import torch, random, numpy
-        indices = list(torch.arange(total_dim))
-        random.shuffle(indices)
-
-        if num_subsets is None:
-            num_subsets = int(numpy.ceil(total_dim / latent_dim))
-
-        subsets = [[] for _ in range(num_subsets)]
-
-        for i, idx in enumerate(indices):
-            subsets[i % num_subsets].append(idx)
-
-        while any(len(subset) < latent_dim for subset in subsets):
-            for subset in subsets:
-                if len(subset) < latent_dim:
-                    remaining_indices = [i for i in indices if i not in subset]
-                    if not remaining_indices:
-                        remaining_indices = indices
-                    subset.append(random.choice(remaining_indices))
-
-        return [torch.tensor(subset, dtype=torch.long) for subset in subsets]
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])
@@ -133,6 +108,29 @@ class Module(LightningModule):
             }
         else:
             return {"optimizer": optimizer}
+
+    # def _create_random_subsets(self, total_dim, latent_dim, num_subsets):
+    #     import torch, random, numpy
+    #     indices = list(torch.arange(total_dim))
+    #     random.shuffle(indices)
+    #
+    #     if num_subsets is None:
+    #         num_subsets = int(numpy.ceil(total_dim / latent_dim))
+    #
+    #     subsets = [[] for _ in range(num_subsets)]
+    #
+    #     for i, idx in enumerate(indices):
+    #         subsets[i % num_subsets].append(idx)
+    #
+    #     while any(len(subset) < latent_dim for subset in subsets):
+    #         for subset in subsets:
+    #             if len(subset) < latent_dim:
+    #                 remaining_indices = [i for i in indices if i not in subset]
+    #                 if not remaining_indices:
+    #                     remaining_indices = indices
+    #                 subset.append(random.choice(remaining_indices))
+    #
+    #     return [torch.tensor(subset, dtype=torch.long) for subset in subsets]
 
     # def configure_optimizers(self):
     #     optimizer_class = getattr(optim, self.optimizer_config["name"])
