@@ -49,7 +49,7 @@ class ModelMetrics(MetricCollection):
             unmixing = base_model(
                 observed_dim=model.observed_dim,
                 latent_dim=latent_dim,
-                dataset_size=model.dataset_size,
+                dataset_size=model.trainer.datamodule.dataset_size,
             )
             latent_sample = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
             return latent_sample

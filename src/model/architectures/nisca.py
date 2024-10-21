@@ -20,7 +20,7 @@ class Model(LightningModule, VariationalAutoencoder):
         self.posterior_config = model_config["posterior"]
         self.encoder_transform = model_config["reparameterization"]
 
-        self.mc_samples = model_config["mc_samples"]
+        self.mc_samples = getattr(model_config, "mc_samples", 1)
         self.sigma = model_config["sigma"]
 
         self.distance = model_config["distance"]
@@ -39,8 +39,8 @@ class Encoder(nn.Module):
         self.linear_mixture_inv_scale = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
-        self.loc_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
-        self.scale_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
+        self.loc_network = self.constructor(observed_dim, observed_dim, **self.config)
+        self.scale_network = self.constructor(observed_dim, observed_dim, **self.config)
 
         self.linear_mixture_inv_loc = network.LinearPositive(
             torch.rand(latent_dim - 1, observed_dim), **self.config
@@ -49,6 +49,7 @@ class Encoder(nn.Module):
             torch.rand(latent_dim - 1, observed_dim), **self.config
         )
         # task: change order of observed, latent arguments in constructor
+        # task: make it a part of CNN? final linear layer
 
     def forward(self, x):
         loc = self.loc_network(x)

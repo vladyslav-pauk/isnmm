@@ -77,13 +77,18 @@ class Module(LightningModule):
             data_sample = next(iter(datamodule.train_dataloader()))
 
             self.observed_dim = data_sample["data"].shape[1]
-            if self.latent_dim is None and data_sample["labels"]:
-                self.latent_dim = data_sample["labels"]["latent_sample"].shape[-1]
-                print("Labelled data found.")
 
-            if self.sigma is None:
-                self.sigma = datamodule.sigma
-                print("Ground truth model found.")
+            if data_sample["labels"]:
+                print("Labelled data found")
+
+                if self.latent_dim is None:
+                    self.latent_dim = data_sample["labels"]["latent_sample"].shape[-1]
+
+                if self.sigma is None:
+                    self.sigma = datamodule.sigma
+
+            if self.unmixing:
+                print(f"Unmixing latent sample with {self.unmixing}")
 
             self.save_hyperparameters({"data_config": datamodule.data_config})
 

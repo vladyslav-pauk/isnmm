@@ -10,7 +10,6 @@
   },
   "model": {
     "experiment_name": "nonlinearity_removal",
-    "mc_samples": null,
     "latent_dim": null,
     "sigma": null,
     "distance": "mse_loss",

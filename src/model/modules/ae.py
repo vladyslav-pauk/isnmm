@@ -9,7 +9,6 @@ class Module(LightningModule):
         super().__init__()
 
     def _reparameterization(self, sample):
-        print(sample.shape)
         if self.encoder_transform is None:
             self.transform = t.Identity()
         else:

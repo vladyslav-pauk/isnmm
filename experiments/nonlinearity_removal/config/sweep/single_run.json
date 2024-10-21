@@ -15,7 +15,7 @@
     },
     "model_name": {
       "values": [
-        "nisca"
+        "cnae"
       ]
     },
     "observed_dim": {
@@ -25,12 +25,12 @@
     },
     "latent_dim": {
       "values": [
-        4
+        3
       ]
     },
     "snr": {
       "values": [
-        25
+        100
       ]
     },
     "dataset_size": {
@@ -40,7 +40,7 @@
     },
     "data_seed": {
       "values": [
-        1
+        42
       ]
     },
     "model.mc_samples": {
