@@ -8,7 +8,7 @@
     "experiment_name": {
       "value": "nonlinearity_removal"
     },
-    "data_model_name": {
+    "data_model": {
       "values": [
         "nonlinear"
       ]
@@ -18,14 +18,19 @@
         "nisca"
       ]
     },
-    "snr": {
+    "observed_dim": {
       "values": [
-        20
+        3
       ]
     },
-    "torch_seed": {
+    "latent_dim": {
       "values": [
-        0
+        4
+      ]
+    },
+    "snr": {
+      "values": [
+        25
       ]
     },
     "dataset_size": {
@@ -33,23 +38,42 @@
         10000
       ]
     },
-    "trainer.max_epochs": {
+    "data_seed": {
       "values": [
-        1000
+        1
+      ]
+    },
+    "model.mc_samples": {
+      "values": [
+        1
       ]
     },
     "decoder.hidden_layers": {
       "values": [
         {
-          "h1": 128
+          "h1":  128,
+          "h2":  128,
+          "h3":  128
         }
       ]
     },
     "encoder.hidden_layers": {
       "values": [
         {
-          "h1": 128
+          "h1":  128,
+          "h2":  128,
+          "h3":  128
         }
+      ]
+    },
+    "trainer.max_epochs": {
+      "values": [
+        1000
+      ]
+    },
+    "torch_seed": {
+      "values": [
+        0
       ]
     }
   }

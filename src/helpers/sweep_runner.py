@@ -25,12 +25,10 @@ class Sweep:
     def step(self):
         config = init_run(self.experiment, self.experiment_dir)
 
-        print(f"Dataset:")
         data_model = initialize_data_model(**config)
         data_model.sample()
         data_model.save_data()
 
-        print(f"Model '{config['model_name']}':")
         self.train_model(**config)
 
     def fetch_data(self, sweep_id=None, save=True):

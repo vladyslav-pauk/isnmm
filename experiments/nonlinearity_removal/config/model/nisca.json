@@ -3,10 +3,11 @@
   "torch_seed": 1,
   "data_loader": {
     "module_name": "synthetic",
-    "split": [0.8, 0.1, 0.1],
+    "split": [1.0, 0.0, 0.0],
     "batch_size": 100,
     "val_batch_size": 100,
-    "num_workers": 4
+    "num_workers": 4,
+    "shuffle": true
   },
   "model": {
     "experiment_name": "nonlinearity_removal",
@@ -14,6 +15,7 @@
     "latent_dim": null,
     "sigma": null,
     "distance": "mse_loss",
+    "unmixing": null,
     "prior": {
       "base_distribution": "Dirichlet"
     },
@@ -23,7 +25,7 @@
     "reparameterization": "LogitTransform"
   },
   "encoder": {
-    "constructor": "FCN",
+    "constructor": "CNN",
     "hidden_layers": {
       "h1": 128,
       "h2": 128,
@@ -77,11 +79,11 @@
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
-    "max_epochs": 2000,
+    "max_epochs": 1000,
     "gradient_clip_val": null,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
-    "log_every_n_steps": 10,
+    "log_every_n_steps": 100,
     "val_check_interval": 1.0,
     "enable_progress_bar": false
   },
@@ -94,7 +96,7 @@
   "early_stopping": {
     "monitor": "r_square",
     "mode": "max",
-    "patience": 500,
+    "patience": 100,
     "min_delta": 1e-5
   }
 }

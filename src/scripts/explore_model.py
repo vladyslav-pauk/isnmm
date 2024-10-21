@@ -1,85 +1,87 @@
 import os
+
+import numpy.random
 import torch
 
 import src.model as model_package
-from src.helpers.utils import load_model_config, load_data_config
-# from src.scripts.train import train_model
 from src.modules.data.synthetic import DataModule
-# from src.modules.metric.matrix_mse import mse_matrix_db
 
 
-def load_model(run_id, model_name, experiment_name, datamodule):
-
+def load_model(run_id, model_name, experiment_name):
     module = getattr(model_package, model_name)
 
-    checkpoints_dir = f"../../models/{experiment_name}/{run_id}/checkpoints/"
+    checkpoints_dir = f"../models/{experiment_name}/{run_id}/checkpoints/"
     checkpoint_files = [f for f in os.listdir(checkpoints_dir) if f.endswith(".ckpt")]
     best_model_path = os.path.join(checkpoints_dir, checkpoint_files[0])
 
     checkpoint = torch.load(best_model_path)
+    config = checkpoint["hyper_parameters"]
 
-    config = checkpoint["hyper_parameters"]['config']
-    config['data'] = checkpoint["hyper_parameters"]['data_config']['data']
+    encoder = module.Encoder(config=config['encoder'])
+    decoder = module.Decoder(config=config['decoder'])
 
-    encoder = module.Encoder(
-        input_dim=config['data']['observed_dim'],
-        latent_dim=config['data']['latent_dim'],
-        hidden_layers=config['encoder']['hidden_dim'],
-    )
-    decoder = module.Decoder(
-        latent_dim=config['data']['latent_dim'],
-        output_dim=config['data']['observed_dim'],
-        hidden_layers=config['decoder']['hidden_dim'],
-        activation=config['decoder']['activation'],
-    )
+    encoder.construct(latent_dim=config['data_config']['latent_dim'], observed_dim=config['data_config']['observed_dim'])
+    decoder.construct(latent_dim=config['data_config']['latent_dim'], observed_dim=config['data_config']['observed_dim'])
 
     model = module.Model.load_from_checkpoint(
         checkpoint_path=best_model_path,
         encoder=encoder,
-        data_model=datamodule,
         decoder=decoder,
-        lr=config['train']['lr'],
+        optimizer_config=config['optimizer'],
+        model_config=config['model'],
+        strict=False
     )
 
     model.eval()
 
-    return model
+    return model, config
 
 
 if __name__ == "__main__":
-    experiment_name = "simplex_recovery"
-    model_name = "VASCA"
+    numpy_seed = 0
+    torch_seed = 0
+    torch.manual_seed(torch_seed)
+    numpy.random.seed(numpy_seed)
 
-    data_config = load_data_config(experiment_name)
-    config = load_model_config(experiment_name, model_name)
+    experiment_name = "nonlinearity_removal"
+    model_name = "NISCA"
+    base_model = 'MVES'
 
-    datamodule = DataModule(data_config, **config['data_loader'])
+    run_id = 'gkoq3xw4'
 
-    run_id = 'olk8thyp'
-    # training_config = load_experiment_config(experiment_name, model_name)
-    # run_id = train_model(
-    #     experiment_name=experiment_name,
-    #     config=training_config,
-    #     datamodule=datamodule,
-    #     run='eval_script'
-    # )
-
-    model = load_model(
+    model, config = load_model(
         run_id=run_id,
         model_name=model_name,
         experiment_name=experiment_name,
-        datamodule=datamodule
     )
 
-    print(model.decoder.linear_mixing.matrix)
-    print(model.data_model.dataset.data_model.linear_mixing)
-    # print(mse_matrix_db(model.decoder.linear_mixing.matrix, model.data_model.dataset.data_model.linear_mixing))
+    datamodule = DataModule(config['data_config'], **config['data_loader'])
+    datamodule.prepare_data()
+    observed_data, latent_data = datamodule.observed_sample, datamodule.latent_sample
 
-    # x_data, z_data = next(iter(datamodule.test_dataloader()))
-    x_data, z_data = datamodule.dataset.data
     with torch.no_grad():
-        predictions = model.decoder.nonlinear_transform(x_data)
-    print("Predictions:", predictions)
+        latent_sample_mixed = model(observed_data)['reconstructed_sample']
+    linear_mixture = model.decoder.linear_mixture.matrix.cpu().detach()
+
+    seed = 0
+    torch.manual_seed(seed)
+    numpy.random.seed(seed)
+    M = 3  # Number of spectral bands
+    N = 3  # Number of endmembers
+    L = 10000  # Number of pixels
+    linear_mixture = torch.rand(M, N)
+    alpha = torch.ones(N)
+    latent_sample_true = torch.distributions.Dirichlet(alpha).sample((L,))
+    latent_sample_mixed = latent_sample_true @ linear_mixture.T
+
+    unmixing_model = getattr(model_package, base_model).Model
+    unmixing = unmixing_model(observed_dim=observed_data.size(-1), latent_dim=latent_data.size(-1), dataset_size=observed_data.size(0))
+    latent_sample = unmixing.estimate_abundances(latent_sample_mixed)
+
+    print("Mean SAM Endmembers: {}\nMean SAM Abundances: {}".format(*unmixing.compute_metrics(linear_mixture, latent_sample, latent_sample_true)))
+
+    # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
+    # unmixing.plot_mse_image(rows=100, cols=100)
 
 # todo: finish explore_model script
 # task: load config from the loaded model snapshot wandb

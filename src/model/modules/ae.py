@@ -9,6 +9,7 @@ class Module(LightningModule):
         super().__init__()
 
     def _reparameterization(self, sample):
+        print(sample.shape)
         if self.encoder_transform is None:
             self.transform = t.Identity()
         else:
@@ -40,5 +41,4 @@ class Module(LightningModule):
 #  Ideally, I save these as hyperparameters, and the rest as config.
 #  self.save_hyperparameters(ignore=['encoder', 'decoder', 'ground_truth_model'])
 # task: use expectation of the reconstructed x for each z_mc instead of using z_mean
-# fixme: unequal dimensions (as in paper with blocks)
 # task: add logging

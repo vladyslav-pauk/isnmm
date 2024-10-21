@@ -9,10 +9,13 @@ class SpectralAngle(torchmetrics.Metric):
         self.add_state("sum_spectral_angle", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
 
-    def update(self, model_A, true_A):
-        true_A_norm = true_A / torch.norm(true_A, dim=1, keepdim=True)
-        model_A_norm = model_A / torch.norm(model_A, dim=1, keepdim=True)
-        cosines = torch.sum(true_A_norm * model_A_norm, dim=1)
+    def update(self, matrix_est, matrix_true):
+        matrix_true = matrix_true.T
+        matrix_est = matrix_est.T
+        matrix_true_norm = matrix_true / torch.norm(matrix_true, dim=1, keepdim=True)
+        matrix_est_norm = matrix_est / torch.norm(matrix_est, dim=1, keepdim=True)
+
+        cosines = torch.sum(matrix_true_norm * matrix_est_norm, dim=1)
         spectral_angle = torch.acos(cosines).sum()
         self.sum_spectral_angle += spectral_angle
         self.count += cosines.shape[0]
@@ -20,4 +23,4 @@ class SpectralAngle(torchmetrics.Metric):
     def compute(self):
         return self.sum_spectral_angle / self.count
 
-# todo: check if this is a correct behavior of SAM
+    # todo: use function from helpers

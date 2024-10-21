@@ -15,12 +15,17 @@ class LogitTransform(Transform):
     def codomain(self):
         return constraints.real_vector
 
+    # def __call__(self, sample):
+    #     exp_y = torch.exp(sample)
+    #     last_component = 1.0 / (1.0 + torch.sum(exp_y, dim=-1, keepdim=True))
+    #
+    #     return torch.cat([exp_y * last_component, last_component], dim=-1)
+
     def __call__(self, sample):
-        exp_y = torch.exp(sample)
-        last_component = 1.0 / (1.0 + torch.sum(exp_y, dim=-1, keepdim=True))
-
-        return torch.cat([exp_y * last_component, last_component], dim=-1)
-
+        sample_padded = torch.cat([sample, torch.zeros_like(sample[..., :1])], dim=-1)
+        lse = torch.logsumexp(sample_padded, dim=-1, keepdim=True)
+        transformed_sample = torch.exp(sample_padded - lse)
+        return transformed_sample / transformed_sample.sum(dim=-1, keepdim=True)
 
     def _inverse(self, z):
         epsilon = 1e-12

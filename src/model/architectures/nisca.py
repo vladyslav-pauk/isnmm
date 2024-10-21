@@ -10,6 +10,9 @@ class Model(LightningModule, VariationalAutoencoder):
     def __init__(self, encoder=None, decoder=None, model_config=None, optimizer_config=None):
         super().__init__(encoder, decoder)
 
+        self.encoder = encoder
+        self.decoder = decoder
+
         self.latent_dim = model_config["latent_dim"]
 
         self.optimizer_config = optimizer_config
@@ -32,29 +35,29 @@ class Encoder(nn.Module):
 
         self.loc_network = None
         self.scale_network = None
-        # self.linear_mixture_inv = nn.Identity()
+        self.linear_mixture_inv_loc = nn.Identity()
+        self.linear_mixture_inv_scale = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
         self.loc_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
         self.scale_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
 
-        # self.linear_mixture_inv_mu = network.LinearPositive(
-        #     torch.rand(latent_dim - 1, observed_dim), **self.config
-        # )
-        # self.linear_mixture_inv_var = network.LinearPositive(
-        #     torch.rand(latent_dim - 1, observed_dim), **self.config
-        # )
+        self.linear_mixture_inv_loc = network.LinearPositive(
+            torch.rand(latent_dim - 1, observed_dim), **self.config
+        )
+        self.linear_mixture_inv_scale = network.LinearPositive(
+            torch.rand(latent_dim - 1, observed_dim), **self.config
+        )
         # task: change order of observed, latent arguments in constructor
 
     def forward(self, x):
         loc = self.loc_network(x)
-        # mu = self.linear_mixture_inv_mu(mu)
         scale = self.scale_network(x)
-        # std = std.abs().pow(0.5)
-        # # std = torch.exp(0.5 * std)
-        # std = self.linear_mixture_inv_var(std)
-        # std = torch.zeros_like(mu)
-        return loc, scale.exp() #.clamp(min=1e-12)
+
+        loc = self.linear_mixture_inv_loc(loc)
+        scale = self.linear_mixture_inv_scale(scale)
+
+        return loc, scale.exp().clamp(1e-12, 1e12)
 
 
 class Decoder(nn.Module):
@@ -76,9 +79,11 @@ class Decoder(nn.Module):
         x = self.nonlinear_transform(y)
         return x
 
-# todo: SVMAX initialization
+# todo: CNN and CFCN automatically with linear mixture, FCN without
+# task: SVMAX initialization
 # task: clean and squash github commits
 # task: use yaml for config
 # task: move to experiment, make a folder for each experiment (move configs too?)
 # task: check numerical stability of the model, if there are nans or unusual values
 # todo: look into cnae and vasca papers and see what else has to be implemented
+# todo: instead of h1, h2, ... use depth and width, make both, if not depth, width read h1, h2...

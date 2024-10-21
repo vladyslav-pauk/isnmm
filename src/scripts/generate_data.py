@@ -5,10 +5,10 @@ from src.helpers.utils import load_data_config, update_hyperparameters
 import src.modules.distribution as distribution_package
 
 
-def initialize_data_model(experiment_name, data_model_name, **kwargs):
+def initialize_data_model(experiment_name, data_model, **kwargs):
 
     config = load_data_config(experiment_name)
-    config = update_hyperparameters(config, kwargs)
+    config = update_hyperparameters(config, kwargs, show_log=False)
 
     seed = config["data_seed"]
     if seed:
@@ -17,13 +17,13 @@ def initialize_data_model(experiment_name, data_model_name, **kwargs):
     linear_mixture_matrix = torch.randn(config["observed_dim"], config["latent_dim"])
 
     generative_model = getattr(distribution_package, config["data_module_name"])
-    model = generative_model(linear_mixture_matrix, data_model_name, **config)
+    model = generative_model(linear_mixture_matrix, data_model, **config)
 
     return model
 
 
 if __name__ == "__main__":
-    data_model_name = 'nnmm'
+    data_model_name = 'nonlinear'
     experiment_name = 'nonlinearity_removal'
 
     model = initialize_data_model(experiment_name, data_model_name)

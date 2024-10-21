@@ -25,6 +25,8 @@ if __name__ == '__main__':
     averaged_data = experiment_analyzer.average_seeds(data)
     experiment_analyzer.plot_metric(averaged_data, save=False)
 
-# todo: discard run, if metrics is bad (positive mse_db)
-# todo: save plots
-# fixme: run schedule
+# fixme: discard run, if metrics is below threshold (-10 positive mse_db)
+# todo: saving plots and results
+# fixme: test single runs for SNRs and models I want to do, make sure I get results, fine tune configs and schedule parameters
+# fixme: run schedule to unmix latents with NISCA, CNAE+MVES, VASCA, MVES depending on noise, and latent dimension
+# todo: latent_sample contains nans -> skip

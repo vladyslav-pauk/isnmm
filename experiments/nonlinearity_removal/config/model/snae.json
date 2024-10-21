@@ -15,6 +15,7 @@
     "num_subsets": 1,
     "sigma": null,
     "distance": "mse_loss",
+    "unmixing": null,
     "reparameterization": "Transformation"
   },
   "encoder": {

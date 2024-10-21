@@ -20,7 +20,6 @@ class Module(AutoEncoder):
             self.transform = t.Identity()
         else:
             self.transform = getattr(t, self.encoder_transform)()
-
         return self.transform(base_sample)
 
     def _regularization_loss(self, model_output, data, idxes):
@@ -42,4 +41,3 @@ class Module(AutoEncoder):
             base_distribution(loc, scale), self.transform
         )
         return prior, posterior
-

@@ -12,5 +12,6 @@ if __name__ == "__main__":
     )
     averaged_data = experiment_analyzer.average_seeds(data)
     experiment_analyzer.plot_metric(averaged_data)
+    print(averaged_data)
 
 # todo: covariate, metric, comparison markers to sweep dataset

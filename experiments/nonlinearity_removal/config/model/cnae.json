@@ -10,11 +10,12 @@
   },
   "model": {
     "experiment_name": "nonlinearity_removal",
-    "mc_samples": 1,
+    "mc_samples": null,
     "latent_dim": null,
     "sigma": null,
     "distance": "mse_loss",
-    "reparameterization": null
+    "reparameterization": null,
+    "unmixing": "MVES"
   },
   "encoder": {
     "constructor": "CNN",
@@ -59,7 +60,7 @@
     "update_frequency": 1000
   },
   "trainer": {
-    "accelerator": "auto",
+    "accelerator": "cpu",
     "devices": 1,
     "max_epochs": 2000,
     "limit_val_batches": 1,

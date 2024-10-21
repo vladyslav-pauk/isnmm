@@ -1,11 +1,10 @@
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torchmetrics
 import matplotlib.pyplot as plt
 import math
-import torch
+
 import wandb
+import torch
+import torch.nn as nn
+import torchmetrics
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
@@ -82,7 +81,7 @@ class LineFitter(nn.Module):
         params = torch.linalg.lstsq(Y, x_flat).solution
         slope, intercept = params[0], params[1]
         x_pred = slope * y + intercept
-        mse = F.mse_loss(x_pred, x)
+        mse = nn.functional.mse_loss(x_pred, x)
 
         ss_total = torch.sum((x - x.mean()) ** 2)
         ss_residual = torch.sum((x - x_pred) ** 2)
@@ -190,3 +189,4 @@ def visual_normalization(x):
 # task: residual nonlinearity and plot components shall go under the Fitter class
 # task: crop outliers
 # task: i can also check variance of the residual, that's more statistical metric
+# task: matched latent correlation plot

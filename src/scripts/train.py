@@ -17,8 +17,11 @@ def train_model(experiment_name, model_name, **kwargs):
     config = load_model_config(experiment_name, model_name)
     data_config = load_data_config(experiment_name)
 
+    print(f"Dataset '{data_config['data_module_name']}':")
+    data_config = update_hyperparameters(data_config, kwargs)
+
+    print(f"Model '{config['model_name']}':")
     config = update_hyperparameters(config, kwargs)
-    data_config = update_hyperparameters(data_config, kwargs, show_log=False)
 
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
@@ -50,6 +53,7 @@ def _setup_model(config, logger):
         optimizer_config=config['optimizer'],
         model_config=config['model']
     )
+    model.save_hyperparameters(config)
     logger.watch(model, log='parameters')
     return model
 

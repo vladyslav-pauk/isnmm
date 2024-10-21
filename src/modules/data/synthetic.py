@@ -7,7 +7,7 @@ from ..utils import dict_to_str
 
 
 class DataModule(LightningDataModule):
-    def __init__(self, data_config, **config):
+    def __init__(self, data_config, shuffle=False, **config):
         super().__init__()
         self.data_config = data_config
         self.model_name = data_config["data_module_name"]
@@ -22,10 +22,12 @@ class DataModule(LightningDataModule):
         self.val_batch_size = config["val_batch_size"]
         self.split = config["split"]
         self.num_workers = config["num_workers"]
+        self.shuffle = shuffle
 
         self.linear_mixture = None
-        self.observed_data = None
 
+        self.observed_sample = None
+        self.latent_sample = None
         self.linearly_mixed_sample = None
 
     def prepare_data(self):
@@ -57,7 +59,7 @@ class DataModule(LightningDataModule):
         self.n_feature = self.observed_sample.shape[1]
 
     def train_dataloader(self):
-        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, persistent_workers=True)
+        return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers, persistent_workers=True)
 
     def val_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers, persistent_workers=True)
