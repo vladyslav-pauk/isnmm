@@ -35,12 +35,12 @@
     },
     "dataset_size": {
       "values": [
-        10000
+        5000
       ]
     },
     "data_seed": {
       "values": [
-        42
+        12
       ]
     },
     "model.mc_samples": {
@@ -51,29 +51,25 @@
     "decoder.hidden_layers": {
       "values": [
         {
-          "h1":  128,
-          "h2":  128,
-          "h3":  128
+          "h1":  128
         }
       ]
     },
     "encoder.hidden_layers": {
       "values": [
         {
-          "h1":  128,
-          "h2":  128,
-          "h3":  128
+          "h1":  128
         }
       ]
     },
     "trainer.max_epochs": {
       "values": [
-        1000
+        4000
       ]
     },
     "torch_seed": {
       "values": [
-        0
+        42
       ]
     }
   }

@@ -7,7 +7,7 @@ from ..utils import dict_to_str
 
 
 class DataModule(LightningDataModule):
-    def __init__(self, data_config, shuffle=False, **config):
+    def __init__(self, data_config, **config):
         super().__init__()
         self.data_config = data_config
         self.model_name = data_config["data_module_name"]
@@ -22,7 +22,7 @@ class DataModule(LightningDataModule):
         self.val_batch_size = config["val_batch_size"]
         self.split = config["split"]
         self.num_workers = config["num_workers"]
-        self.shuffle = shuffle
+        self.shuffle = config['shuffle']
 
         self.linear_mixture = None
 

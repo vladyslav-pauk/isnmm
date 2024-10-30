@@ -20,7 +20,7 @@ class ModelMetrics(MetricCollection):
         }
         if model:
             metrics.update({
-                'mixture_mse_db': metric.MatrixMse(),
+                'mixture_mse_db': metric.MatrixMse(db=True),
                 'mixture_sam': metric.SpectralAngle(),
                 'subspace_distance': metric.SubspaceDistance(),
                 'latent_mse_db': metric.MatrixMse()

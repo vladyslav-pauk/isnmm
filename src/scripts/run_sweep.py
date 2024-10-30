@@ -23,7 +23,7 @@ if __name__ == '__main__':
         metric="latent_mse_db", covariate="snr", comparison="model_name"
     )
     averaged_data = experiment_analyzer.average_seeds(data)
-    experiment_analyzer.plot_metric(averaged_data, save=False)
+    # experiment_analyzer.plot_metric(averaged_data, save=False)
 
 # fixme: discard run, if metrics is below threshold (-10 positive mse_db)
 # todo: saving plots and results

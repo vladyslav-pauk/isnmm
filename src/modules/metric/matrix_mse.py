@@ -4,10 +4,10 @@ import itertools
 
 
 class MatrixMse(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False):
+    def __init__(self, dist_sync_on_step=False, db=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
-        # State to track minimum MSE
+        self.db = db
         self.add_state("min_mse", default=torch.tensor(float('inf')), dist_reduce_fx="min")
 
     def update(self, model_A, true_A):
@@ -15,7 +15,10 @@ class MatrixMse(torchmetrics.Metric):
         self.min_mse = torch.min(self.min_mse, best_mse)
 
     def compute(self):
-        return 10 * torch.log10(self.min_mse)
+        if self.db:
+            return 10 * torch.log10(self.min_mse)
+        else:
+            return self.min_mse
 
     def find_best_permutation_mse(self, model_A, true_A):
         num_cols = model_A.size(1)
