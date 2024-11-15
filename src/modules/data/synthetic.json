@@ -1,6 +1,4 @@
 {
-  "data_module_name": "noisy_mixture",
-  "data_model": "nonlinear",
   "degree": null,
   "scale": 5,
   "mixing_matrix_init": "normal_",

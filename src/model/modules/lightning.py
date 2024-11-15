@@ -14,8 +14,6 @@ class Module(LightningModule):
         self.metrics = None
         self.unmixing = False
 
-        self.metrics_list = ['latent_mse']
-
     def forward(self, observed_batch):
         posterior_parameterization = self.encoder(observed_batch)
         latent_sample, latent_sample_mean = self._reparameterization(posterior_parameterization)
@@ -97,13 +95,15 @@ class Module(LightningModule):
             self.encoder.construct(self.latent_dim, self.observed_dim)
             self.decoder.construct(self.latent_dim, self.observed_dim)
 
-            self.metrics = self.metrics_module.ModelMetrics(datamodule, self.metrics_list).eval()
+            self.metrics.true_model = datamodule
 
     def on_test_start(self):
-        self.metrics_list = ['latent_mse', 'r_square', 'subspace_distance']
-        self.metrics = self.metrics_module.ModelMetrics(self.trainer.datamodule, self.metrics_list).eval()
-        self.metrics["r_square"].show_plot = True
-        self.metrics["r_square"].log_plot = False
+        self.metrics.metrics_list = []
+        self.metrics.true_model = self.trainer.datamodule
+        self.metrics._setup_metrics()
+
+        self.metrics.show_plots = False
+        self.metrics.log_plots = False
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])

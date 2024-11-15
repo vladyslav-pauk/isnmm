@@ -1,7 +1,7 @@
 import json
 import os
-from src.helpers.wandb_tools import fetch_wandb_sweep#, login_wandb
-from src.helpers.utils import font_style, format_string
+from src.utils.wandb_tools import fetch_wandb_sweep#, login_wandb
+from src.utils.utils import font_style, format_string
 import matplotlib.pyplot as plt
 import numpy as np
 from collections import defaultdict
@@ -11,8 +11,8 @@ class SweepAnalyzer:
     def __init__(self, experiment, sweep_id):
         self.experiment = experiment
         self.sweep_id = sweep_id
-        self.output_dir = f"../experiments/{experiment}/results/sweeps"
-        self.output_file = f"{sweep_id}.json"
+        self.output_dir = f"../experiments/{experiment}/results/{self.sweep_id}"
+        self.output_file = f"sweep_summary.json"
         # todo: fix directories, run from project root
 
         os.makedirs(self.output_dir, exist_ok=True)
@@ -117,13 +117,12 @@ class SweepAnalyzer:
         plt.ylabel(format_string(metric_name))
         # plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
         # plt.legend()
-        plt.show()
+        # plt.show()
 
         if save:
-            plt.savefig(os.path.join(self.output_dir, f"{self.sweep_id}_metric_plot.png"))
+            plt.savefig(os.path.join(f'../experiments/{self.experiment}/results/{self.sweep_id}', f"sweep_summary.png"))
 
     def _fetch_data(self):
-        # login_wandb(self.experiment)
         self.sweep_data = fetch_wandb_sweep(self.experiment, self.sweep_id)
 
     def _save_data(self):

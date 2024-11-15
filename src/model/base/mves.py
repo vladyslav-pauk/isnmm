@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from scipy.spatial import ConvexHull
 from scipy.optimize import lsq_linear
 
-from src.helpers.matrix_tools import kmeans_torch, match_components, spectral_angle_mapper
+from src.utils.matrix_tools import kmeans_torch, match_components, spectral_angle_mapper
 
 
 class Model:

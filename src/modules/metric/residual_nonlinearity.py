@@ -67,7 +67,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             # nr=(self.reconstructed_sample, self.noiseless_sample_true),
             scale=True,
             show_plot=show_plot,
-            name=f"Model vs True Nonlinearity"
+            name=f"model_true_nonlinearity"
         )
         # plot_components(
         #     model=(self.linearly_mixed_sample, self.reconstructed_sample),
@@ -90,7 +90,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             true=(torch.linspace(0, 1, 100).repeat(3, 1).t(), torch.linspace(0, 1, 100).repeat(3, 1).t()),
             scale=False,
             show_plot=show_plot,
-            name=f"Latent Correlation"
+            name=f"latent_correlation"
         )
 
         # plt.plot(self.latent_sample[:, 0], self.latent_sample[:, 1], 'o')
@@ -148,8 +148,6 @@ class LineFitter(nn.Module):
         return torch.cat(transformed_components, dim=-1)
 
 
-# Adjust your Matplotlib parameters for LaTeX rendering, fonts, etc., as before
-
 def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwargs):
     import warnings
     warnings.filterwarnings("ignore", message=".*path .*")
@@ -199,17 +197,25 @@ def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwar
     plt.xlabel(r"$A z$")
     plt.ylabel(r"$f(A z)$")
 
-    # Save the plot with a transparent background
     if show_plot:
         plt.show()
     else:
         wandb.log({
             name: plt
         })
-    # Save figure with transparent background
 
-    # Saving the figure with transparency
-    fig.savefig(f'{name}.png', transparent=True)
+    import os
+    wandb_path = os.getenv("WANDB_DIR")
+    sweep_id = os.getenv("SWEEP_ID")
+    run_id = os.getenv("RUN_ID")
+
+    path = f"{wandb_path}/results/{sweep_id}/media/{run_id}-{name}.png"
+    directory = os.path.dirname(path)
+
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    fig.savefig(path, transparent=True)
     plt.close()
     return plt
 

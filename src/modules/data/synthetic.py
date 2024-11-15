@@ -10,7 +10,7 @@ class DataModule(LightningDataModule):
     def __init__(self, data_config, **config):
         super().__init__()
         self.data_config = data_config
-        self.model_name = data_config["data_module_name"]
+        # self.model_name = data_config["data_module_name"]
         self.dataset_size = data_config["dataset_size"]
         self.latent_dim = data_config["latent_dim"]
         self.observed_dim = data_config["observed_dim"]

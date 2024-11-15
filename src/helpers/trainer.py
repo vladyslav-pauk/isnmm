@@ -7,16 +7,17 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.modules.callback import EarlyStoppingCallback
-from src.helpers.config_tools import load_model_config, load_data_config, update_hyperparameters
-from src.helpers.wandb_tools import init_logger#, login_wandb
+from src.utils.config_tools import load_model_config, load_data_config, update_hyperparameters
+from src.utils.wandb_tools import init_logger#, login_wandb
+import src.experiments as exp_module
 
-
-def train_model(experiment_name, model_name, **kwargs):
+# fixme: remove sweep_id variable
+def train_model(experiment_name, model_name, sweep_id=None, **kwargs):
 
     config = load_model_config(experiment_name, model_name)
     data_config = load_data_config(experiment_name)
 
-    print(f"Dataset '{data_config['data_module_name']}':")
+    print(f"Dataset '{experiment_name}':")
     data_config = update_hyperparameters(data_config, kwargs)
 
     print(f"Model '{config['model_name']}':")
@@ -25,7 +26,8 @@ def train_model(experiment_name, model_name, **kwargs):
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
 
-    logger = _setup_logger(experiment_name, config, data_config, kwargs)
+    logger = _setup_logger(experiment_name, sweep_id, config, data_config, kwargs)
+
     datamodule = _setup_data_module(data_config, config["data_loader"])
     model = _setup_model(config, logger)
     trainer = _setup_trainer(config, logger)
@@ -47,16 +49,15 @@ def _setup_model(config, logger):
     encoder = model_module.Encoder(config=config['encoder'])
     decoder = model_module.Decoder(config=config['decoder'])
 
-    import src.experiments as exp_module
-    experiment_metrics = logger._project
-    metrics_module = getattr(exp_module, experiment_metrics)
+    metrics_module = getattr(exp_module, logger._project)
+    metrics = metrics_module.ModelMetrics(monitor=config['metric']['name']).eval()
 
     model = model_module.Model(
         encoder=encoder,
         decoder=decoder,
         optimizer_config=config['optimizer'],
         model_config=config['model'],
-        metrics=metrics_module
+        metrics=metrics
     )
     model.save_hyperparameters(config)
     logger.watch(model, log='parameters')
@@ -66,12 +67,16 @@ def _setup_model(config, logger):
 def _setup_trainer(config, logger):
 
     early_stopping_callback = EarlyStoppingCallback(
+        monitor=config['metric']['name'],
+        mode=config['metric']['goal'][:3],
         **config['early_stopping']
     )
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=f'../experiments/{logger._project}/results/checkpoints/{logger.experiment.id}',
-        filename=f'{{epoch:02d}}-{{{config["checkpoint"]["monitor"]}:.2f}}',
+        dirpath=f'../experiments/{logger._project}/checkpoints/{logger.experiment.id}',
+        filename=f'{{epoch:02d}}-{{{config["metric"]["name"]}:.2f}}',
+        monitor=config['metric']['name'],
+        mode=config['metric']['goal'][:3],
         **config['checkpoint']
     )
 
@@ -84,10 +89,11 @@ def _setup_trainer(config, logger):
     return trainer
 
 
-def _setup_logger(experiment_name, config, data_config, kwargs):
+def _setup_logger(experiment_name, sweep_id, config, data_config, kwargs):
     logger = init_logger(
         experiment_name=experiment_name,
-        config=kwargs
+        config=kwargs,
+        sweep_id=sweep_id
     )
     logger.log_hyperparams({
         'config': config,

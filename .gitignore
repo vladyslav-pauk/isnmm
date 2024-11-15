@@ -161,9 +161,12 @@ cython_debug/
 .idea/
 
 # local dirs
-datasets/*
+datasets/
 !datasets/synthetic/
 models/
 resources/
 /src/res/
+wandb/
+checkpoints/
+_tmp/
 results/

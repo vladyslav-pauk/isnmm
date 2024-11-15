@@ -17,7 +17,7 @@ class GenerativeModel:  # (Distribution)
     # arg_constraints = {"degree": constraints.positive, "linear_mixing": constraints.positive}
     # support = constraints.simplex
 
-    def __init__(self, linear_mixture_matrix=None, data_model_name=None, **config):
+    def __init__(self, linear_mixture_matrix=None, **config):
         super().__init__()
         # observed_dim = None,
         # latent_dim = None,
@@ -39,7 +39,6 @@ class GenerativeModel:  # (Distribution)
         self.sigma = None
         self.mixing_matrix_init = config["mixing_matrix_init"]
         self.nonlinear_transform_init = config["nonlinear_transform_init"]
-        self.data_model_name = data_model_name
 
         if linear_mixture_matrix is not None:
             self.observed_dim, self.latent_dim = linear_mixture_matrix.shape
@@ -124,7 +123,7 @@ class GenerativeModel:  # (Distribution)
 
 
 if __name__ == "__main__":
-    from src.scripts.generate_data import initialize_data_model
+    from src.helpers.generate_data import initialize_data_model
 
     config = {
         # "data_model": "cnae",
@@ -143,7 +142,7 @@ if __name__ == "__main__":
     }
 
     # model = GenerativeModel(**config)
-    data_model = initialize_data_model(data_model="cnae", experiment_name="synthetic_data", **config)
+    data_model = initialize_data_model(experiment_name="synthetic_data", **config)
     data_model.sample()
     data_model.plot_sample()
     data_model.plot_nonlinearities()

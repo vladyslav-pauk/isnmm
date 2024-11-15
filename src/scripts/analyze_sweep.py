@@ -1,5 +1,6 @@
 from src.helpers.sweep_analyzer import SweepAnalyzer
-from pprint import pprint
+import numpy as np
+from tabulate import tabulate
 
 
 def analyze_sweep(experiment, sweep_id):
@@ -10,7 +11,19 @@ def analyze_sweep(experiment, sweep_id):
     )
     averaged_data = experiment_analyzer.average_seeds(data)
     experiment_analyzer.plot_metric(averaged_data)
-    pprint(averaged_data)
+
+    print("Sweep results:")
+    table = []
+    for data_dict in averaged_data:
+        row = {}
+        for key, value in data_dict.items():
+            if isinstance(value, (np.ndarray, list)) and len(value) > 0:
+                value = value[0]
+            row[key] = value
+        table.append(row)
+
+    # Print as table
+    print(tabulate(table, headers="keys", tablefmt="grid"))
 
 
 if __name__ == "__main__":

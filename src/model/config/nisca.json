@@ -1,6 +1,10 @@
 {
   "model_name": "nisca",
   "torch_seed": 1,
+  "metric": {
+    "goal": "minimize",
+    "name": "latent_mse"
+  },
   "data_loader": {
     "module_name": "synthetic",
     "split": [1.0, 0.0, 0.0],
@@ -87,14 +91,10 @@
     "enable_progress_bar": false
   },
   "checkpoint": {
-    "monitor": "latent_mse",
-    "mode": "min",
     "save_top_k": 1,
     "verbose": true
   },
   "early_stopping": {
-    "monitor": "latent_mse",
-    "mode": "min",
     "patience": 100,
     "min_delta": 1e-4
   }

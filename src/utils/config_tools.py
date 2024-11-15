@@ -1,19 +1,19 @@
 import json
 import os
 import yaml
-from src.helpers.utils import flatten_dict, unflatten_dict
+from src.utils.utils import flatten_dict, unflatten_dict
 
 
 
 def load_model_config(experiment, config_name):
-    path = f'../experiments/{experiment}/config/model/{config_name}.json'
+    path = f'../src/model/config/{config_name}.json'
     if os.path.exists(path):
         with open(path, 'r') as f:
             return json.load(f)
 
 
 def load_sweep_config(experiment, config_name):
-    path = f'../experiments/{experiment}/config/sweep/{config_name}.yaml'
+    path = f'../experiments/{experiment}/config/{config_name}.yaml'
 
     if os.path.exists(path):
         with open(path, 'r') as f:
@@ -52,7 +52,7 @@ def convert_yaml_to_json(yaml_str):
 
 
 def load_data_config(experiment):
-    path = f'../experiments/{experiment}/config/data.json'
+    path = f'../src/modules/data/synthetic.json'
 
     if os.path.exists(path):
         with open(path, 'r') as f:

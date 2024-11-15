@@ -13,7 +13,7 @@ class Model(LightningModule, VariationalAutoencoder):
         self.encoder = encoder
         self.decoder = decoder
 
-        self.metrics_module = metrics
+        self.metrics = metrics
 
         self.latent_dim = model_config["latent_dim"]
 
