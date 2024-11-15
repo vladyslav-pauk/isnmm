@@ -10,7 +10,6 @@
     "shuffle": true
   },
   "model": {
-    "experiment_name": "nonlinearity_removal",
     "mc_samples": 1,
     "latent_dim": null,
     "sigma": null,

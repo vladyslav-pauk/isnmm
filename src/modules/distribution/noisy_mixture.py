@@ -143,7 +143,7 @@ if __name__ == "__main__":
     }
 
     # model = GenerativeModel(**config)
-    data_model = initialize_data_model(data_model="cnae", experiment_name="nonlinearity_removal", **config)
+    data_model = initialize_data_model(data_model="cnae", experiment_name="synthetic_data", **config)
     data_model.sample()
     data_model.plot_sample()
     data_model.plot_nonlinearities()

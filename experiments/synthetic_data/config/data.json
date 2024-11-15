@@ -1,14 +1,14 @@
 {
   "data_module_name": "noisy_mixture",
   "data_model": "nonlinear",
-  "nonlinearity": "cnae",
   "degree": null,
-  "snr": 25,
-  "mixing_matrix_init": "normal_",
   "scale": 5,
+  "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
+  "nonlinearity": "cnae",
   "observed_dim": 3,
   "latent_dim": 3,
+  "snr": 25,
   "dataset_size": 100000,
   "data_seed": 21
 }

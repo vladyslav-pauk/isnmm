@@ -1,8 +1,5 @@
-import os
-import json
 import argparse
 import hashlib
-import yaml
 
 
 def sweep_parser():
@@ -46,9 +43,6 @@ def hash_name(kwargs):
     #     run_name = None
 
 
-
-
-
 def unflatten_dict(d, sep='.'):
     result = {}
     for key, value in d.items():
@@ -72,6 +66,7 @@ def flatten_dict(d, parent_key='', sep='.'):
             items.append((new_key, value))
     return dict(items)
 
+
 def font_style():
     font = {
         'family': 'serif',
@@ -80,6 +75,7 @@ def font_style():
         'size': 22,
     }
     return font
+
 
 def format_string(s):
     s = s.replace('_', ' ').title()
@@ -90,6 +86,7 @@ def format_string(s):
     if 'Db' in s:
         s = s.replace('Db', 'dB')
     return s
+
 
 # log_format = "%(asctime)s - %(levelname)s - %(message)s"
 # logging.basicConfig(

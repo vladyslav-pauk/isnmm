@@ -24,7 +24,7 @@ def initialize_data_model(experiment_name, data_model, **kwargs):
 
 if __name__ == "__main__":
     data_model_name = 'nonlinear'
-    experiment_name = 'nonlinearity_removal'
+    experiment_name = 'synthetic_data'
 
     model = initialize_data_model(experiment_name, data_model_name)
 

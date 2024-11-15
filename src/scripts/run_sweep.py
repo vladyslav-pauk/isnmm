@@ -1,4 +1,4 @@
-from train import train_model
+from src.helpers.trainer import train_model
 from src.helpers.config_tools import load_sweep_config
 from src.helpers.utils import sweep_parser
 from src.helpers.sweep_runner import Sweep

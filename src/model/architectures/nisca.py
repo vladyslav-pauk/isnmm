@@ -7,11 +7,13 @@ from src.model.modules.vae import Module as VariationalAutoencoder
 
 
 class Model(LightningModule, VariationalAutoencoder):
-    def __init__(self, encoder=None, decoder=None, model_config=None, optimizer_config=None):
+    def __init__(self, encoder=None, decoder=None, model_config=None, optimizer_config=None, metrics=None):
         super().__init__(encoder, decoder)
 
         self.encoder = encoder
         self.decoder = decoder
+
+        self.metrics_module = metrics
 
         self.latent_dim = model_config["latent_dim"]
 
@@ -24,8 +26,6 @@ class Model(LightningModule, VariationalAutoencoder):
         self.sigma = model_config["sigma"]
 
         self.distance = model_config["distance"]
-        self.experiment_metrics = model_config["experiment_name"]
-
         self.unmixing = model_config["unmixing"]
 
 

@@ -166,5 +166,4 @@ datasets/*
 models/
 resources/
 /src/res/
-wandb/
-experiments/*/sweeps
+results/

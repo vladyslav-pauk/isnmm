@@ -2,8 +2,6 @@ import torch.optim as optim
 from torch import isnan, isinf
 from pytorch_lightning import LightningModule
 
-import src.experiments as exp_module
-
 
 class Module(LightningModule):
     def __init__(self, encoder, decoder):
@@ -98,11 +96,12 @@ class Module(LightningModule):
 
             self.encoder.construct(self.latent_dim, self.observed_dim)
             self.decoder.construct(self.latent_dim, self.observed_dim)
-            self.metrics = getattr(exp_module, self.experiment_metrics).ModelMetrics(datamodule, self.metrics_list).eval()
+
+            self.metrics = self.metrics_module.ModelMetrics(datamodule, self.metrics_list).eval()
 
     def on_test_start(self):
         self.metrics_list = ['latent_mse', 'r_square', 'subspace_distance']
-        self.metrics = getattr(exp_module, self.experiment_metrics).ModelMetrics(self.trainer.datamodule, self.metrics_list).eval()
+        self.metrics = self.metrics_module.ModelMetrics(self.trainer.datamodule, self.metrics_list).eval()
         self.metrics["r_square"].show_plot = True
         self.metrics["r_square"].log_plot = False
 

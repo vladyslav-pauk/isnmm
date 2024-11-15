@@ -43,7 +43,7 @@ if __name__ == "__main__":
     torch.manual_seed(torch_seed)
     numpy.random.seed(numpy_seed)
 
-    experiment_name = "nonlinearity_removal"
+    experiment_name = "synthetic_data"
     model_name = "NISCA"
     base_model = 'MVES'
 

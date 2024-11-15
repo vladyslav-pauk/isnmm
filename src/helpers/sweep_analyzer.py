@@ -1,6 +1,6 @@
 import json
 import os
-from src.helpers.wandb_tools import login_wandb, fetch_wandb_sweep
+from src.helpers.wandb_tools import fetch_wandb_sweep#, login_wandb
 from src.helpers.utils import font_style, format_string
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +11,7 @@ class SweepAnalyzer:
     def __init__(self, experiment, sweep_id):
         self.experiment = experiment
         self.sweep_id = sweep_id
-        self.output_dir = f"../experiments/{experiment}/sweeps"
+        self.output_dir = f"../experiments/{experiment}/results/sweeps"
         self.output_file = f"{sweep_id}.json"
         # todo: fix directories, run from project root
 
@@ -123,7 +123,7 @@ class SweepAnalyzer:
             plt.savefig(os.path.join(self.output_dir, f"{self.sweep_id}_metric_plot.png"))
 
     def _fetch_data(self):
-        login_wandb()
+        # login_wandb(self.experiment)
         self.sweep_data = fetch_wandb_sweep(self.experiment, self.sweep_id)
 
     def _save_data(self):

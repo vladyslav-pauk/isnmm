@@ -8,7 +8,7 @@ import src.modules.data as data_package
 import src.model as model_package
 from src.modules.callback import EarlyStoppingCallback
 from src.helpers.config_tools import load_model_config, load_data_config, update_hyperparameters
-from src.helpers.wandb_tools import init_logger, login_wandb
+from src.helpers.wandb_tools import init_logger#, login_wandb
 
 
 def train_model(experiment_name, model_name, **kwargs):
@@ -46,11 +46,17 @@ def _setup_model(config, logger):
     model_module = getattr(model_package, config['model_name'].upper())
     encoder = model_module.Encoder(config=config['encoder'])
     decoder = model_module.Decoder(config=config['decoder'])
+
+    import src.experiments as exp_module
+    experiment_metrics = logger._project
+    metrics_module = getattr(exp_module, experiment_metrics)
+
     model = model_module.Model(
         encoder=encoder,
         decoder=decoder,
         optimizer_config=config['optimizer'],
-        model_config=config['model']
+        model_config=config['model'],
+        metrics=metrics_module
     )
     model.save_hyperparameters(config)
     logger.watch(model, log='parameters')
@@ -64,7 +70,8 @@ def _setup_trainer(config, logger):
     )
 
     checkpoint_callback = ModelCheckpoint(
-        filename=f'best-model-{{epoch:02d}}-{{{config["checkpoint"]["monitor"]}:.2f}}',
+        dirpath=f'../experiments/{logger._project}/results/checkpoints/{logger.experiment.id}',
+        filename=f'{{epoch:02d}}-{{{config["checkpoint"]["monitor"]}:.2f}}',
         **config['checkpoint']
     )
 
@@ -89,24 +96,24 @@ def _setup_logger(experiment_name, config, data_config, kwargs):
     return logger
 
 
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(description='Train a model with specified hyperparameters')
-    parser.add_argument('experiment_name', type=str, help='Name of the experiment (e.g., simplex_recovery)')
-    parser.add_argument('data_name', type=str, help='Name of the dataset (e.g., lmm)')
-    parser.add_argument('model_name', type=str, help='Name of the model (e.g., vasca)')
-    parser.add_argument('--hyperparameters', type=str, default=None, help='Hyperparameter dictionary')
-    args = parser.parse_args()
-
-    if args.hyperparameters:
-        hyperparameters = ast.literal_eval(args.hyperparameters)
-    else:
-        hyperparameters = {}
-
-    login_wandb()
-
-    train_model(
-        experiment_name=args.experiment_name,
-        model_name=args.model_name,
-        **hyperparameters
-    )
+# if __name__ == "__main__":
+#
+#     parser = argparse.ArgumentParser(description='Train a model with specified hyperparameters')
+#     parser.add_argument('experiment_name', type=str, help='Name of the experiment (e.g., simplex_recovery)')
+#     parser.add_argument('data_name', type=str, help='Name of the dataset (e.g., lmm)')
+#     parser.add_argument('model_name', type=str, help='Name of the model (e.g., vasca)')
+#     parser.add_argument('--hyperparameters', type=str, default=None, help='Hyperparameter dictionary')
+#     args = parser.parse_args()
+#
+#     if args.hyperparameters:
+#         hyperparameters = ast.literal_eval(args.hyperparameters)
+#     else:
+#         hyperparameters = {}
+#
+#     login_wandb(args.experiment_name)
+#
+#     train_model(
+#         experiment_name=args.experiment_name,
+#         model_name=args.model_name,
+#         **hyperparameters
+#     )

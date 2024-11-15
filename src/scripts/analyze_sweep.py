@@ -14,7 +14,7 @@ def analyze_sweep(experiment, sweep_id):
 
 
 if __name__ == "__main__":
-    experiment = "nonlinearity_removal"
+    experiment = "synthetic_data"
     sweep_id = "c9mus55a"
 
     analyze_sweep(experiment, sweep_id)

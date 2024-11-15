@@ -1,6 +1,7 @@
 import wandb
 from pytorch_lightning.loggers import WandbLogger
 import os
+import shutil
 
 
 def set_wandb_dir(directory=None):
@@ -9,12 +10,12 @@ def set_wandb_dir(directory=None):
     os.environ["WANDB_DIR"] = os.path.abspath(wandb_dir)
 
 
-def login_wandb(directory='models'):
+def login_wandb(experiment=None):
     os.environ["WANDB_API_KEY"] = "fcf64607eeb9e076d3cbfdfe0ea3532621753d78"
     os.environ['WANDB_SILENT'] = 'true'
     # os.environ['WANDB_DISABLE_SERVICE'] = 'True'
 
-    set_wandb_dir(directory)
+    set_wandb_dir(f'experiments/{experiment}/results')
 
     wandb.require("core")
     wandb.login()
@@ -26,24 +27,29 @@ def login_wandb(directory='models'):
         category=UserWarning
     )
 
+# fixme: rename experiment to synthetic_data
 
-def init_run(experiment, sweep_dir):
-    if not os.path.exists(sweep_dir):
-        os.makedirs(sweep_dir)
+def init_run(experiment):
+    sweep_dir = f"../experiments/{experiment}/results"
+    # if not os.path.exists(sweep_dir):
+    #     os.makedirs(sweep_dir)
 
-    set_wandb_dir(sweep_dir)
-
+    # set_wandb_dir(sweep_dir)
     project_name = os.path.dirname(os.path.abspath(__file__)).split("src")[0].split("/")[-2]
+
     wandb.init(
         entity=project_name,
         project=experiment,
         dir=sweep_dir
     )
+
     print(f"--- Run ID: {wandb.run.id} ---")
     config = wandb.config
     config["run_id"] = wandb.run.id
     wandb.finish()
     return config
+
+# fixme: values are printed as updated, value is printed before all runs
 
 
 def init_logger(experiment_name=None, config=None):
@@ -55,9 +61,9 @@ def init_logger(experiment_name=None, config=None):
         project=experiment_name,
         name=config["run_id"] if "run_id" in config else None,
         notes="notes for the model",
-        save_dir=f"../models",
         resume="allow"
     )
+
     # f'{hyperparameters['snr']}'
     # logger.experiment.tags = list(hyperparameters.keys())
     return logger

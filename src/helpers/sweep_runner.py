@@ -14,16 +14,22 @@ class Sweep:
         self.train_model = trainer
 
         self.sweep_data = None
-        self.experiment_dir = f"../experiments/{self.experiment}/results"
-
-        login_wandb(self.experiment_dir)
+        login_wandb(self.experiment)
         self.id = wandb.sweep(sweep=sweep_config, project=self.experiment)
 
     def run(self):
         wandb.agent(self.id, function=self.step)
 
+        path_to_remove = f"{os.path.dirname(os.path.abspath(__file__)).split('src')[0]}experiments/{self.experiment}/results/nisca"
+        if os.path.exists(path_to_remove):
+            print(f"Removing path: {path_to_remove}")
+            shutil.rmtree(path_to_remove, ignore_errors=False)
+        else:
+            print(f"Path does not exist: {path_to_remove}")
+
     def step(self):
-        config = init_run(self.experiment, self.experiment_dir)
+
+        config = init_run(self.experiment)
 
         data_model = initialize_data_model(**config)
         data_model.sample()
@@ -41,7 +47,8 @@ class Sweep:
         # shutil.rmtree(f"{os.path.dirname(os.path.abspath(__file__)).split("src")[0]}models/nisca/", ignore_errors=True)
 
     def save_data(self, sweep_data):
-        if not os.path.exists(self.experiment_dir):
-            os.makedirs(self.experiment_dir)
-        with open(f"{self.experiment_dir}/{self.id}.json", "w") as f:
+        save_dir = f"../experiments/{self.experiment}/results/sweeps"
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        with open(f"{save_dir}/{self.id}.json", "w") as f:
             json.dump(sweep_data, f)

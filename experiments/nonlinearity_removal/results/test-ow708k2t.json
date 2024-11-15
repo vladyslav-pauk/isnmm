@@ -1,1 +1,0 @@
-{"kurxy2ut": {"metrics": {"_wandb": {"runtime": 0}}, "config": {"snr": 10, "run_id": "kurxy2ut", "model_name": "cnae", "torch_seed": 0, "data_model_name": "nnmm", "experiment_name": "nonlinearity_removal", "trainer.max_epochs": 5, "decoder.hidden_layers": {"h1": 12}, "encoder.hidden_layers": {"h1": 12}}}}

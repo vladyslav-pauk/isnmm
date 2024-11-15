@@ -1,1 +1,0 @@
-{"ik0eof0k": {"metrics": {"_wandb": {"runtime": 0}}, "config": {"snr": 20, "run_id": "ik0eof0k", "model_name": "vasca", "torch_seed": 0, "dataset_size": 10000, "data_model_name": "linear", "experiment_name": "simplex_recovery"}}}
