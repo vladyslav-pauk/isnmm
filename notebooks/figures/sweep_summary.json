@@ -1,0 +1,14 @@
+[
+    {
+        "model_name": "nisca",
+        "snr": [
+            30
+        ],
+        "latent_mse_avg": [
+            0.12913483381271362
+        ],
+        "latent_mse_std": [
+            0.0
+        ]
+    }
+]
