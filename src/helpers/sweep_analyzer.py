@@ -11,7 +11,8 @@ class SweepAnalyzer:
     def __init__(self, experiment, sweep_id):
         self.experiment = experiment
         self.sweep_id = sweep_id
-        self.output_dir = f"../experiments/{experiment}/results/{self.sweep_id}"
+        project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
+        self.output_dir = f"{project_root}experiments/{experiment}/results/{self.sweep_id}"
         self.output_file = f"sweep_summary.json"
         # todo: fix directories, run from project root
 
@@ -19,7 +20,6 @@ class SweepAnalyzer:
 
         self.sweep_data = None
         self._fetch_data()
-        self._save_data()
 
     def extract_metrics(self, metric="latent_mse", covariate="snr", comparison="model_name"):
         # Refactor the data structure to have three main keys
@@ -80,7 +80,7 @@ class SweepAnalyzer:
             })
         return formatted_data
 
-    def plot_metric(self, averaged_data, save=False):
+    def plot_metric(self, averaged_data, save=True, save_dir=None):
         font = font_style()
 
         plt.rc('font', **font)
@@ -120,13 +120,24 @@ class SweepAnalyzer:
         # plt.show()
 
         if save:
-            plt.savefig(os.path.join(f'../experiments/{self.experiment}/results/{self.sweep_id}', f"sweep_summary.png"))
+            project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
+            if save_dir is None:
+                save_dir = f'experiments/{self.experiment}/results/{self.sweep_id}'
+            plt.savefig(os.path.join(project_root, save_dir, f"sweep_summary.png"))
 
     def _fetch_data(self):
         self.sweep_data = fetch_wandb_sweep(self.experiment, self.sweep_id)
 
-    def _save_data(self):
-        with open(os.path.join(self.output_dir, self.output_file), "w") as f:
-            json.dump(self.sweep_data, f, indent=4)
+    def save_data(self, save_dir=None):
+        averaged_data = self.average_seeds(self.extract_metrics())
+        averaged_data = json.loads(
+            json.dumps(averaged_data, default=lambda o: o.tolist() if isinstance(o, np.ndarray) else o))
 
-        print(f"Saved sweep data to {os.path.join(self.output_dir, self.output_file)}")
+        if save_dir is not None:
+            project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
+            self.output_dir = f"{project_root}{save_dir}"
+
+        with open(os.path.join(self.output_dir, self.output_file), "w") as f:
+            json.dump(averaged_data, f, indent=4)
+
+        print(f"Saved sweep summary to {os.path.join(self.output_dir, self.output_file)}")

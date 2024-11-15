@@ -2,17 +2,20 @@ from src.helpers.sweep_analyzer import SweepAnalyzer
 import numpy as np
 from tabulate import tabulate
 
+from src.utils.wandb_tools import login_wandb
 
-def analyze_sweep(experiment, sweep_id):
+
+def analyze_sweep(experiment, sweep_id, save=True, save_dir=None):
     experiment_analyzer = SweepAnalyzer(experiment, sweep_id)
 
     data = experiment_analyzer.extract_metrics(
         metric="latent_mse", covariate="snr", comparison="model_name"
     )
     averaged_data = experiment_analyzer.average_seeds(data)
-    experiment_analyzer.plot_metric(averaged_data)
+    experiment_analyzer.plot_metric(averaged_data, save=save, save_dir=save_dir)
+    if save:
+        experiment_analyzer.save_data(save_dir=save_dir)
 
-    print("Sweep results:")
     table = []
     for data_dict in averaged_data:
         row = {}
@@ -22,14 +25,14 @@ def analyze_sweep(experiment, sweep_id):
             row[key] = value
         table.append(row)
 
-    # Print as table
     print(tabulate(table, headers="keys", tablefmt="grid"))
 
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "c9mus55a"
+    sweep_id = "ptxlpyn7"
 
+    login_wandb(experiment)
     analyze_sweep(experiment, sweep_id)
 
 # todo: covariate, metric, comparison markers to sweep dataset

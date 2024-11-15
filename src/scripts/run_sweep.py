@@ -4,6 +4,7 @@ from src.utils.utils import sweep_parser
 from src.helpers.sweep_runner import Sweep
 
 from analyze_sweep import analyze_sweep
+from src.utils.wandb_tools import login_wandb
 
 
 if __name__ == '__main__':
@@ -12,13 +13,14 @@ if __name__ == '__main__':
     experiment = args.experiment
     sweep = args.sweep
     sweep_config = load_sweep_config(experiment, sweep)
+    login_wandb(experiment)
 
     print(f"Experiment '{experiment}'")
     sweep = Sweep(sweep_config, train_model)
     sweep.run()
 
     sweep.fetch_data(save=True)
-    analyze_sweep(experiment, sweep.id)
+    analyze_sweep(experiment, sweep.id, save=True)
 
     import os
     import shutil

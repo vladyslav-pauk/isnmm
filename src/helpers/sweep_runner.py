@@ -3,7 +3,7 @@ import json
 import wandb
 
 
-from src.utils.wandb_tools import init_run, fetch_wandb_sweep, login_wandb
+from src.utils.wandb_tools import init_run, fetch_wandb_sweep
 from src.helpers.generate_data import initialize_data_model
 
 
@@ -12,8 +12,6 @@ class Sweep:
         self.experiment = sweep_config["parameters"]["experiment_name"]["value"]
         self.train_model = trainer
         self.sweep_data = None
-
-        login_wandb(self.experiment)
 
         self.id = wandb.sweep(sweep=sweep_config, project=self.experiment)
         os.environ["SWEEP_ID"] = self.id
@@ -34,6 +32,7 @@ class Sweep:
         if sweep_id is None:
             sweep_id = self.id
         sweep_data = fetch_wandb_sweep(self.experiment, sweep_id)
+        print(sweep_data)
 
         if save:
             self.save_data(sweep_data)
