@@ -27,7 +27,6 @@ def login_wandb(experiment=None):
         category=UserWarning
     )
 
-# fixme: rename experiment to synthetic_data
 
 def init_run(experiment, sweep_id=''):
 
