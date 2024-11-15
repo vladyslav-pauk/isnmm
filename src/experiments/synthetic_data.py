@@ -65,8 +65,8 @@ class ModelMetrics(MetricCollection):
 
     def unmix(self, latent_sample, model, latent_dim):
         if model.unmixing:
-            base_model = getattr(model_package, model.unmixing).Model
-            unmixing = base_model(
+            unmixing_model = getattr(model_package, model.unmixing).Model
+            unmixing = unmixing_model(
                 observed_dim=model.observed_dim,
                 latent_dim=latent_dim,
                 dataset_size=model.trainer.datamodule.dataset_size,

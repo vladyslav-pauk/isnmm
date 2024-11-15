@@ -146,3 +146,5 @@ if __name__ == "__main__":
     data_model.sample()
     data_model.plot_sample()
     data_model.plot_nonlinearities()
+
+# todo: implement usgs semi-real data and realistic nonlinearity (physics model)
