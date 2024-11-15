@@ -21,6 +21,9 @@ class SpectralAngle(torchmetrics.Metric):
         self.count += cosines.shape[0]
 
     def compute(self):
-        return self.sum_spectral_angle / self.count
+        spectral_angle = self.sum_spectral_angle / self.count
+        self.sum_spectral_angle = torch.tensor(0.0)
+        self.count = torch.tensor(0)
+        return spectral_angle
 
     # todo: use function from helpers

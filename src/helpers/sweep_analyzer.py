@@ -21,7 +21,7 @@ class SweepAnalyzer:
         self._fetch_data()
         self._save_data()
 
-    def extract_metrics(self, metric="latent_mse_db", covariate="snr", comparison="model_name"):
+    def extract_metrics(self, metric="latent_mse", covariate="snr", comparison="model_name"):
         # Refactor the data structure to have three main keys
         refactored_data = {
             'covariate': {'name': covariate, 'values': defaultdict(list)},
@@ -115,8 +115,8 @@ class SweepAnalyzer:
         plt.subplots_adjust(left=0.15)
         plt.xlabel(format_string(covariate_name))
         plt.ylabel(format_string(metric_name))
-        plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
-        plt.legend()
+        # plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
+        # plt.legend()
         plt.show()
 
         if save:

@@ -16,14 +16,17 @@ class Module(LightningModule):
         self.metrics = None
         self.unmixing = False
 
+        self.metrics_list = ['latent_mse']
+
     def forward(self, observed_batch):
         posterior_parameterization = self.encoder(observed_batch)
-        latent_sample = self._reparameterization(posterior_parameterization)
+        latent_sample, latent_sample_mean = self._reparameterization(posterior_parameterization)
         reconstructed_sample = self.decoder(latent_sample)
 
         model_output = {
             "reconstructed_sample": reconstructed_sample,
             "latent_sample": latent_sample,
+            "latent_sample_mean": latent_sample_mean,
             "posterior_parameterization": posterior_parameterization
         }
         return model_output
@@ -46,6 +49,7 @@ class Module(LightningModule):
         self.metrics._update(data, model_outputs, labels, idxes, self)
 
         final_metrics = self.metrics.compute()
+
         print("Final metrics:")
         for key, value in final_metrics.items():
             print(f"\t{key} = {value.detach().cpu().numpy()}")
@@ -94,7 +98,13 @@ class Module(LightningModule):
 
             self.encoder.construct(self.latent_dim, self.observed_dim)
             self.decoder.construct(self.latent_dim, self.observed_dim)
-            self.metrics = getattr(exp_module, self.experiment_metrics).ModelMetrics(datamodule).eval()
+            self.metrics = getattr(exp_module, self.experiment_metrics).ModelMetrics(datamodule, self.metrics_list).eval()
+
+    def on_test_start(self):
+        self.metrics_list = ['latent_mse', 'r_square', 'subspace_distance']
+        self.metrics = getattr(exp_module, self.experiment_metrics).ModelMetrics(self.trainer.datamodule, self.metrics_list).eval()
+        self.metrics["r_square"].show_plot = True
+        self.metrics["r_square"].log_plot = False
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])

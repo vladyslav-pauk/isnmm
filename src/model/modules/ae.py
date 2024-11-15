@@ -14,7 +14,7 @@ class Module(LightningModule):
         else:
             self.transform = getattr(t, self.encoder_transform)()
 
-        return self.transform(sample).unsqueeze(0)
+        return self.transform(sample).unsqueeze(0), self.transform(sample).unsqueeze(0)
 
     def _loss_function(self, observed_batch, model_output, idxes):
         reconstructed_sample = model_output["reconstructed_sample"]

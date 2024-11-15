@@ -1,8 +1,8 @@
 {
   "method": "grid",
   "metric": {
-    "goal": "maximize",
-    "name": "r_square"
+    "goal": "minimize",
+    "name": "latent_mse"
   },
   "parameters": {
     "experiment_name": {
@@ -10,12 +10,12 @@
     },
     "data_model": {
       "values": [
-        "nonlinear"
+        "cnae"
       ]
     },
     "model_name": {
       "values": [
-        "cnae"
+        "nisca"
       ]
     },
     "observed_dim": {
@@ -30,12 +30,17 @@
     },
     "snr": {
       "values": [
-        100
+        30
       ]
     },
     "dataset_size": {
       "values": [
-        5000
+        10000
+      ]
+    },
+    "batch_size": {
+      "values": [
+        100
       ]
     },
     "data_seed": {
@@ -58,18 +63,18 @@
     "encoder.hidden_layers": {
       "values": [
         {
-          "h1":  128
+          "h1": 128
         }
       ]
     },
     "trainer.max_epochs": {
       "values": [
-        4000
+        3000
       ]
     },
     "torch_seed": {
       "values": [
-        42
+        17
       ]
     }
   }

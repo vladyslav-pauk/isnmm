@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from pytorch_lightning import seed_everything
 import matplotlib.pyplot as plt
 
-from ..utils import dict_to_str
+from src.modules.utils import dict_to_str
 
 
 class GenerativeModel:
@@ -19,7 +19,7 @@ class GenerativeModel:
         self.observed_dim = config["observed_dim"]
         self.latent_dim = config["latent_dim"]
         self.num_samples = config["dataset_size"]
-        self.mixing_scale_factors = config.get("mixing_scale_factors", [5.0, 4.0, 1.0])
+        self.mixing_scale_factors = config.get("mixing_scale_factors", [5.0, 5.0, 5.0])
 
         # Initialize random mixing matrix for linear mixtures
         self.mixing_matrix = torch.randn(self.observed_dim, self.latent_dim)
@@ -46,7 +46,7 @@ class GenerativeModel:
         # Apply the nonlinearities (same as in SyntheticCNAE)
         nonlinear_mixture[:, 0] = 5 * torch.sigmoid(self.linear_mixture[:, 0]) + 0.3 * self.linear_mixture[:, 0]
         nonlinear_mixture[:, 1] = -3 * torch.tanh(self.linear_mixture[:, 1]) - 0.2 * self.linear_mixture[:, 1]
-        # nonlinear_mixture[:, 2] = 0.4 * torch.exp(self.linear_mixture[:, 2])
+        nonlinear_mixture[:, 2] = 0.4 * torch.exp(self.linear_mixture[:, 2])
 
         return nonlinear_mixture
 
@@ -85,11 +85,11 @@ class GenerativeModel:
 
 if __name__ == "__main__":
     config = {
-        "observed_dim": 2,
+        "observed_dim": 3,
         "latent_dim": 3,
         "dataset_size": 1000,
-        "mixing_scale_factors": [5.0, 4.0], #, 1.0],
-        "seed": 42
+        "mixing_scale_factors": [5.0, 5.0 , 5.0],
+        "seed": 0
     }
     model = GenerativeModel(**config)
     model.plot_sample()

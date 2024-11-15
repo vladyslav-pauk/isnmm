@@ -7,9 +7,8 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 import src.modules.data as data_package
 import src.model as model_package
 from src.modules.callback import EarlyStoppingCallback
-from src.helpers.utils import load_model_config, load_data_config
+from src.helpers.config_tools import load_model_config, load_data_config, update_hyperparameters
 from src.helpers.wandb_tools import init_logger, login_wandb
-from src.helpers.utils import update_hyperparameters
 
 
 def train_model(experiment_name, model_name, **kwargs):

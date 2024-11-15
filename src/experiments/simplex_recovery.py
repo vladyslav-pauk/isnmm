@@ -18,12 +18,13 @@ class ModelMetrics(MetricCollection):
             'mixture_log_volume': metric.MatrixVolume(),
             'mixture_matrix_change': metric.MatrixChange()
         }
+
         if model:
             metrics.update({
                 'mixture_mse_db': metric.MatrixMse(db=True),
                 'mixture_sam': metric.SpectralAngle(),
                 'subspace_distance': metric.SubspaceDistance(),
-                'latent_mse_db': metric.MatrixMse()
+                'latent_mse': metric.DataMse()
             })
         wandb.define_metric(name="mixture_matrix_change", summary='min')
         return metrics
@@ -40,7 +41,7 @@ class ModelMetrics(MetricCollection):
             self['mixture_mse_db'].update(linear_mixture_true, linear_mixture)
             self['mixture_sam'].update(linear_mixture_true, linear_mixture)
             self['subspace_distance'].update(idxes, latent_sample, latent_sample_qr)
-            self['latent_mse_db'].update(latent_sample, latent_sample_true)
+            self['latent_mse'].update(latent_sample, latent_sample_true)
 
         self['mixture_log_volume'].update(linear_mixture)
         self['mixture_matrix_change'].update(linear_mixture)

@@ -6,7 +6,8 @@
     "split": [0.8, 0.1, 0.1],
     "batch_size": 100,
     "val_batch_size": 100,
-    "num_workers": 4
+    "num_workers": 4,
+    "shuffle": true
   },
   "model": {
     "experiment_name": "nonlinearity_removal",
@@ -19,7 +20,7 @@
     "reparameterization": "Transformation"
   },
   "encoder": {
-    "constructor": "CNN",
+    "constructor": "FCN",
     "hidden_layers": {
       "h1":  128,
       "h2":  128,

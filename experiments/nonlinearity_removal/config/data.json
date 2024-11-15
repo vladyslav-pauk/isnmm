@@ -10,5 +10,5 @@
   "observed_dim": 3,
   "latent_dim": 3,
   "dataset_size": 100000,
-  "data_seed": 1
+  "data_seed": 21
 }

@@ -15,29 +15,34 @@ class Network(nn.Module):
 
     def forward(self, x):
         transformed_components = [
-            self._component_transform(x[..., i:i + 1], self.coefficients[i]) for i in range(x.shape[-1])
+            self._component_transform(x[..., i:i + 1], i) for i in range(x.shape[-1])
         ]
         return torch.cat(transformed_components, dim=-1)
 
-    def _component_transform(self, x, coefficients):
+    def _component_transform(self, x, coefficient):
         if self.model == None:
             return x
-
-        transformed_components = torch.stack(
-            [self._basis_function(x, power, coeff) for power, coeff in enumerate(coefficients)]
-        ).sum(dim=0)
+        # transformed_components = torch.stack(
+        #     [self._basis_function(x, power, coeff) for power, coeff in enumerate(coefficients)]
+        # ).sum(dim=0)
+        transformed_components = self._basis_function(x, coefficient)
         return transformed_components
 
-    def _basis_function(self, x, power, coeff):
-        # x = 10 * torch.tanh(0.5 * x ** 2) + x + x**2
+    def _basis_function(self, x, coefficient):
         if self.model == 'tanh':
-            x = coeff * torch.tanh((power + 1) * x ** power)
+            # x = 10 * torch.tanh(0.5 * x ** 2) + x + x**2
+            x = coefficient * torch.tanh( x ** coefficient)
         elif self.model == 'sin':
             x = torch.sin(4 * x) + 5 * x
         elif self.model == 'cnae':
-            # x = 5*torch.sigmoid(x)+0.3*x
-            x = -3*torch.tanh(x)-0.2*x
-            # x = 0.4*torch.exp((x))
+            func = lambda x: [
+                5 * torch.sigmoid(x) + 0.3 * x,
+                5 * torch.sigmoid(x) + 0.3 * x,
+                # -3 * torch.tanh(x) - 0.2 * x,
+                5 * torch.sigmoid(x) + 0.3 * x
+                # 0.4 * torch.exp(x)
+            ]
+            x = func(x)[coefficient]
         return x
 
     def inverse(self, y, tol=1e-6, max_iter=10000):

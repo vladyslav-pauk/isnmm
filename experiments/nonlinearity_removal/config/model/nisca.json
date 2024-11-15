@@ -4,8 +4,8 @@
   "data_loader": {
     "module_name": "synthetic",
     "split": [1.0, 0.0, 0.0],
-    "batch_size": 100,
-    "val_batch_size": 100,
+    "batch_size": 1000,
+    "val_batch_size": 10000,
     "num_workers": 4,
     "shuffle": true
   },
@@ -25,11 +25,12 @@
     "reparameterization": "LogitTransform"
   },
   "encoder": {
-    "constructor": "CNN",
+    "constructor": "FCN",
     "hidden_layers": {
-      "h1": 128,
-      "h2": 128,
-      "h3": 128
+      "h1": 32,
+      "h2": 32,
+      "h3": 16,
+      "h4": 8
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -45,9 +46,7 @@
   "decoder": {
     "constructor": "CNN",
     "hidden_layers": {
-      "h1":  128,
-      "h2":  128,
-      "h3":  128
+      "h1":  128
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
@@ -66,38 +65,38 @@
         "linear_mixture": 1e-3,
         "nonlinear_transform": 1e-3
       },
-      "encoder": 1e-3
+      "encoder": 1e-2
     },
     "scheduler": null,
     "scheduler_params": {
       "interval": "epoch",
       "frequency": 1,
-      "monitor": "r_square",
+      "monitor": "latent_mse",
       "strict": true
     }
   },
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
-    "max_epochs": 1000,
+    "max_epochs": 10000,
     "gradient_clip_val": null,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
-    "log_every_n_steps": 5,
-    "val_check_interval": 1.0,
+    "log_every_n_steps": null,
+    "val_check_interval": null,
     "check_val_every_n_epoch": 10,
     "enable_progress_bar": false
   },
   "checkpoint": {
-    "monitor": "r_square",
-    "mode": "max",
+    "monitor": "latent_mse",
+    "mode": "min",
     "save_top_k": 1,
     "verbose": true
   },
   "early_stopping": {
-    "monitor": "r_square",
-    "mode": "max",
+    "monitor": "latent_mse",
+    "mode": "min",
     "patience": 100,
-    "min_delta": 1e-5
+    "min_delta": 1e-4
   }
 }

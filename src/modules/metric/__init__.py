@@ -1,4 +1,5 @@
 from .matrix_mse import MatrixMse as MatrixMse
+from .data_mse import DataMse as DataMse
 from .residual_nonlinearity import ResidualNonlinearity as ResidualNonlinearity
 from .spectral_angle import SpectralAngle as SpectralAngle
 from .subspace_distance import SubspaceDistance as SubspaceDistance

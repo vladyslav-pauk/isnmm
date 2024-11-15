@@ -20,11 +20,13 @@ class Model(LightningModule, VariationalAutoencoder):
         self.posterior_config = model_config["posterior"]
         self.encoder_transform = model_config["reparameterization"]
 
-        self.mc_samples = getattr(model_config, "mc_samples", 1)
+        self.mc_samples = model_config["mc_samples"]
         self.sigma = model_config["sigma"]
 
         self.distance = model_config["distance"]
         self.experiment_metrics = model_config["experiment_name"]
+
+        self.unmixing = model_config["unmixing"]
 
 
 class Encoder(nn.Module):
@@ -39,8 +41,8 @@ class Encoder(nn.Module):
         self.linear_mixture_inv_scale = nn.Identity()
 
     def construct(self, latent_dim, observed_dim):
-        self.loc_network = self.constructor(observed_dim, observed_dim, **self.config)
-        self.scale_network = self.constructor(observed_dim, observed_dim, **self.config)
+        self.loc_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
+        self.scale_network = self.constructor(observed_dim, latent_dim - 1, **self.config)
 
         self.linear_mixture_inv_loc = network.LinearPositive(
             torch.rand(latent_dim - 1, observed_dim), **self.config
@@ -55,8 +57,8 @@ class Encoder(nn.Module):
         loc = self.loc_network(x)
         scale = self.scale_network(x)
 
-        loc = self.linear_mixture_inv_loc(loc)
-        scale = self.linear_mixture_inv_scale(scale)
+        # loc = self.linear_mixture_inv_loc(loc)
+        # scale = self.linear_mixture_inv_scale(scale)
 
         return loc, scale.exp().clamp(1e-12, 1e12)
 
@@ -75,9 +77,9 @@ class Decoder(nn.Module):
         )
         self.nonlinear_transform = self.constructor(observed_dim, observed_dim, **self.config)
 
-    def forward(self, z):
-        y = self.linear_mixture(z)
-        x = self.nonlinear_transform(y)
+    def forward(self, x):
+        x = self.linear_mixture(x)
+        x = self.nonlinear_transform(x)
         return x
 
 # todo: CNN and CFCN automatically with linear mixture, FCN without

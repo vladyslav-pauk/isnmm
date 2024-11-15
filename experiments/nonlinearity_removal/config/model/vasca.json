@@ -3,10 +3,11 @@
   "torch_seed": 0,
   "data_loader": {
     "module_name": "synthetic",
-    "split": [0.8, 0.1, 0.1],
+    "split": [1.0, 0.1, 0.1],
     "batch_size": 100,
     "val_batch_size": 100,
-    "num_workers": 4
+    "num_workers": 4,
+    "shuffle": true
   },
   "model": {
     "experiment_name": "nonlinearity_removal",
@@ -28,12 +29,13 @@
     "hidden_layers": {
       "h1": 32,
       "h2": 32,
-      "h3": 32
+      "h3": 16,
+      "h4": 8
     },
     "hidden_activation": "ReLU",
     "output_activation": null,
     "weight_initialization": null,
-    "bn_eps": null,
+    "bn_eps": 1e-5,
     "bn_momentum": 0.1,
     "dropout_rate": null
   },
@@ -52,31 +54,32 @@
       "scheduler_params": {
         "interval": "epoch",
         "frequency": 1,
-        "monitor": "r_square",
+        "monitor": "latent_mse",
         "strict": true
       }
   },
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
-    "max_epochs": 1000,
-    "log_every_n_steps": 10,
+    "max_epochs": 10000,
+    "log_every_n_steps": null,
     "limit_val_batches": 1,
-    "val_check_interval": 1.0,
+    "val_check_interval": null,
     "limit_test_batches": 1,
-    "gradient_clip_val": 0.5,
+    "gradient_clip_val": null,
+    "check_val_every_n_epoch": 10,
     "enable_progress_bar": false
   },
   "checkpoint": {
-    "monitor": "latent_mse_db",
+    "monitor": "latent_mse",
     "mode": "min",
     "save_top_k": 1,
     "verbose": true
   },
   "early_stopping": {
-    "monitor": "latent_mse_db",
+    "monitor": "latent_mse",
     "mode": "min",
-    "patience": 500,
+    "patience": 100,
     "min_delta": 1e-4
   }
 }

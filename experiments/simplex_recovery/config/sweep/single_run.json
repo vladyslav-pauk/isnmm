@@ -2,13 +2,13 @@
   "method": "grid",
   "metric": {
     "goal": "minimize",
-    "name": "latent_mse_db"
+    "name": "latent_mse"
   },
   "parameters": {
     "experiment_name": {
       "value": "simplex_recovery"
     },
-    "data_model_name": {
+    "data_model": {
       "values": [
         "linear"
       ]
@@ -25,12 +25,32 @@
     },
     "torch_seed": {
       "values": [
-        0
+        11
+      ]
+    },
+    "data_seed": {
+      "values": [
+        12
+      ]
+    },
+    "latent_dim": {
+      "values": [
+        3
+      ]
+    },
+    "observed_dim": {
+      "values": [
+        50
       ]
     },
     "dataset_size": {
       "values": [
         10000
+      ]
+    },
+    "batch_size": {
+      "values": [
+        2000
       ]
     }
   }

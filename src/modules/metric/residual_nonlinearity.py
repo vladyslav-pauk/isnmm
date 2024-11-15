@@ -8,7 +8,7 @@ import torchmetrics
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False, show_plot=False):
+    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=True):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.add_state("sum_r_squared", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
@@ -16,12 +16,14 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
         self.show_plot = show_plot
 
-    def update(self, model_output, labels, linearly_mixed_sample, observed_sample):
+    def update(self, model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed):
 
         self.reconstructed_sample = model_output["reconstructed_sample"].mean(0)
         self.linearly_mixed_sample_true = labels["linearly_mixed_sample"]
         self.latent_sample_qr = labels["latent_sample_qr"]
-        self.latent_sample = model_output["latent_sample"].mean(0)
+        # self.latent_sample = model_output["latent_sample"].mean(0)
+
+        self.latent_sample = latent_sample_unmixed
         self.latent_sample_true = labels["latent_sample"]
         self.linearly_mixed_sample = linearly_mixed_sample
         self.observed_sample = observed_sample
@@ -33,14 +35,36 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
     def compute(self):
         self.plot(show_plot=self.show_plot)
-        return self.sum_r_squared / self.count
+        r_squared_average = self.sum_r_squared / self.count
+        self.sum_r_squared = torch.tensor(0.0)
+        self.count = torch.tensor(0.0)
+        return r_squared_average
+
+    def match_components(self, matrix_model, matrix_true):
+        num_cols = matrix_model.size(1)
+        import itertools
+        col_permutations = itertools.permutations(range(num_cols))
+
+        best_mse = float('inf')
+        best_perm = None
+
+        for perm in col_permutations:
+            permuted_matrix = matrix_model[:, list(perm)]
+            mse = torch.mean(torch.sum((matrix_true - permuted_matrix) ** 2, dim=1))
+
+            if mse < best_mse:
+                best_mse = mse
+                best_perm = permuted_matrix
+
+        return best_perm
 
     def plot(self, show_plot=False):
 
         plot_components(
             model=(self.reconstructed_sample, self.linearly_mixed_sample),
             true=(self.noiseless_sample_true, self.linearly_mixed_sample_true),
-            nr=(self.reconstructed_sample, self.noiseless_sample_true),
+            # residual=(self.linearly_mixed_sample_true, self.reconstructed_sample),
+            # nr=(self.reconstructed_sample, self.noiseless_sample_true),
             scale=True,
             show_plot=show_plot,
             name=f"Model vs True Nonlinearity"
@@ -52,21 +76,31 @@ class ResidualNonlinearity(torchmetrics.Metric):
         #     show_plot=show_plot,
         #     name=f"Reconstruction vs True Noiseless"
         # )
+        # plot_components(
+        #     model=(self.linearly_mixed_sample_true, self.linearly_mixed_sample),
+        #     fitter=(self.linearly_mixed_sample_true, self.fitter),
+        #     labels=self.fitter.rsquared,
+        #     scale=False,
+        #     show_plot=show_plot,
+        #     name=f"Residual Nonlinearity"
+        # )
+
         plot_components(
-            model=(self.linearly_mixed_sample_true, self.linearly_mixed_sample),
-            fitter=(self.linearly_mixed_sample_true, self.fitter),
-            labels=self.fitter.rsquared,
+            model=(self.latent_sample_true, self.match_components(self.latent_sample, self.latent_sample_true)),
+            true=(torch.linspace(0, 1, 100).repeat(3, 1).t(), torch.linspace(0, 1, 100).repeat(3, 1).t()),
             scale=False,
             show_plot=show_plot,
-            name=f"Residual Nonlinearity"
+            name=f"Latent Correlation"
         )
-        # plot_components(
-        #     self.latent_sample_true,
-        #     model=self.latent_sample,
-        #     scale=True,
-        #     show_plot=show_plot,
-        #     name=f"Latent Correlation"
-        # )
+
+        # plt.plot(self.latent_sample[:, 0], self.latent_sample[:, 1], 'o')
+        # if show_plot:
+        #     plt.show()
+        # else:
+        #     wandb.log({
+        #         "Latent Space": plt
+        #     })
+        plt.close()
 
 
 class LineFitter(nn.Module):
@@ -114,13 +148,12 @@ class LineFitter(nn.Module):
         return torch.cat(transformed_components, dim=-1)
 
 
-def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwargs):
-    # task: make it a line instead of scatter
-    # todo: adjust styling for the paper
+# Adjust your Matplotlib parameters for LaTeX rendering, fonts, etc., as before
 
+def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwargs):
     import warnings
     warnings.filterwarnings("ignore", message=".*path .*")
-    font_size = 12
+    font_size = 24
     plt.rcParams.update({
         "text.usetex": True,
         "font.family": "serif",
@@ -134,48 +167,50 @@ def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwar
         "savefig.dpi": 300,
         "text.latex.preamble": r"\usepackage{amsmath}"
     })
+
     num_components = kwargs[list(kwargs.keys())[0]][0].shape[-1]
-
-    n_cols = math.ceil(math.sqrt(num_components))
-    n_rows = math.ceil(num_components / n_cols)
-
+    n_cols = 3
+    n_rows = 1
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
     axes = axes.flatten()
+    markers = ['o', 'o']
+
     for i in range(num_components):
-        for k, (x, v) in kwargs.items():
+        for j, (k, (x, v)) in enumerate(kwargs.items()):
             x_component = x[..., i].clone().detach().cpu().numpy()
             if callable(v):
                 y_component = v(x)[..., i].clone().detach().cpu()
             else:
                 y_component = v[..., i].clone().detach().cpu()
                 if (torch.max(y_component) - torch.min(y_component)).any() < 1e-6:
-                    print(f"Warning: y-component {i} is constant")
-
-            axes[i].scatter(visual_normalization(torch.tensor(x_component)), visual_normalization(y_component) if scale else y_component, label=k.replace('_', ' ').capitalize())
-
-            if labels is not None:
-                axes[i].text(0.5, 0.1, f"R-squared: {labels[i]:.4f}", horizontalalignment='center', verticalalignment='center',
-                         transform=axes[i].transAxes)
-        # axes[i].set_title(f'Component {i + 1} Nonlinearity')
-        # axes[i].set_xlabel(f'Linearly mixed component {i + 1}')
-        # axes[i].set_ylabel(f'Nonlinearly transformed component {i + 1}')
-        # axes[i].set_yticklabels([])
-        # axes[i].set_xticklabels([])
-        # axes[i].set_xticks([])
-        # axes[i].set_yticks([])
-
-    # axes[0].legend()
-
+                    continue
+            marker = markers[j % len(markers)]
+            axes[i].scatter(
+                visual_normalization(torch.tensor(x_component)) if scale else x_component,
+                visual_normalization(y_component) if scale else y_component,
+                label=k.replace('_', ' ').capitalize(),
+                marker=marker
+            )
+        if labels is not None:
+            if show_plot:
+                print(f"R-squared for component {i}: {labels[i]:.4f}")
     plt.tight_layout()
 
+    plt.xlabel(r"$A z$")
+    plt.ylabel(r"$f(A z)$")
+
+    # Save the plot with a transparent background
     if show_plot:
         plt.show()
     else:
         wandb.log({
             name: plt
         })
-    plt.close()
+    # Save figure with transparent background
 
+    # Saving the figure with transparency
+    fig.savefig(f'{name}.png', transparent=True)
+    plt.close()
     return plt
 
 

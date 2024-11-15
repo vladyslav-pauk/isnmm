@@ -4,10 +4,11 @@ from math import isnan
 
 
 class EarlyStoppingCallback(Callback):
-    def __init__(self, monitor: str, patience: int = 3, mode: str = 'min', min_delta: float = 0.0, verbose=False):
+    def __init__(self, monitor: str, patience: int = 3, mode: str = 'min', min_delta: float = 0.0, verbose=False, start_epoch=1500):
         super().__init__()
 
         stopping_threshold = min_delta
+        self.start_epoch = start_epoch
 
         if mode in ['min', 'max']:
             self.early_stopping = EarlyStopping(
@@ -22,6 +23,9 @@ class EarlyStoppingCallback(Callback):
             self.stopped_epoch = 0
 
     def on_validation_end(self, trainer, pl_module):
+        if trainer.current_epoch < self.start_epoch:
+            return
+
         if hasattr(self, 'early_stopping'):
             return self.early_stopping.on_validation_end(trainer, pl_module)
 

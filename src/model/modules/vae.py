@@ -20,17 +20,17 @@ class Module(AutoEncoder):
             self.transform = t.Identity()
         else:
             self.transform = getattr(t, self.encoder_transform)()
-        return self.transform(base_sample)
+        return self.transform(base_sample), self.transform(loc.unsqueeze(0))
 
     def _regularization_loss(self, model_output, data, idxes):
         latent_sample = model_output["latent_sample"]
         prior, posterior = self._model(*model_output["posterior_parameterization"])
 
-        neg_entropy_posterior = posterior.log_prob(latent_sample).mean()
-        log_prior = prior.log_prob(latent_sample).mean()
+        neg_entropy_posterior = posterior.log_prob(latent_sample)
+        log_prior = prior.log_prob(latent_sample)
         kl_posterior_prior = neg_entropy_posterior - log_prior
 
-        return {"kl_posterior_prior": 2 * self.sigma**2 * kl_posterior_prior}
+        return {"kl_posterior_prior": 2 * self.sigma**2 * kl_posterior_prior.mean()}
         # task: add beta
 
     def _model(self, loc, scale):

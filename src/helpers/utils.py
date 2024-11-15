@@ -2,6 +2,7 @@ import os
 import json
 import argparse
 import hashlib
+import yaml
 
 
 def sweep_parser():
@@ -32,66 +33,6 @@ def sweep_parser():
     return args
 
 
-def load_model_config(experiment, config_name):
-    path = f'../experiments/{experiment}/config/model/{config_name}.json'
-    if os.path.exists(path):
-        with open(path, 'r') as f:
-            return json.load(f)
-
-
-def load_sweep_config(experiment, config_name):
-    path = f'../experiments/{experiment}/config/sweep/{config_name}.json'
-
-    if os.path.exists(path):
-        with open(path, 'r') as f:
-            return json.load(f)
-
-
-def load_data_config(experiment):
-    path = f'../experiments/{experiment}/config/data.json'
-
-    if os.path.exists(path):
-        with open(path, 'r') as f:
-            return json.load(f)
-
-
-def update_hyperparameters(config, kwargs, show_log=True):
-    unflattened_kwargs = unflatten_dict(kwargs)
-
-    def print_flattened_dict(parent_key, flattened_dict):
-        for flat_key, flat_value in flattened_dict.items():
-            print(f"\t{parent_key}.{flat_key} = {flat_value}")
-
-    for key, value in unflattened_kwargs.items():
-        if key in config:
-            if isinstance(config[key], dict) and isinstance(value, dict):
-                config[key].update(value)
-                flattened_value_dict = flatten_dict(value)
-                if show_log:
-                    print_flattened_dict(key, flattened_value_dict)
-            else:
-                config[key] = value
-                if show_log:
-                    print(f"\t{key} = {value}")
-
-    return config
-
-
-def get_parameter_combinations(config, prefix="", sep="_"):
-    params = {}
-
-    for key, value in config.items():
-        new_key = f"{prefix}{sep}{key}" if prefix else key
-
-        if isinstance(value, dict):
-            nested_params = get_parameter_combinations(value, new_key)
-            params.update(nested_params)
-        elif isinstance(value, list):
-            params[new_key] = value
-
-    return params
-
-
 def hash_name(kwargs):
     if kwargs:
         kwargs_str = str(sorted(kwargs.items()))
@@ -103,6 +44,9 @@ def hash_name(kwargs):
     #     run_name = "-".join([f"{key}_{value}" for key, value in kwargs.items() if value is not None])
     # else:
     #     run_name = None
+
+
+
 
 
 def unflatten_dict(d, sep='.'):

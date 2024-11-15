@@ -10,7 +10,7 @@ from pytorch_lightning import seed_everything
 from src.modules.transform import NonlinearComponentWise as NonlinearTransform
 # from src.modules.transform import NonlinearDimensionReduction as NonlinearTransform
 from src.modules.network.linear_positive import Network as LinearPositive
-from ..utils import dict_to_str
+from src.modules.utils import dict_to_str
 
 
 class GenerativeModel:  # (Distribution)
@@ -124,10 +124,12 @@ class GenerativeModel:  # (Distribution)
 
 
 if __name__ == "__main__":
+    from src.scripts.generate_data import initialize_data_model
 
     config = {
-        "data_model": "nonlinear",
-        "nonlinearity": "sin",
+        # "data_model": "cnae",
+        # "experiment_name": "nonlinearity_removal",
+        "nonlinearity": "cnae",
         "observed_dim": 2,
         "latent_dim": 3,
         "dataset_size": 1000,
@@ -135,10 +137,13 @@ if __name__ == "__main__":
         "nonlinear_transform_init": "none",
         "degree": None,
         "snr": 25,
-        "seed": 42
+        "seed": 1,
+        "data_seed": 1,
+        "scale": 5.0
     }
 
-    model = GenerativeModel(**config)
-    model.sample()
-    model.plot_sample()
-    # model.plot_nonlinearities()
+    # model = GenerativeModel(**config)
+    data_model = initialize_data_model(data_model="cnae", experiment_name="nonlinearity_removal", **config)
+    data_model.sample()
+    data_model.plot_sample()
+    data_model.plot_nonlinearities()

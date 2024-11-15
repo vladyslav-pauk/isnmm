@@ -15,7 +15,7 @@
     "sigma": null,
     "distance": "mse_loss",
     "reparameterization": null,
-    "unmixing": null
+    "unmixing": "MVES"
   },
   "encoder": {
     "constructor": "CNN",
@@ -80,6 +80,6 @@
     "monitor": "r_square",
     "mode": "max",
     "patience": 500,
-    "min_delta": 1e-5
+    "min_delta": 1e-4
   }
 }
