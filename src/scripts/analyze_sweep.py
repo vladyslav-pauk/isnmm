@@ -15,10 +15,13 @@ def analyze_sweep(experiment, sweep_id, metric="latent_mse", covariate="snr", co
     data = experiment_analyzer.extract_metrics(
         metric=metric, covariate=covariate, comparison=comparison
     )
+
     averaged_data = experiment_analyzer.average_seeds(data)
     experiment_analyzer.plot_metric(averaged_data, save=save, save_dir=save_dir)
     if save:
         experiment_analyzer.save_data(save_dir=save_dir, metric=metric, covariate=covariate, comparison=comparison)
+
+    experiment_analyzer.plot_training_history(metric_key=metric)
 
     # Load and process metrics data
     project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
@@ -62,11 +65,15 @@ def tabulate_dict(data):
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "n4iaxyyh"
+    sweep_id = "ekyinm4z"
 
     login_wandb(experiment)
     analyze_sweep(
         experiment, sweep_id, metric="subspace_distance", covariate="snr", comparison="model_name"
+    )
+
+    analyze_sweep(
+        experiment, sweep_id, metric="validation_loss", covariate="dataset_size", comparison="model_name"
     )
 
     analyze_sweep(
@@ -77,10 +84,8 @@ if __name__ == "__main__":
         experiment, sweep_id, metric="_runtime", covariate="dataset_size", comparison="model_name"
     )
 
-
+# todo: adjust styling and sizing for plots
 # todo: save tables to latex
-
-# fixme: train history plots
 
 # fixme: finish all sweep configs
 # fixme: test single runs for SNRs and models I want to do, make sure I get results

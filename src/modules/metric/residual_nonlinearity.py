@@ -209,7 +209,7 @@ def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwar
     sweep_id = os.getenv("SWEEP_ID")
     run_id = os.getenv("RUN_ID")
 
-    path = f"{wandb_path}/results/{sweep_id}/media/{run_id}-{name}.png"
+    path = f"{wandb_path}/results/{sweep_id}/runs/{run_id}-{name}.png"
     directory = os.path.dirname(path)
 
     if not os.path.exists(directory):
