@@ -11,7 +11,7 @@ from src.utils.utils import logging_setup
 
 
 def load_model(run_id, model_name, experiment_name):
-    module = getattr(model_package, model_name)
+    module = getattr(model_package, model_name.upper())
 
     checkpoints_dir = f"../experiments/{experiment_name}/checkpoints/{run_id}/"
     checkpoint_files = [f for f in os.listdir(checkpoints_dir) if f.endswith(".ckpt")]
@@ -77,7 +77,7 @@ def plot_training_history():
 
 if __name__ == "__main__":
 
-    model = predict("synthetic_data", 'nisca', "z8bbalbz")
+    model = predict("synthetic_data", 'nisca', "0pza7t31")
 
     plot_training_history()
 

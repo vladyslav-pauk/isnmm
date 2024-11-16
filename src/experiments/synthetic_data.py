@@ -86,7 +86,6 @@ class ModelMetrics(MetricCollection):
             )
         run_id = os.environ.get("RUN_ID", "default")
 
-        print(output_path)
         if os.path.exists(output_path):
             with open(output_path, 'r') as f:
                 existing_data = json.load(f)

@@ -68,7 +68,7 @@ def tabulate_dict(data):
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "zjniazhs"
+    sweep_id = "iflolj1b"
 
     logging_setup()
     login_wandb(experiment)
@@ -94,7 +94,7 @@ if __name__ == "__main__":
 # todo: unique definition of run path for all calls via wandb tools
 
 # fixme: instead of h1, h2, ... use depth and width, make both, if not depth, width read h1, h2...
-# fixme: run analyze sweep in the sweep_run
+# fixme: run analyze sweep in the sweep_run, run explore_model best for hyperparameter search
 # fixme: min 1500 epochs, set in config
 
 # fixme: test single runs for SNRs and models I want to do, make sure I get results

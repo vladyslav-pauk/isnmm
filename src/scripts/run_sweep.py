@@ -6,15 +6,15 @@ from src.helpers.sweep_runner import Sweep
 from analyze_sweep import analyze_sweep
 from src.utils.wandb_tools import login_wandb
 from src.utils.utils import logging_setup
-from src.scripts.explore_model import predict, load_model
+from src.scripts.explore_model import predict, plot_training_history
 
 
 if __name__ == '__main__':
     args = sweep_parser()
 
     experiment = args.experiment
-    sweep = args.sweep
-    sweep_config = load_sweep_config(experiment, sweep)
+    sweep_name = args.sweep
+    sweep_config = load_sweep_config(experiment, sweep_name)
 
     logging_setup()
     login_wandb(experiment)
@@ -22,15 +22,14 @@ if __name__ == '__main__':
     print(f"Experiment '{experiment}'")
     sweep = Sweep(sweep_config, train_model)
     sweep.run(save=True)
-    # sweep.fetch_data(save=True)
 
     _, data = analyze_sweep(experiment, sweep.id, save=True)
 
-    if sweep == 'test_run':
-        run_id = list(data.keys())[0]
-        model = data[run_id]['config']['model_name']
-        model = load_model(run_id, model, experiment)
+    if sweep_name == 'test_run':
+        model = next(iter(data['run_ids']))
+        run_id = data['run_ids'][model][0]
         predict(experiment, model, run_id)
+        plot_training_history()
 
     import os
     import shutil
