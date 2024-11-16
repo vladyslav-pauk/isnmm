@@ -68,7 +68,7 @@ def tabulate_dict(data):
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "ar797g3l"
+    sweep_id = "1viyolyk"
 
     logging_setup()
     login_wandb(experiment)
