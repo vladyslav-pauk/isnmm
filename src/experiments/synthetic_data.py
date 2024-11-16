@@ -69,7 +69,7 @@ class ModelMetrics(MetricCollection):
     def save_metrics(self, metrics):
         base_dir = os.path.join(wandb.run.dir.split('wandb')[0], 'results')
         sweep_id = wandb.run.dir.split('/')[-4].split('-')[-1]
-        output_path = os.path.join(base_dir, sweep_id, "sweep_metrics.json")
+        output_path = os.path.join(base_dir, sweep_id, "sweep_data.json")
 
         if os.path.exists(output_path):
             with open(output_path, 'r') as f:

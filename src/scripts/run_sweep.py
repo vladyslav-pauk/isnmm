@@ -17,9 +17,9 @@ if __name__ == '__main__':
 
     print(f"Experiment '{experiment}'")
     sweep = Sweep(sweep_config, train_model)
-    sweep.run()
+    sweep.run(save=True)
+    # sweep.fetch_data(save=True)
 
-    sweep.fetch_data(save=True)
     analyze_sweep(experiment, sweep.id, save=True)
 
     import os

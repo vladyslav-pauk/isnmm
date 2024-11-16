@@ -17,7 +17,7 @@ parameters:
   latent_dim:
     - 3
   dataset_size:
-    - 10000
+    - 10
   snr:
     - 30
   decoder.hidden_layers:

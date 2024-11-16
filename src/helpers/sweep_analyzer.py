@@ -21,18 +21,20 @@ class SweepAnalyzer:
         self.sweep_data = None
         self._fetch_data()
 
+    from collections import defaultdict
+
     def extract_metrics(self, metric="latent_mse", covariate="snr", comparison="model_name"):
-        # Refactor the data structure to have three main keys
+        # Refactor the data structure to have four main keys, including 'run_ids'
         refactored_data = {
             'covariate': {'name': covariate, 'values': defaultdict(list)},
             'metric': {'name': metric, 'values': defaultdict(list)},
-            'comparison': {'name': comparison, 'values': defaultdict(list)}
+            'comparison': {'name': comparison, 'values': defaultdict(list)},
+            'run_ids': defaultdict(list)  # New section for run IDs
         }
 
         for run_id, content in self.sweep_data.items():
             seed = content['config']['torch_seed']
 
-            # Check if the metric is a dictionary (e.g., {'max': value})
             metric_value = content['metrics'][metric]
             if isinstance(metric_value, dict):
                 # Extract the 'max' value if available, or another key if needed
@@ -49,6 +51,7 @@ class SweepAnalyzer:
             refactored_data['covariate']['values'][comparison_value].append(covariate_value)
             refactored_data['metric']['values'][comparison_value].append(metric_value)
             refactored_data['comparison']['values'][comparison_value].append(seed)
+            refactored_data['run_ids'][comparison_value].append(run_id)  # Add run_id to the refactored data
 
         return refactored_data
         # todo: metrix is automatically one with 'max'? 'r_square': {'max': 0.4832684993743897},...
@@ -80,7 +83,7 @@ class SweepAnalyzer:
             })
         return formatted_data
 
-    def plot_metric(self, averaged_data, save=True, save_dir=None):
+    def plot_metric(self, averaged_data, save=True, save_dir=None, metric="latent_mse", covariate="snr"):
         font = font_style()
 
         plt.rc('font', **font)
@@ -115,29 +118,52 @@ class SweepAnalyzer:
         plt.subplots_adjust(left=0.15)
         plt.xlabel(format_string(covariate_name))
         plt.ylabel(format_string(metric_name))
-        # plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
-        # plt.legend()
-        # plt.show()
+        plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
+        plt.legend()
 
         if save:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             if save_dir is None:
                 save_dir = f'experiments/{self.experiment}/results/{self.sweep_id}'
-            plt.savefig(os.path.join(project_root, save_dir, f"sweep_summary.png"))
 
-    def _fetch_data(self):
-        self.sweep_data = fetch_wandb_sweep(self.experiment, self.sweep_id)
+            # Generate the output file name based on metric and covariate
+            plot_file_name = f"summary-{metric_name}-{covariate_name}.png"
+            plt.savefig(os.path.join(project_root, save_dir, plot_file_name))
 
-    def save_data(self, save_dir=None):
-        averaged_data = self.average_seeds(self.extract_metrics())
+        plt.close()  # Close the plot to free memory
+
+    def _fetch_data(self, wandb=False):
+        if wandb:
+            self.sweep_data = fetch_wandb_sweep(self.experiment, self.sweep_id)
+        else:
+            project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
+            path_to_data = f"{project_root}experiments/{self.experiment}/results/{self.sweep_id}/sweep_data.json"
+            if os.path.exists(path_to_data):
+                with open(path_to_data, 'r') as f:
+                    self.sweep_data = json.load(f)
+            else:
+                raise FileNotFoundError(f"Metrics file not found at {path_to_data}")
+
+    def save_data(self, save_dir=None, metric="latent_mse", covariate="snr", comparison="model_name"):
+        # Extract metrics and covariates
+        extracted_data = self.extract_metrics(metric=metric, covariate=covariate, comparison=comparison)
+        averaged_data = self.average_seeds(extracted_data)
         averaged_data = json.loads(
-            json.dumps(averaged_data, default=lambda o: o.tolist() if isinstance(o, np.ndarray) else o))
+            json.dumps(averaged_data, default=lambda o: o.tolist() if isinstance(o, np.ndarray) else o)
+        )
 
+        # Generate the output file name based on metric and covariate
+        metric_name = extracted_data['metric']['name']
+        covariate_name = extracted_data['covariate']['name']
+        summary_file_name = f"summary-{metric_name}-{covariate_name}.json"
+
+        # If save_dir is provided, use it as the base directory; otherwise, use the default output directory
         if save_dir is not None:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
-            self.output_dir = f"{project_root}{save_dir}"
+            self.output_dir = os.path.join(project_root, save_dir)
 
-        with open(os.path.join(self.output_dir, self.output_file), "w") as f:
+        # Save the data in the dynamically named file
+        with open(os.path.join(self.output_dir, summary_file_name), "w") as f:
             json.dump(averaged_data, f, indent=4)
 
-        print(f"Saved sweep summary to {os.path.join(self.output_dir, self.output_file)}")
+        print(f"Saved sweep summary to {os.path.join(self.output_dir, summary_file_name)}")
