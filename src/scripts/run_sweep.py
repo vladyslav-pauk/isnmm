@@ -30,6 +30,8 @@ if __name__ == '__main__':
         run_id = data['run_ids'][model][0]
         predict(experiment, model, run_id)
         plot_training_history()
+        # fixme: check if i get correct values of metrics
+        #  (latent_mse is different in Final metrics explore vs run, rest is the same)
 
     import os
     import shutil
