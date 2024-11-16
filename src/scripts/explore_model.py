@@ -8,6 +8,7 @@ import src.model as model_package
 from src.modules.data.synthetic import DataModule
 import src.experiments as exp_module
 from src.helpers.experiment_analyzer import ExperimentAnalyzer
+from src.utils.utils import logging_setup
 
 
 def load_model(run_id, model_name, experiment_name):
@@ -47,7 +48,9 @@ def load_model(run_id, model_name, experiment_name):
 if __name__ == "__main__":
     os.environ["EXPERIMENT"] = "synthetic_data"
     model_name = "NISCA"
-    os.environ["RUN_ID"] = "dfqq3dti"
+    os.environ["RUN_ID"] = "rn2vuw1b"
+
+    logging_setup()
 
     model, config = load_model(
         run_id=os.environ["RUN_ID"],
@@ -64,7 +67,10 @@ if __name__ == "__main__":
     trainer.predict(model, datamodule)
 
     experiment_analyzer = ExperimentAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
-    experiment_analyzer.plot_training_history(metric_key=config['metric']['name'])
+
+    experiment_analyzer.plot_training_history(metric_key='validation_loss')
+    for metric in model.metrics.metrics_list:
+        experiment_analyzer.plot_training_history(metric_key=metric)
 
     # base_model = 'MVES'
     # datamodule.prepare_data()
@@ -85,9 +91,6 @@ if __name__ == "__main__":
     # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
     # unmixing.plot_mse_image(rows=100, cols=100)
 
-# fixme: implement the explore model script and jupyter notebook (add making and saving plots, and model parameters to tables)
-# fixme: all plots and tables for the chosen best model on given settings
-# fixme: save the plots and tables
-
+# todo: kl and reconstruction plots
 # task: load config from the loaded model snapshot wandb
 # task: hyperparameters (configs) not saved to checkpoints

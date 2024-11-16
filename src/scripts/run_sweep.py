@@ -5,6 +5,7 @@ from src.helpers.sweep_runner import Sweep
 
 from analyze_sweep import analyze_sweep
 from src.utils.wandb_tools import login_wandb
+from src.utils.utils import logging_setup
 
 
 if __name__ == '__main__':
@@ -13,6 +14,8 @@ if __name__ == '__main__':
     experiment = args.experiment
     sweep = args.sweep
     sweep_config = load_sweep_config(experiment, sweep)
+
+    logging_setup()
     login_wandb(experiment)
 
     print(f"Experiment '{experiment}'")

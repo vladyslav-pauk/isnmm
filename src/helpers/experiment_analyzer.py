@@ -132,4 +132,5 @@ class ExperimentAnalyzer:
             plt.close()
 
         else:
-            print(f"Metric '{metric_key}' not found in run data.")
+            pass
+            # print(f"Metric '{metric_key}' not found in run data.")

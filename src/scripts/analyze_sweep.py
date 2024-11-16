@@ -4,6 +4,7 @@ import numpy as np
 from tabulate import tabulate
 
 from src.utils.wandb_tools import login_wandb
+from src.utils.utils import logging_setup
 
 from src.helpers.sweep_analyzer import SweepAnalyzer
 
@@ -63,9 +64,11 @@ def tabulate_dict(data):
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "18mtsjjq"
+    sweep_id = "jljtfdef"
 
+    logging_setup()
     login_wandb(experiment)
+
     analyze_sweep(
         experiment, sweep_id, metric="subspace_distance", covariate="snr", comparison="model_name"
     )

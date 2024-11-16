@@ -1,5 +1,10 @@
 import argparse
 import hashlib
+import warnings
+
+
+def logging_setup():
+    warnings.filterwarnings("ignore", category=UserWarning, module="pytorch_lightning")
 
 
 def sweep_parser():
