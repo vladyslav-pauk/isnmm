@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import glob
 
+
 class RunAnalyzer:
     def __init__(self, experiment, run_id):
         self.experiment = experiment

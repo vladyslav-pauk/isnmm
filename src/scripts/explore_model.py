@@ -1,8 +1,6 @@
 import os
-
 import torch
 from pytorch_lightning import Trainer
-
 import src.model as model_package
 from src.modules.data.synthetic import DataModule
 import src.experiments as exp_module
@@ -12,19 +10,22 @@ from src.utils.utils import logging_setup
 
 def load_model(run_id, model_name, experiment_name):
     module = getattr(model_package, model_name.upper())
-
     checkpoints_dir = f"../experiments/{experiment_name}/checkpoints/{run_id}/"
     checkpoint_files = [f for f in os.listdir(checkpoints_dir) if f.endswith(".ckpt")]
-    best_model_path = os.path.join(checkpoints_dir, checkpoint_files[0])
 
+    if not checkpoint_files:
+        raise FileNotFoundError(f"No checkpoints found for run ID {run_id} in {checkpoints_dir}")
+
+    best_model_path = os.path.join(checkpoints_dir, checkpoint_files[0])
     checkpoint = torch.load(best_model_path)
     config = checkpoint["hyper_parameters"]
 
     encoder = module.Encoder(config=config['encoder'])
     decoder = module.Decoder(config=config['decoder'])
-
-    encoder.construct(latent_dim=config['data_config']['latent_dim'], observed_dim=config['data_config']['observed_dim'])
-    decoder.construct(latent_dim=config['data_config']['latent_dim'], observed_dim=config['data_config']['observed_dim'])
+    encoder.construct(latent_dim=config['data_config']['latent_dim'],
+                      observed_dim=config['data_config']['observed_dim'])
+    decoder.construct(latent_dim=config['data_config']['latent_dim'],
+                      observed_dim=config['data_config']['observed_dim'])
 
     metrics_module = getattr(exp_module, experiment_name)
     metrics = metrics_module.ModelMetrics(monitor=config['metric']['name']).eval()
@@ -38,46 +39,35 @@ def load_model(run_id, model_name, experiment_name):
         strict=False,
         metrics=metrics
     )
-
     model.eval()
-
     return model, config
 
 
-def predict(experiment, model, run_id):
+def predict(experiment, model_name, run_id):
     os.environ["EXPERIMENT"] = experiment
-    model_name = model.upper()
     os.environ["RUN_ID"] = run_id
 
     logging_setup()
-
-    model, config = load_model(
-        run_id=os.environ["RUN_ID"],
-        model_name=model_name,
-        experiment_name=os.environ["EXPERIMENT"],
-    )
+    model, config = load_model(run_id, model_name, experiment)
 
     torch.manual_seed(config['torch_seed'])
-
     trainer = Trainer(**config['trainer'], logger=False)
     datamodule = DataModule(config['data_config'], **config['data_loader'])
     trainer.predict(model, datamodule)
-
     return model
 
 
 def plot_training_history(model):
-    experiment_analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
-    experiment_analyzer.plot_training_history(metric_key='validation_loss')
+    analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
+    analyzer.plot_training_history(metric_key='validation_loss')
     for metric in model.metrics.metrics_list:
-        experiment_analyzer.plot_training_history(metric_key=metric)
+        analyzer.plot_training_history(metric_key=metric)
 
 
 if __name__ == "__main__":
-
     model = predict("synthetic_data", 'nisca', "he5knkb8")
-
     plot_training_history(model)
+
     # fixme: latent sam and angle
     # fixme: unmixing plots
 
