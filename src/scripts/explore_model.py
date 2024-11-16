@@ -7,7 +7,7 @@ from pytorch_lightning import Trainer
 import src.model as model_package
 from src.modules.data.synthetic import DataModule
 import src.experiments as exp_module
-from src.helpers.experiment_analyzer import ExperimentAnalyzer
+from src.helpers.run_analyzer import RunAnalyzer
 from src.utils.utils import logging_setup
 
 
@@ -66,8 +66,7 @@ if __name__ == "__main__":
 
     trainer.predict(model, datamodule)
 
-    experiment_analyzer = ExperimentAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
-
+    experiment_analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
     experiment_analyzer.plot_training_history(metric_key='validation_loss')
     for metric in model.metrics.metrics_list:
         experiment_analyzer.plot_training_history(metric_key=metric)

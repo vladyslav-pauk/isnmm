@@ -94,6 +94,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             model=(self.latent_sample_true, self.match_components(self.latent_sample, self.latent_sample_true)),
             true=(torch.linspace(0, 1, 100).repeat(3, 1).t(), torch.linspace(0, 1, 100).repeat(3, 1).t()),
             scale=False,
+            max_points=300,
             show_plot=show_plot,
             save_plot=self.save_plot,
             name=f"latent_correlation"
@@ -154,7 +155,7 @@ class LineFitter(nn.Module):
         return torch.cat(transformed_components, dim=-1)
 
 
-def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, name=None, **kwargs):
+def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, name=None, max_points=10e8, **kwargs):
     import warnings
     warnings.filterwarnings("ignore", message=".*path .*")
     font_size = 24
@@ -188,6 +189,12 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
                 y_component = v[..., i].clone().detach().cpu()
                 if (torch.max(y_component) - torch.min(y_component)).any() < 1e-6:
                     continue
+
+            if len(x_component) > max_points:
+                indices = torch.randperm(len(x_component))[:int(max_points)]
+                x_component = x_component[indices]
+                y_component = y_component[indices]
+
             marker = markers[j % len(markers)]
             axes[i].scatter(
                 visual_normalization(torch.tensor(x_component)) if scale else x_component,

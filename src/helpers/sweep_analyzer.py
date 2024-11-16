@@ -19,7 +19,10 @@ class SweepAnalyzer:
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.sweep_data = None
-        self._fetch_data()
+        try:
+            self._fetch_data()
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Metrics file not found for sweep {sweep_id}")
 
     from collections import defaultdict
 

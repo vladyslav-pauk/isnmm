@@ -5,7 +5,7 @@ import numpy as np
 import glob
 
 
-class ExperimentAnalyzer:
+class RunAnalyzer:
     def __init__(self, experiment, run_id):
         self.experiment = experiment
         self.run_id = run_id
@@ -16,7 +16,10 @@ class ExperimentAnalyzer:
         os.makedirs(self.output_dir, exist_ok=True)
 
         self.run_data = None
-        self._fetch_data()
+        try:
+            self._fetch_data()
+        except FileNotFoundError as e:
+            print(e)
 
     def extract_metrics(self, metric="latent_mse", covariate="snr"):
         # Simplified data extraction for a single run
@@ -76,7 +79,7 @@ class ExperimentAnalyzer:
 
         if not sweep_dirs:
             raise FileNotFoundError(
-                f"No 'sweep_data.json' files found in any 'sweep-*' directories under {results_dir}")
+                f"File 'sweep_data.json' not found in {results_dir}")
 
         found = False
         # Iterate over each sweep_data.json file to find the run_id

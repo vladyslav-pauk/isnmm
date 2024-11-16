@@ -10,7 +10,11 @@ from src.helpers.sweep_analyzer import SweepAnalyzer
 
 
 def analyze_sweep(experiment, sweep_id, metric="latent_mse", covariate="snr", comparison="model_name", save=True, save_dir=None):
-    experiment_analyzer = SweepAnalyzer(experiment, sweep_id)
+    try:
+        experiment_analyzer = SweepAnalyzer(experiment, sweep_id)
+    except FileNotFoundError as e:
+        print(e)
+        return
 
     data = experiment_analyzer.extract_metrics(
         metric=metric, covariate=covariate, comparison=comparison
