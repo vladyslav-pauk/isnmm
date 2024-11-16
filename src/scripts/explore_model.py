@@ -60,9 +60,7 @@ def predict(experiment, model, run_id):
     torch.manual_seed(config['torch_seed'])
 
     trainer = Trainer(**config['trainer'], logger=False)
-
     datamodule = DataModule(config['data_config'], **config['data_loader'])
-
     trainer.predict(model, datamodule)
 
     return model
@@ -77,9 +75,11 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
 
-    model = predict("synthetic_data", 'nisca', "0pza7t31")
+    model = predict("synthetic_data", 'nisca', "he5knkb8")
 
     plot_training_history(model)
+    # fixme: latent sam and angle
+    # fixme: unmixing plots
 
     # base_model = 'MVES'
     # datamodule.prepare_data()

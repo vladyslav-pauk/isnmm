@@ -23,15 +23,15 @@ class ModelMetrics(MetricCollection):
 
     def _setup_metrics(self):
         all_metrics = {
-            'mixture_mse_db': metric.MatrixMse(db=True),
-            'mixture_sam': metric.SpectralAngle(),
-            # 'mixture_matrix_change': metric.MatrixChange(),
             'subspace_distance': metric.SubspaceDistance(),
             'r_square': metric.ResidualNonlinearity(
                 show_plot=self.show_plots, log_plot=self.log_plots, save_plot=self.save_plots
             ),
             'latent_mse': metric.data_mse.DataMse(),
-            'mixture_log_volume': metric.MatrixVolume()
+            # 'mixture_mse_db': metric.MatrixMse(db=True),
+            # 'mixture_sam': metric.SpectralAngle(),
+            # 'mixture_matrix_change': metric.MatrixChange(),
+            # 'mixture_log_volume': metric.MatrixVolume()
         }
 
         if not self.metrics_list:
@@ -61,11 +61,12 @@ class ModelMetrics(MetricCollection):
                 'subspace_distance': (idxes, latent_sample_unmixed, latent_sample_qr),
                 'r_square': (model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed),
                 'latent_mse': (model_output["latent_sample"].mean(0), latent_sample_true),
-                'mixture_mse_db': (self.linear_mixture_true, linear_mixture),
-                'mixture_sam': (self.linear_mixture_true, linear_mixture),
-                'mixture_log_volume': (linear_mixture,),
+                # 'mixture_mse_db': (self.linear_mixture_true, linear_mixture),
+                # 'mixture_sam': (self.linear_mixture_true, linear_mixture),
+                # 'mixture_log_volume': (linear_mixture,),
                 # 'mixture_matrix_change': (linear_mixture,)
             }
+            # fixme: why i use idxes only in subspace distance
 
             for metric_name, args in metric_updates.items():
                 if self.metrics_list is None or metric_name in self.metrics_list:

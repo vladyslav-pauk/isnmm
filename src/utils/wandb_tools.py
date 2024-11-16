@@ -50,7 +50,8 @@ def init_run(experiment, sweep_id=''):
     wandb.finish()
     return config
 
-# todo: values are printed as updated, value is printed before all runs
+# todo: values are printed as updated, value is printed before all runs,
+#  use value for fixed, and values for sweep, automatic covariate
 
 
 def init_logger(experiment_name=None, config=None, sweep_id=None):

@@ -24,7 +24,7 @@ class SweepAnalyzer:
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Metrics file not found for sweep {sweep_id}")
 
-    def extract_metrics(self, metric=None, covariate="snr", comparison="model_name"):
+    def extract_metrics(self, metric=None, covariate=None, comparison=None):
         # fixme: fix default metric, covariate, comparison everywhere in extract_metric and analyze_sweep
         refactored_data = {
             'covariate': {'name': covariate, 'values': defaultdict(list)},
@@ -143,7 +143,7 @@ class SweepAnalyzer:
             else:
                 raise FileNotFoundError(f"Metrics file not found at {path_to_data}")
 
-    def save_data(self, save_dir=None, metric="latent_mse", covariate="snr", comparison="model_name"):
+    def save_comparison_data(self, save_dir=None, metric=None, covariate=None, comparison=None):
         # Extract metrics and covariates
         extracted_data = self.extract_metrics(metric=metric, covariate=covariate, comparison=comparison)
         averaged_data = self.average_seeds(extracted_data)

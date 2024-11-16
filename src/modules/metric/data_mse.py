@@ -7,17 +7,16 @@ import torch
 import torchmetrics
 import itertools
 
+
 class DataMse(torchmetrics.Metric):
     def __init__(self, dist_sync_on_step=False, db=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.db = db
-        # States to collect model and true data across batches
         self.add_state("model_data", default=[], dist_reduce_fx=None)
         self.add_state("true_data", default=[], dist_reduce_fx=None)
 
     def update(self, model_A, true_A):
-        # Collect model_A and true_A for all batches
         self.model_data.append(model_A.clone().detach().cpu())
         self.true_data.append(true_A.clone().detach().cpu())
 

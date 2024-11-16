@@ -25,13 +25,13 @@ if __name__ == '__main__':
 
     _, data = analyze_sweep(experiment, sweep.id, save=True)
 
-    if sweep_name == 'test_run':
+    show_plots = False
+    if show_plots:
         model = next(iter(data['run_ids']))
         run_id = data['run_ids'][model][0]
         model = predict(experiment, model, run_id)
         plot_training_history(model)
-        # fixme: check if i get correct values of metrics
-        #  (latent_mse is different in Final metrics explore vs run, rest is the same)
+        # todo: instead of this just pass show_plot = True in test_run config (too complicated)
 
     import os
     import shutil

@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 import warnings
+import numpy as np
 
 
 def logging_setup():
@@ -70,6 +71,12 @@ def flatten_dict(d, parent_key='', sep='.'):
         else:
             items.append((new_key, value))
     return dict(items)
+
+
+def tabulate_dict(data):
+    return [
+        {key: (value[0] if isinstance(value, (np.ndarray, list)) and value else value) for key, value in item.items()}
+        for item in data]
 
 
 def font_style():

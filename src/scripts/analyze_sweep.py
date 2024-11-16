@@ -1,93 +1,62 @@
 import os
 import json
-import numpy as np
 from tabulate import tabulate
-
 from src.utils.wandb_tools import login_wandb
-from src.utils.utils import logging_setup
-
+from src.utils.utils import logging_setup, tabulate_dict
 from src.helpers.sweep_analyzer import SweepAnalyzer
 
 
-def analyze_sweep(experiment, sweep_id, metric="validation_loss", covariate="snr", comparison="model_name", save=True, save_dir=None):
+def analyze_sweep(experiment, sweep_id, metric, covariate, comparison, save=True, save_dir=None):
     try:
-        experiment_analyzer = SweepAnalyzer(experiment, sweep_id)
+        analyzer = SweepAnalyzer(experiment, sweep_id)
     except FileNotFoundError as e:
         print(e)
         return
 
-    data = experiment_analyzer.extract_metrics(
-        metric=metric, covariate=covariate, comparison=comparison
-    )
+    data = analyzer.extract_metrics(metric=metric, covariate=covariate, comparison=comparison)
+    averaged_data = analyzer.average_seeds(data)
+    analyzer.plot_metric(averaged_data, save=save, save_dir=save_dir)
 
-    averaged_data = experiment_analyzer.average_seeds(data)
-    experiment_analyzer.plot_metric(averaged_data, save=save, save_dir=save_dir)
     if save:
-        experiment_analyzer.save_data(save_dir=save_dir, metric=metric, covariate=covariate, comparison=comparison)
-
-    # experiment_analyzer.plot_training_history(metric_key=metric)
+        analyzer.save_comparison_data(save_dir=save_dir, metric=metric, covariate=covariate, comparison=comparison)
 
     project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
-    metrics_file_path = f"{project_root}experiments/{experiment}/results/sweep-{sweep_id}/sweep_data.json"
-    if os.path.exists(metrics_file_path):
-        with open(metrics_file_path, 'r') as f:
-            metrics_data = json.load(f)
-    else:
-        raise FileNotFoundError(f"Metrics file not found at {metrics_file_path}")
+    metrics_path = f"{project_root}experiments/{experiment}/results/sweep-{sweep_id}/sweep_data.json"
+
+    if not os.path.exists(metrics_path):
+        raise FileNotFoundError(f"Metrics file not found at {metrics_path}")
+
+    with open(metrics_path, 'r') as f:
+        metrics_data = json.load(f)
 
     for run_id, content in data.items():
         if run_id in metrics_data:
             for metric_name, metric_value in metrics_data[run_id]["metrics"].items():
-                if "values" not in data[run_id]:
-                    data[run_id]["values"] = {}
-                if metric_name not in data[run_id]["values"]:
-                    data[run_id]["values"][metric_name] = []
-                data[run_id]["values"][metric_name].append(metric_value)
+                content.setdefault("values", {}).setdefault(metric_name, []).append(metric_value)
 
-    averaged_data = experiment_analyzer.average_seeds(data)
-
-    table = tabulate_dict(averaged_data)
+    table = tabulate_dict(analyzer.average_seeds(data))
 
     print(f"The {metric.replace('_', ' ')} for different {covariate.replace('_', ' ')}, averaged over random seeds:")
     print(tabulate(table, headers="keys", tablefmt="grid"))
-
     return table, data
-
-
-def tabulate_dict(data):
-    table = []
-    for data_dict in data:
-        row = {}
-        for key, value in data_dict.items():
-            if isinstance(value, (np.ndarray, list)) and len(value) > 0:
-                value = value[0]
-            row[key] = value
-        table.append(row)
-    return table
 
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "iflolj1b"
-
+    sweep_id = "m46bou5w"
     logging_setup()
     login_wandb(experiment)
 
-    analyze_sweep(
-        experiment, sweep_id, metric="subspace_distance", covariate="snr", comparison="model_name"
-    )
+    metrics_to_analyze = [
+        ("subspace_distance", "snr"),
+        ("validation_loss", "dataset_size"),
+        ("latent_mse", "latent_dim"),
+        ("_runtime", "dataset_size")
+    ]
 
-    analyze_sweep(
-        experiment, sweep_id, metric="validation_loss", covariate="dataset_size", comparison="model_name"
-    )
+    for metric, covariate in metrics_to_analyze:
+        analyze_sweep(experiment, sweep_id, metric=metric, covariate=covariate, comparison="model_name")
 
-    analyze_sweep(
-        experiment, sweep_id, metric="latent_mse", covariate="latent_dim", comparison="model_name"
-    )
-
-    analyze_sweep(
-        experiment, sweep_id, metric="_runtime", covariate="dataset_size", comparison="model_name"
-    )
 
 # todo: adjust styling and sizing for plots
 # todo: save tables to latex

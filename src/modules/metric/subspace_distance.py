@@ -12,7 +12,7 @@ class SubspaceDistance(torchmetrics.Metric):
     def update(self, idxes, latent_sample, latent_sample_qr):
         # Detach and move to CPU
         latent_sample = latent_sample[idxes].detach().cpu()
-        latent_sample_qr = latent_sample_qr.detach().cpu()
+        latent_sample_qr = latent_sample_qr[idxes].detach().cpu()
 
         # QR decomposition to get orthonormal basis of latent_sample
         qf, _ = torch.linalg.qr(latent_sample)
