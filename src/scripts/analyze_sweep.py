@@ -61,6 +61,7 @@ if __name__ == "__main__":
 # todo: adjust styling and sizing for plots
 # todo: save tables to latex
 # todo: unique definition of run path for all calls via wandb tools
+# todo: fix directories, run from project root, define all in utils file (enviroment variables?)
 
 # fixme: instead of h1, h2, ... use depth and width, make both, if not depth, width read h1, h2...
 # fixme: run analyze sweep in the sweep_run, run explore_model best for hyperparameter search
