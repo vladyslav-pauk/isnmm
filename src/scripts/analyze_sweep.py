@@ -64,7 +64,7 @@ def tabulate_dict(data):
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "jljtfdef"
+    sweep_id = "ar797g3l"
 
     logging_setup()
     login_wandb(experiment)
@@ -87,10 +87,8 @@ if __name__ == "__main__":
 
 # todo: adjust styling and sizing for plots
 # todo: save tables to latex
+# todo: unique definition of run path for all calls via wandb tools
 
-# fixme: unique definition of run path for all calls via wandb tools
-
-# fixme: finish all sweep configs
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: fine tune scheduling and early stopping
 # fixme: make pipeline for automatic run with hyperparameter search (special config)

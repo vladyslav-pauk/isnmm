@@ -9,7 +9,7 @@ parameters:
   model_name:
     - nisca
   trainer.max_epochs:
-    - 10
+    - 2000
   batch_size:
     - 100
   observed_dim:
@@ -17,9 +17,9 @@ parameters:
   latent_dim:
     - 3
   dataset_size:
-    - 10
+    - 10000
   snr:
-    - 10
+    - 20
   decoder.hidden_layers:
     - h1: 128
   encoder.hidden_layers:

@@ -8,8 +8,10 @@ parameters:
     - cnae
   model_name:
     - nisca
+    - cnae
+    - vasca
   trainer.max_epochs:
-    - 10
+    - 2000
   batch_size:
     - 100
   observed_dim:
@@ -19,6 +21,8 @@ parameters:
   dataset_size:
     - 10000
   snr:
+    - 10
+    - 20
     - 30
   decoder.hidden_layers:
     - h1: 128
@@ -28,5 +32,9 @@ parameters:
       - 1
   torch_seed:
       - 17
+      - 12
+      - 2
+      - 42
+      - 7
   data_seed:
       - 12
