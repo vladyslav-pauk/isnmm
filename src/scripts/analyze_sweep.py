@@ -93,6 +93,8 @@ if __name__ == "__main__":
 # todo: save tables to latex
 # todo: unique definition of run path for all calls via wandb tools
 
+# fixme: instead of h1, h2, ... use depth and width, make both, if not depth, width read h1, h2...
+
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: fine tune scheduling and early stopping
 # fixme: make pipeline for automatic run with hyperparameter search (special config)
