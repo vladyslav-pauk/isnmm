@@ -28,8 +28,8 @@ if __name__ == '__main__':
     if sweep_name == 'test_run':
         model = next(iter(data['run_ids']))
         run_id = data['run_ids'][model][0]
-        predict(experiment, model, run_id)
-        plot_training_history()
+        model = predict(experiment, model, run_id)
+        plot_training_history(model)
         # fixme: check if i get correct values of metrics
         #  (latent_mse is different in Final metrics explore vs run, rest is the same)
 

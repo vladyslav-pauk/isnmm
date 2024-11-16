@@ -68,7 +68,7 @@ def predict(experiment, model, run_id):
     return model
 
 
-def plot_training_history():
+def plot_training_history(model):
     experiment_analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
     experiment_analyzer.plot_training_history(metric_key='validation_loss')
     for metric in model.metrics.metrics_list:
@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     model = predict("synthetic_data", 'nisca', "0pza7t31")
 
-    plot_training_history()
+    plot_training_history(model)
 
     # base_model = 'MVES'
     # datamodule.prepare_data()
