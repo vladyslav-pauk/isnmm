@@ -44,10 +44,10 @@ def load_model(run_id, model_name, experiment_name):
     return model, config
 
 
-if __name__ == "__main__":
-    os.environ["EXPERIMENT"] = "synthetic_data"
-    model_name = "NISCA"
-    os.environ["RUN_ID"] = "z8bbalbz"
+def predict(experiment, model, run_id):
+    os.environ["EXPERIMENT"] = experiment
+    model_name = model.upper()
+    os.environ["RUN_ID"] = run_id
 
     logging_setup()
 
@@ -65,10 +65,21 @@ if __name__ == "__main__":
 
     trainer.predict(model, datamodule)
 
+    return model
+
+
+def plot_training_history():
     experiment_analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
     experiment_analyzer.plot_training_history(metric_key='validation_loss')
     for metric in model.metrics.metrics_list:
         experiment_analyzer.plot_training_history(metric_key=metric)
+
+
+if __name__ == "__main__":
+
+    model = predict("synthetic_data", 'nisca', "z8bbalbz")
+
+    plot_training_history()
 
     # base_model = 'MVES'
     # datamodule.prepare_data()

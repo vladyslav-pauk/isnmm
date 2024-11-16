@@ -6,6 +6,7 @@ from src.helpers.sweep_runner import Sweep
 from analyze_sweep import analyze_sweep
 from src.utils.wandb_tools import login_wandb
 from src.utils.utils import logging_setup
+from src.scripts.explore_model import predict, load_model
 
 
 if __name__ == '__main__':
@@ -23,7 +24,13 @@ if __name__ == '__main__':
     sweep.run(save=True)
     # sweep.fetch_data(save=True)
 
-    analyze_sweep(experiment, sweep.id, save=True)
+    _, data = analyze_sweep(experiment, sweep.id, save=True)
+
+    if sweep == 'test_run':
+        run_id = list(data.keys())[0]
+        model = data[run_id]['config']['model_name']
+        model = load_model(run_id, model, experiment)
+        predict(experiment, model, run_id)
 
     import os
     import shutil

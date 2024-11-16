@@ -25,6 +25,7 @@ class SweepAnalyzer:
             raise FileNotFoundError(f"Metrics file not found for sweep {sweep_id}")
 
     def extract_metrics(self, metric=None, covariate="snr", comparison="model_name"):
+        # fixme: fix default metric, covariate, comparison everywhere in extract_metric and analyze_sweep
         refactored_data = {
             'covariate': {'name': covariate, 'values': defaultdict(list)},
             'metric': {'name': metric, 'values': defaultdict(list)},
