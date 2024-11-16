@@ -85,8 +85,7 @@ class Decoder(nn.Module):
         x = self.nonlinear_transform(x)
         return x
 
-# todo: unequal dimensions by stacking and separate optimization
-# fixme: compare CNAE paper synthetic results with mine
+# fixme: unequal dimensions by stacking and separate optimization
 
 # def _create_random_subsets(self, total_dim, latent_dim, num_subsets):
     #     import torch, random, numpy

@@ -29,7 +29,5 @@ if __name__ == '__main__':
         shutil.rmtree(path_to_remove, ignore_errors=False)
 
 
-# fixme: discard run, if metrics is below threshold (-10 positive mse_db)
-# fixme: test single runs for SNRs and models I want to do, make sure I get results, fine tune configs and schedule parameters
-# fixme: run schedule to unmix latents with NISCA, CNAE+MVES, VASCA, MVES depending on noise, and latent dimension
-# todo: latent_sample contains nans -> skip
+# todo: discard run, if metrics is below threshold (-10 positive mse_db)
+# task: latent_sample contains nans -> skip

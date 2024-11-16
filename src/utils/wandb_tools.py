@@ -54,7 +54,7 @@ def init_run(experiment, sweep_id=''):
     wandb.finish()
     return config
 
-# fixme: values are printed as updated, value is printed before all runs
+# todo: values are printed as updated, value is printed before all runs
 
 
 def init_logger(experiment_name=None, config=None, sweep_id=None):

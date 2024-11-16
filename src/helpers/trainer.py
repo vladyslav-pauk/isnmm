@@ -1,5 +1,6 @@
 import argparse
 import ast
+import os
 
 from pytorch_lightning import Trainer, seed_everything
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -11,8 +12,8 @@ from src.utils.config_tools import load_model_config, load_data_config, update_h
 from src.utils.wandb_tools import init_logger#, login_wandb
 import src.experiments as exp_module
 
-# fixme: remove sweep_id variable
-def train_model(experiment_name, model_name, sweep_id=None, **kwargs):
+
+def train_model(experiment_name, model_name, **kwargs):
 
     config = load_model_config(experiment_name, model_name)
     data_config = load_data_config(experiment_name)
@@ -26,7 +27,7 @@ def train_model(experiment_name, model_name, sweep_id=None, **kwargs):
     if config.get("torch_seed") is not None:
         seed_everything(config.get("torch_seed"), workers=True)
 
-    logger = _setup_logger(experiment_name, sweep_id, config, data_config, kwargs)
+    logger = _setup_logger(experiment_name, config, data_config, kwargs)
 
     datamodule = _setup_data_module(data_config, config["data_loader"])
     model = _setup_model(config, logger)
@@ -89,11 +90,11 @@ def _setup_trainer(config, logger):
     return trainer
 
 
-def _setup_logger(experiment_name, sweep_id, config, data_config, kwargs):
+def _setup_logger(experiment_name, config, data_config, kwargs):
     logger = init_logger(
         experiment_name=experiment_name,
         config=kwargs,
-        sweep_id=sweep_id
+        sweep_id=os.getenv('SWEEP_ID')
     )
     logger.log_hyperparams({
         'config': config,

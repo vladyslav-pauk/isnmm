@@ -8,7 +8,6 @@ parameters:
     - cnae
   model_name:
     - nisca
-    - cnae
   trainer.max_epochs:
     - 10
   batch_size:

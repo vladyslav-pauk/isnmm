@@ -26,7 +26,7 @@ class Sweep:
         data_model.sample()
         data_model.save_data()
 
-        self.train_model(sweep_id=self.id, **config)
+        self.train_model(**config)
 
     def fetch_data(self, sweep_id=None, save=True):
         if sweep_id is None:

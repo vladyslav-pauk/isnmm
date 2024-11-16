@@ -83,8 +83,8 @@ if __name__ == "__main__":
     # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
     # unmixing.plot_mse_image(rows=100, cols=100)
 
-# fixme: implement the explore model script and jupyter notebook (add making and saving plots, and model parameters)
-# todo: finish explore_model script
+# fixme: implement the explore model script and jupyter notebook (add making and saving plots, and model parameters to tables)
+# fixme: all plots and tables for the chosen best model on given settings
+
 # task: load config from the loaded model snapshot wandb
 # task: hyperparameters (configs) not saved to checkpoints
-# todo: docs describing experiments, datasets, models
