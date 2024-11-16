@@ -194,6 +194,8 @@ class SweepAnalyzer:
                 save_dir = f'experiments/{self.experiment}/results/{self.sweep_id}/runs'
                 plot_file_name = f"{run_id}-training-history-{metric_key}.png"
                 plt.savefig(os.path.join(project_root, save_dir, plot_file_name))
+                plt.close()
 
             else:
-                print(f"Metric '{metric_key}' not found in run {run_id}")
+                pass
+                # print(f"Metric '{metric_key}' not found in run {run_id}")
