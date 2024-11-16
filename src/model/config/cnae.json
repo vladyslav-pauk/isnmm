@@ -65,7 +65,7 @@
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
-    "max_epochs": 2000,
+    "max_epochs": 20000,
     "limit_val_batches": 1,
     "limit_test_batches": 1,
     "log_every_n_steps": 5,
@@ -78,7 +78,7 @@
     "verbose": true
   },
   "early_stopping": {
-    "patience": 500,
+    "patience": 100,
     "min_delta": 1e-4
   }
 }

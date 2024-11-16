@@ -47,7 +47,7 @@ def load_model(run_id, model_name, experiment_name):
 if __name__ == "__main__":
     os.environ["EXPERIMENT"] = "synthetic_data"
     model_name = "NISCA"
-    os.environ["RUN_ID"] = "w2tjfoa7"
+    os.environ["RUN_ID"] = "z8bbalbz"
 
     logging_setup()
 

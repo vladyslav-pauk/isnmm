@@ -9,7 +9,7 @@ from src.utils.utils import logging_setup
 from src.helpers.sweep_analyzer import SweepAnalyzer
 
 
-def analyze_sweep(experiment, sweep_id, metric="latent_mse", covariate="snr", comparison="model_name", save=True, save_dir=None):
+def analyze_sweep(experiment, sweep_id, metric=None, covariate="snr", comparison="model_name", save=True, save_dir=None):
     try:
         experiment_analyzer = SweepAnalyzer(experiment, sweep_id)
     except FileNotFoundError as e:
@@ -68,7 +68,7 @@ def tabulate_dict(data):
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "1viyolyk"
+    sweep_id = "zjniazhs"
 
     logging_setup()
     login_wandb(experiment)
@@ -94,9 +94,10 @@ if __name__ == "__main__":
 # todo: unique definition of run path for all calls via wandb tools
 
 # fixme: instead of h1, h2, ... use depth and width, make both, if not depth, width read h1, h2...
+# fixme: run analyze sweep in the sweep_run, make single_run config that also runs explore run
+# fixme: min 1500 epochs, set in config
 
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
-# fixme: fine tune scheduling and early stopping
 # fixme: make pipeline for automatic run with hyperparameter search (special config)
 # fixme: make a container and run on server
 # fixme: notebooks for exploring models and analyzing sweeps

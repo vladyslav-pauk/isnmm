@@ -24,33 +24,29 @@ class SweepAnalyzer:
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Metrics file not found for sweep {sweep_id}")
 
-    from collections import defaultdict
-
-    def extract_metrics(self, metric="latent_mse", covariate="snr", comparison="model_name"):
-        # Refactor the data structure to have four main keys, including 'run_ids'
+    def extract_metrics(self, metric=None, covariate="snr", comparison="model_name"):
         refactored_data = {
             'covariate': {'name': covariate, 'values': defaultdict(list)},
             'metric': {'name': metric, 'values': defaultdict(list)},
             'comparison': {'name': comparison, 'values': defaultdict(list)},
             'run_ids': defaultdict(list)  # New section for run IDs
         }
+        if not metric:
+            metric = self.sweep_data[next(iter(self.sweep_data))]['config']['metric']['name']
 
         for run_id, content in self.sweep_data.items():
             seed = content['config']['torch_seed']
 
             metric_value = content['metrics'][metric]
             if isinstance(metric_value, dict):
-                # Extract the 'max' value if available, or another key if needed
                 if 'max' in metric_value:
                     metric_value = metric_value['max']
                 else:
                     raise ValueError(f"Expected 'max' key in metric dictionary, found: {metric_value.keys()}")
 
-            # For direct numerical values (like reconstruction loss), use them as is
             covariate_value = content['config'][covariate]
             comparison_value = content['config'][comparison]
 
-            # Assign values to corresponding refactored sections
             refactored_data['covariate']['values'][comparison_value].append(covariate_value)
             refactored_data['metric']['values'][comparison_value].append(metric_value)
             refactored_data['comparison']['values'][comparison_value].append(seed)
@@ -86,7 +82,7 @@ class SweepAnalyzer:
             })
         return formatted_data
 
-    def plot_metric(self, averaged_data, save=True, save_dir=None, metric="latent_mse", covariate="snr"):
+    def plot_metric(self, averaged_data, save=True, save_dir=None):
         font = font_style()
 
         plt.rc('font', **font)
@@ -129,11 +125,10 @@ class SweepAnalyzer:
             if save_dir is None:
                 save_dir = f'experiments/{self.experiment}/results/sweep-{self.sweep_id}'
 
-            # Generate the output file name based on metric and covariate
             plot_file_name = f"{metric_name}-{covariate_name}.png"
             plt.savefig(os.path.join(project_root, save_dir, plot_file_name))
 
-        plt.close()  # Close the plot to free memory
+        plt.close()
 
     def _fetch_data(self, wandb=False):
         if wandb:
@@ -155,52 +150,15 @@ class SweepAnalyzer:
             json.dumps(averaged_data, default=lambda o: o.tolist() if isinstance(o, np.ndarray) else o)
         )
 
-        # Generate the output file name based on metric and covariate
         metric_name = extracted_data['metric']['name']
         covariate_name = extracted_data['covariate']['name']
         summary_file_name = f"{metric_name}-{covariate_name}.json"
 
-        # If save_dir is provided, use it as the base directory; otherwise, use the default output directory
         if save_dir is not None:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             self.output_dir = os.path.join(project_root, save_dir)
 
-        # Save the data in the dynamically named file
         with open(os.path.join(self.output_dir, summary_file_name), "w") as f:
             json.dump(averaged_data, f, indent=4)
 
         print(f"Saved sweep summary to {os.path.join(self.output_dir, summary_file_name)}")
-    #
-    # def plot_training_history(self, metric_key="latent_mse", run_id=None):
-    #     for run_id, run_data in self.sweep_data.items():
-    #         if run_id is not None and run_id != run_id:
-    #             continue
-    #
-    #         if "data" in run_data and metric_key in run_data["data"]:
-    #             metric_values = run_data["data"][metric_key]
-    #             steps = run_data["data"].get("_step", range(len(metric_values)))  # Use '_step' if available
-    #
-    #             metric_values = np.array(metric_values)
-    #             steps = np.array(steps)
-    #             valid_indices = ~np.isnan(metric_values)
-    #             metric_values = metric_values[valid_indices]
-    #             steps = steps[valid_indices]
-    #
-    #
-    #             plt.figure(figsize=(10, 6))
-    #             plt.plot(steps, metric_values, marker='o', linestyle='-', label=f'Run {run_id}')
-    #             plt.xlabel('Steps' if "_step" in run_data["data"] else 'Index')
-    #             plt.ylabel(metric_key.replace("_", " ").capitalize())
-    #             plt.title(f'Training History for {metric_key} (Run {run_id})')
-    #             plt.legend()
-    #             plt.grid(True)
-    #
-    #             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
-    #             save_dir = f'experiments/{self.experiment}/results/sweep-{self.sweep_id}/runs'
-    #             plot_file_name = f"{run_id}-training-history-{metric_key}.png"
-    #             plt.savefig(os.path.join(project_root, save_dir, plot_file_name))
-    #             plt.close()
-    #
-    #         else:
-    #             pass
-                # print(f"Metric '{metric_key}' not found in run {run_id}")

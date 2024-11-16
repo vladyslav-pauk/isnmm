@@ -64,7 +64,7 @@
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
-    "max_epochs": 10000,
+    "max_epochs": 20000,
     "log_every_n_steps": null,
     "limit_val_batches": 1,
     "val_check_interval": null,

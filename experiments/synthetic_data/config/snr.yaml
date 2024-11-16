@@ -12,6 +12,8 @@ parameters:
     - vasca
   trainer.max_epochs:
     - 2000
+  early_stopping.patience:
+    - 10
   batch_size:
     - 100
   observed_dim:
