@@ -45,10 +45,7 @@ class Module(LightningModule):
         self.metrics._update(data, model_outputs, labels, idxes, self)
 
         final_metrics = self.metrics.compute()
-
-        print("Final metrics:")
-        for key, value in final_metrics.items():
-            print(f"\t{key} = {value.detach().cpu().numpy()}")
+        self.metrics.save_metrics(final_metrics)
 
     def val_dataloader(self):
         return self.train_dataloader()

@@ -10,7 +10,7 @@ from src.modules.data.synthetic import DataModule
 def load_model(run_id, model_name, experiment_name):
     module = getattr(model_package, model_name)
 
-    checkpoints_dir = f"../models/{experiment_name}/{run_id}/checkpoints/"
+    checkpoints_dir = f"../experiments/{experiment_name}/checkpoints/{run_id}/"
     checkpoint_files = [f for f in os.listdir(checkpoints_dir) if f.endswith(".ckpt")]
     best_model_path = os.path.join(checkpoints_dir, checkpoint_files[0])
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     model_name = "NISCA"
     base_model = 'MVES'
 
-    run_id = 'gkoq3xw4'
+    run_id = '9dy5nq25'
 
     model, config = load_model(
         run_id=run_id,
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
     # unmixing.plot_mse_image(rows=100, cols=100)
 
+# fixme: implement the explore model script and jupyter notebook (add making and saving plots, and model parameters)
 # todo: finish explore_model script
 # task: load config from the loaded model snapshot wandb
 # task: hyperparameters (configs) not saved to checkpoints

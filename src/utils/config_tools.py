@@ -4,7 +4,6 @@ import yaml
 from src.utils.utils import flatten_dict, unflatten_dict
 
 
-
 def load_model_config(experiment, config_name):
     path = f'../src/model/config/{config_name}.json'
     if os.path.exists(path):

@@ -8,11 +8,13 @@ from src.model.modules.ae import Module as Autoencoder
 
 
 class Model(LightningModule, Autoencoder):
-    def __init__(self, encoder, decoder, model_config, optimizer_config):
+    def __init__(self, encoder, decoder, model_config, optimizer_config, metrics=None):
         super().__init__(encoder, decoder)
 
         self.optimizer = None
         self.optimizer_config = optimizer_config
+
+        self.metrics = metrics
 
         self.latent_dim = None
         self.mc_samples = 1
@@ -20,7 +22,6 @@ class Model(LightningModule, Autoencoder):
         self.unmixing = model_config["unmixing"]
 
         self.distance = model_config["distance"]
-        self.experiment_metrics = model_config["experiment_name"]
         self.encoder_transform = model_config["reparameterization"]
 
     def _regularization_loss(self, model_output, observed_batch, idxes):

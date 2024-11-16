@@ -1,4 +1,8 @@
+import os
+import json
 import wandb
+
+import torch
 from torchmetrics import MetricCollection
 
 import src.modules.metric as metric
@@ -19,7 +23,7 @@ class ModelMetrics(MetricCollection):
         all_metrics = {
             'mixture_mse_db': metric.MatrixMse(db=True),
             'mixture_sam': metric.SpectralAngle(),
-            'mixture_matrix_change': metric.MatrixChange(),
+            # 'mixture_matrix_change': metric.MatrixChange(),
             'subspace_distance': metric.SubspaceDistance(),
             'r_square': metric.ResidualNonlinearity(show_plot=self.show_plots, log_plot=self.log_plots),
             'latent_mse': metric.data_mse.DataMse(),
@@ -46,8 +50,7 @@ class ModelMetrics(MetricCollection):
             latent_sample_qr = labels["latent_sample_qr"]
             latent_sample_mean = model_output["latent_sample_mean"].mean(0)
             linearly_mixed_sample = model.decoder.linear_mixture(model_output["latent_sample"].mean(0))
-            latent_sample_unmixed = self.unmix(latent_sample_mean, model, latent_sample_true.size(-1))
-            linear_mixture = model.decoder.linear_mixture.matrix
+            latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, model, latent_sample_true.size(-1))
 
             metric_updates = {
                 'subspace_distance': (idxes, latent_sample_unmixed, latent_sample_qr),
@@ -56,12 +59,37 @@ class ModelMetrics(MetricCollection):
                 'mixture_mse_db': (self.linear_mixture_true, linear_mixture),
                 'mixture_sam': (self.linear_mixture_true, linear_mixture),
                 'mixture_log_volume': (linear_mixture,),
-                'mixture_matrix_change': (linear_mixture,)
+                # 'mixture_matrix_change': (linear_mixture,)
             }
 
             for metric_name, args in metric_updates.items():
                 if self.metrics_list is None or metric_name in self.metrics_list:
                     self[metric_name].update(*args)
+
+    def save_metrics(self, metrics):
+        base_dir = os.path.join(wandb.run.dir.split('wandb')[0], 'results')
+        sweep_id = wandb.run.dir.split('/')[-4].split('-')[-1]
+        output_path = os.path.join(base_dir, sweep_id, "sweep_metrics.json")
+
+        if os.path.exists(output_path):
+            with open(output_path, 'r') as f:
+                existing_data = json.load(f)
+        else:
+            existing_data = {}
+
+        run_id = wandb.run.id
+        metrics = {k: v.item() if isinstance(v, torch.Tensor) else v for k, v in metrics.items()}
+
+        if run_id not in existing_data:
+            existing_data[run_id] = {"metrics": {}}
+        existing_data[run_id]["metrics"].update(metrics)
+
+        with open(output_path, 'w') as f:
+            json.dump(existing_data, f, indent=2)
+
+        print("Final metrics:")
+        for key, value in metrics.items():
+            print(f"\t{key} = {value}")
 
     def unmix(self, latent_sample, model, latent_dim):
         if model.unmixing:
@@ -72,5 +100,6 @@ class ModelMetrics(MetricCollection):
                 dataset_size=model.trainer.datamodule.dataset_size,
             )
             latent_sample = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
-            return latent_sample
-        return latent_sample
+            mixing_matrix = unmixing.fit(latent_sample.squeeze().cpu().detach())[0]
+            return latent_sample, mixing_matrix
+        return latent_sample, model.decoder.linear_mixture.matrix

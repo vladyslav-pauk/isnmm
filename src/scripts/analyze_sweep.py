@@ -36,3 +36,4 @@ if __name__ == "__main__":
     analyze_sweep(experiment, sweep_id)
 
 # todo: covariate, metric, comparison markers to sweep dataset
+# fixme: compute 'best' metrics as well, save plots and tables

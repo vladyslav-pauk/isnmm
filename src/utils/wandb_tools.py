@@ -9,6 +9,9 @@ def set_wandb_dir(directory=None):
     wandb_dir = f'{project_root}{directory}'
     os.environ["WANDB_DIR"] = os.path.abspath(wandb_dir)
 
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="pytorch_lightning")
+
 
 def login_wandb(experiment=None):
     set_wandb_dir(f'experiments/{experiment}')

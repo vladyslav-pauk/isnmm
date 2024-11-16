@@ -33,7 +33,7 @@ def train_model(experiment_name, model_name, sweep_id=None, **kwargs):
     trainer = _setup_trainer(config, logger)
 
     trainer.fit(model, datamodule)
-    trainer.test(model, datamodule)
+    trainer.test(model, datamodule, ckpt_path='best')
     # logger.experiment.finish()
 
     return logger.experiment.id

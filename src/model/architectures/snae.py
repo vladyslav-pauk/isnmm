@@ -7,17 +7,17 @@ from src.model.modules.ae import Module as Autoencoder
 
 
 class Model(LightningModule, Autoencoder):
-    def __init__(self, encoder, decoder, model_config, optimizer_config):
+    def __init__(self, encoder, decoder, model_config, optimizer_config, metrics=None):
         super().__init__(encoder, decoder)
 
         self.optimizer_config = optimizer_config
+        self.metrics = metrics
 
         self.latent_dim = model_config["latent_dim"]
         self.mc_samples = 1
         self.sigma = 0
 
         self.distance = model_config["distance"]
-        self.experiment_metrics = model_config["experiment_name"]
         self.encoder_transform = model_config["reparameterization"]
 
 

@@ -32,7 +32,6 @@ class Sweep:
         if sweep_id is None:
             sweep_id = self.id
         sweep_data = fetch_wandb_sweep(self.experiment, sweep_id)
-        print(sweep_data)
 
         if save:
             self.save_data(sweep_data)
