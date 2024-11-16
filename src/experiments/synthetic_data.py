@@ -15,6 +15,8 @@ class ModelMetrics(MetricCollection):
         self.monitor = monitor
         self.show_plots = False
         self.log_plots = False
+        self.log_wandb = True
+        self.save_plots = False
         self.true_model = true_model
 
         self._setup_metrics()
@@ -25,7 +27,9 @@ class ModelMetrics(MetricCollection):
             'mixture_sam': metric.SpectralAngle(),
             # 'mixture_matrix_change': metric.MatrixChange(),
             'subspace_distance': metric.SubspaceDistance(),
-            'r_square': metric.ResidualNonlinearity(show_plot=self.show_plots, log_plot=self.log_plots),
+            'r_square': metric.ResidualNonlinearity(
+                show_plot=self.show_plots, log_plot=self.log_plots, save_plot=self.save_plots
+            ),
             'latent_mse': metric.data_mse.DataMse(),
             'mixture_log_volume': metric.MatrixVolume()
         }
@@ -35,9 +39,10 @@ class ModelMetrics(MetricCollection):
 
         metrics = {name: m for name, m in all_metrics.items() if name in self.metrics_list}
 
-        for metric_name in metrics:
-            if metric_name == self.monitor:
-                wandb.define_metric(name=metric_name, summary='max')
+        # if self.log_wandb:
+        #     for metric_name in metrics:
+        #         if metric_name == self.monitor:
+        #             wandb.define_metric(name=metric_name, summary='max')
 
         self.linear_mixture_true = self.true_model.linear_mixture if self.true_model else None
 
@@ -66,23 +71,37 @@ class ModelMetrics(MetricCollection):
                 if self.metrics_list is None or metric_name in self.metrics_list:
                     self[metric_name].update(*args)
 
-    def save_metrics(self, metrics):
-        base_dir = os.path.join(wandb.run.dir.split('wandb')[0], 'results')
-        sweep_id = wandb.run.dir.split('/')[-4].split('-')[-1]
-        output_path = os.path.join(base_dir, sweep_id, "sweep_data.json")
+    def save_metrics(self, metrics, save_dir=None):
+        if wandb.run is not None and save_dir is None:  # Check if wandb.run is active
+            base_dir = os.path.join(wandb.run.dir.split('wandb')[0], 'results')
+            sweep_id = wandb.run.dir.split('/')[-4].split('-')[-1]
+            output_path = os.path.join(base_dir, f'sweep-{sweep_id}', "sweep_data.json")
+        else:
+            if save_dir is None:
+                save_dir = './results'
 
+            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            output_path = os.path.join(
+                project_root, 'experiments', os.environ["EXPERIMENT"], save_dir, os.environ["RUN_ID"],"sweep_data.json"
+            )
+        run_id = os.environ.get("RUN_ID", "default")
+
+        print(output_path)
         if os.path.exists(output_path):
             with open(output_path, 'r') as f:
                 existing_data = json.load(f)
         else:
             existing_data = {}
 
-        run_id = wandb.run.id
         metrics = {k: v.item() if isinstance(v, torch.Tensor) else v for k, v in metrics.items()}
 
         if run_id not in existing_data:
             existing_data[run_id] = {"metrics": {}}
         existing_data[run_id]["metrics"].update(metrics)
+
+        output_dir = os.path.dirname(output_path)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
 
         with open(output_path, 'w') as f:
             json.dump(existing_data, f, indent=2)

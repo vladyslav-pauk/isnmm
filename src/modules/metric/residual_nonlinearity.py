@@ -6,15 +6,19 @@ import torch
 import torch.nn as nn
 import torchmetrics
 
+from src.utils.wandb_tools import run_dir
+
 
 class ResidualNonlinearity(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=True):
+    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=True, save_plot=True):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.add_state("sum_r_squared", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
         self.fitter = LineFitter()
 
         self.show_plot = show_plot
+        self.log_plot = log_plot
+        self.save_plot = save_plot
 
     def update(self, model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed):
 
@@ -67,6 +71,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             # nr=(self.reconstructed_sample, self.noiseless_sample_true),
             scale=True,
             show_plot=show_plot,
+            save_plot=self.save_plot,
             name=f"model_true_nonlinearity"
         )
         # plot_components(
@@ -90,6 +95,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             true=(torch.linspace(0, 1, 100).repeat(3, 1).t(), torch.linspace(0, 1, 100).repeat(3, 1).t()),
             scale=False,
             show_plot=show_plot,
+            save_plot=self.save_plot,
             name=f"latent_correlation"
         )
 
@@ -148,7 +154,7 @@ class LineFitter(nn.Module):
         return torch.cat(transformed_components, dim=-1)
 
 
-def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwargs):
+def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, name=None, **kwargs):
     import warnings
     warnings.filterwarnings("ignore", message=".*path .*")
     font_size = 24
@@ -204,18 +210,11 @@ def plot_components(labels=None, scale=False, show_plot=False, name=None, **kwar
             name: plt
         })
 
-    import os
-    wandb_path = os.getenv("WANDB_DIR")
-    sweep_id = os.getenv("SWEEP_ID")
-    run_id = os.getenv("RUN_ID")
+    if save_plot:
+        dir = run_dir('predictions')
+        path = f"{dir}/{name}.png"
 
-    path = f"{wandb_path}/results/{sweep_id}/runs/{run_id}-{name}.png"
-    directory = os.path.dirname(path)
-
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-    fig.savefig(path, transparent=True)
+        fig.savefig(path, transparent=True)
     plt.close()
     return plt
 

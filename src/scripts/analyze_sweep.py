@@ -11,7 +11,6 @@ from src.helpers.sweep_analyzer import SweepAnalyzer
 def analyze_sweep(experiment, sweep_id, metric="latent_mse", covariate="snr", comparison="model_name", save=True, save_dir=None):
     experiment_analyzer = SweepAnalyzer(experiment, sweep_id)
 
-    # Step 1: Extract the specified metric
     data = experiment_analyzer.extract_metrics(
         metric=metric, covariate=covariate, comparison=comparison
     )
@@ -21,11 +20,10 @@ def analyze_sweep(experiment, sweep_id, metric="latent_mse", covariate="snr", co
     if save:
         experiment_analyzer.save_data(save_dir=save_dir, metric=metric, covariate=covariate, comparison=comparison)
 
-    experiment_analyzer.plot_training_history(metric_key=metric)
+    # experiment_analyzer.plot_training_history(metric_key=metric)
 
-    # Load and process metrics data
     project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
-    metrics_file_path = f"{project_root}experiments/{experiment}/results/{sweep_id}/sweep_data.json"
+    metrics_file_path = f"{project_root}experiments/{experiment}/results/sweep-{sweep_id}/sweep_data.json"
     if os.path.exists(metrics_file_path):
         with open(metrics_file_path, 'r') as f:
             metrics_data = json.load(f)
@@ -65,7 +63,7 @@ def tabulate_dict(data):
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "ekyinm4z"
+    sweep_id = "18mtsjjq"
 
     login_wandb(experiment)
     analyze_sweep(
@@ -86,6 +84,8 @@ if __name__ == "__main__":
 
 # todo: adjust styling and sizing for plots
 # todo: save tables to latex
+
+# fixme: unique definition of run path for all calls via wandb tools
 
 # fixme: finish all sweep configs
 # fixme: test single runs for SNRs and models I want to do, make sure I get results

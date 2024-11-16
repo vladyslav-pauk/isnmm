@@ -104,4 +104,23 @@ def fetch_wandb_sweep(project_name, sweep_id):
         }
     return all_runs_data
 
+
+def run_dir(save_dir=None):
+    wandb_path = os.getenv("WANDB_DIR")
+    sweep_id = os.getenv("SWEEP_ID")
+    run_id = os.getenv("RUN_ID")
+    experiment = os.getenv("EXPERIMENT")
+
+    root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
+
+    if not save_dir:
+        dir = f"{wandb_path}/results/sweep-{sweep_id}/runs"
+    else:
+        dir = os.path.join(root, 'experiments', experiment, save_dir, run_id)
+
+    if not os.path.exists(dir):
+        os.makedirs(dir)
+
+    return dir
+
 # task: log time epoch

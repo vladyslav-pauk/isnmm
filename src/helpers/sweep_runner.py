@@ -15,6 +15,7 @@ class Sweep:
 
         self.id = wandb.sweep(sweep=sweep_config, project=self.experiment)
         os.environ["SWEEP_ID"] = self.id
+        os.environ["EXPERIMENT"] = self.experiment
 
     def run(self, save=True):
         wandb.agent(self.id, function=self.step)
@@ -47,7 +48,7 @@ class Sweep:
                 target[key] = value
 
     def save_data(self, sweep_data):
-        save_dir = f"../experiments/{self.experiment}/results/{self.id}"
+        save_dir = f"../experiments/{self.experiment}/results/sweep-{self.id}"
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 

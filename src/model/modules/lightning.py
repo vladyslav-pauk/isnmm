@@ -47,6 +47,14 @@ class Module(LightningModule):
         final_metrics = self.metrics.compute()
         self.metrics.save_metrics(final_metrics)
 
+    def predict_step(self, batch, batch_idx, dataloader_idx=None):
+        data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
+        model_outputs = self(data)
+        self.metrics._update(data, model_outputs, labels, idxes, self)
+        final_metrics = self.metrics.compute()
+
+        self.metrics.save_metrics(final_metrics, save_dir=f'predictions')
+
     def val_dataloader(self):
         return self.train_dataloader()
 
@@ -94,6 +102,13 @@ class Module(LightningModule):
 
             self.metrics.true_model = datamodule
 
+    def on_train_start(self) -> None:
+        if self.metrics.log_wandb:
+            for metric_name in self.metrics:
+                if metric_name == self.metrics.monitor:
+                    import wandb
+                    wandb.define_metric(name=metric_name, summary='max')
+
     def on_test_start(self):
         self.metrics.metrics_list = []
         self.metrics.true_model = self.trainer.datamodule
@@ -101,6 +116,17 @@ class Module(LightningModule):
 
         self.metrics.show_plots = False
         self.metrics.log_plots = False
+        self.metrics.save_plots = False
+
+    def on_predict_start(self) -> None:
+        self.metrics.log_wandb = False
+        self.metrics.show_plots = True
+        self.metrics.save_plots = True
+        self.metrics.log_plots = False
+
+        self.metrics.metrics_list = []
+        self.metrics.true_model = self.trainer.datamodule
+        self.metrics._setup_metrics()
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])

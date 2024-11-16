@@ -12,7 +12,7 @@ class SweepAnalyzer:
         self.experiment = experiment
         self.sweep_id = sweep_id
         project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
-        self.output_dir = f"{project_root}experiments/{experiment}/results/{self.sweep_id}"
+        self.output_dir = f"{project_root}experiments/{experiment}/results/sweep-{self.sweep_id}"
         self.output_file = f"sweep_summary.json"
         # todo: fix directories, run from project root
 
@@ -124,10 +124,10 @@ class SweepAnalyzer:
         if save:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             if save_dir is None:
-                save_dir = f'experiments/{self.experiment}/results/{self.sweep_id}'
+                save_dir = f'experiments/{self.experiment}/results/sweep-{self.sweep_id}'
 
             # Generate the output file name based on metric and covariate
-            plot_file_name = f"summary-{metric_name}-{covariate_name}.png"
+            plot_file_name = f"{metric_name}-{covariate_name}.png"
             plt.savefig(os.path.join(project_root, save_dir, plot_file_name))
 
         plt.close()  # Close the plot to free memory
@@ -137,7 +137,7 @@ class SweepAnalyzer:
             self.sweep_data = fetch_wandb_sweep(self.experiment, self.sweep_id)
         else:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
-            path_to_data = f"{project_root}experiments/{self.experiment}/results/{self.sweep_id}/sweep_data.json"
+            path_to_data = f"{project_root}experiments/{self.experiment}/results/sweep-{self.sweep_id}/sweep_data.json"
             if os.path.exists(path_to_data):
                 with open(path_to_data, 'r') as f:
                     self.sweep_data = json.load(f)
@@ -155,7 +155,7 @@ class SweepAnalyzer:
         # Generate the output file name based on metric and covariate
         metric_name = extracted_data['metric']['name']
         covariate_name = extracted_data['covariate']['name']
-        summary_file_name = f"summary-{metric_name}-{covariate_name}.json"
+        summary_file_name = f"{metric_name}-{covariate_name}.json"
 
         # If save_dir is provided, use it as the base directory; otherwise, use the default output directory
         if save_dir is not None:
@@ -167,35 +167,37 @@ class SweepAnalyzer:
             json.dump(averaged_data, f, indent=4)
 
         print(f"Saved sweep summary to {os.path.join(self.output_dir, summary_file_name)}")
-
-    def plot_training_history(self, metric_key="latent_mse"):
-        for run_id, run_data in self.sweep_data.items():
-
-            if "data" in run_data and metric_key in run_data["data"]:
-                metric_values = run_data["data"][metric_key]
-                steps = run_data["data"].get("_step", range(len(metric_values)))  # Use '_step' if available
-
-                metric_values = np.array(metric_values)
-                steps = np.array(steps)
-                valid_indices = ~np.isnan(metric_values)
-                metric_values = metric_values[valid_indices]
-                steps = steps[valid_indices]
-
-
-                plt.figure(figsize=(10, 6))
-                plt.plot(steps, metric_values, marker='o', linestyle='-', label=f'Run {run_id}')
-                plt.xlabel('Steps' if "_step" in run_data["data"] else 'Index')
-                plt.ylabel(metric_key.replace("_", " ").capitalize())
-                plt.title(f'Training History for {metric_key} (Run {run_id})')
-                plt.legend()
-                plt.grid(True)
-
-                project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
-                save_dir = f'experiments/{self.experiment}/results/{self.sweep_id}/runs'
-                plot_file_name = f"{run_id}-training-history-{metric_key}.png"
-                plt.savefig(os.path.join(project_root, save_dir, plot_file_name))
-                plt.close()
-
-            else:
-                pass
+    #
+    # def plot_training_history(self, metric_key="latent_mse", run_id=None):
+    #     for run_id, run_data in self.sweep_data.items():
+    #         if run_id is not None and run_id != run_id:
+    #             continue
+    #
+    #         if "data" in run_data and metric_key in run_data["data"]:
+    #             metric_values = run_data["data"][metric_key]
+    #             steps = run_data["data"].get("_step", range(len(metric_values)))  # Use '_step' if available
+    #
+    #             metric_values = np.array(metric_values)
+    #             steps = np.array(steps)
+    #             valid_indices = ~np.isnan(metric_values)
+    #             metric_values = metric_values[valid_indices]
+    #             steps = steps[valid_indices]
+    #
+    #
+    #             plt.figure(figsize=(10, 6))
+    #             plt.plot(steps, metric_values, marker='o', linestyle='-', label=f'Run {run_id}')
+    #             plt.xlabel('Steps' if "_step" in run_data["data"] else 'Index')
+    #             plt.ylabel(metric_key.replace("_", " ").capitalize())
+    #             plt.title(f'Training History for {metric_key} (Run {run_id})')
+    #             plt.legend()
+    #             plt.grid(True)
+    #
+    #             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
+    #             save_dir = f'experiments/{self.experiment}/results/sweep-{self.sweep_id}/runs'
+    #             plot_file_name = f"{run_id}-training-history-{metric_key}.png"
+    #             plt.savefig(os.path.join(project_root, save_dir, plot_file_name))
+    #             plt.close()
+    #
+    #         else:
+    #             pass
                 # print(f"Metric '{metric_key}' not found in run {run_id}")
