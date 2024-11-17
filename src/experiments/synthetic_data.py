@@ -34,7 +34,7 @@ class ModelMetrics(MetricCollection):
             # 'mixture_matrix_change': metric.MatrixChange(),
             # 'mixture_log_volume': metric.MatrixVolume()
         }
-        # fixme: add unmixing metric
+        # todo: add unmixing metric
 
         # base_model = 'MVES'
         # latent_sample_true = datamodule.latent_sample
@@ -84,7 +84,7 @@ class ModelMetrics(MetricCollection):
                 # 'mixture_log_volume': (linear_mixture,),
                 # 'mixture_matrix_change': (linear_mixture,)
             }
-            # fixme: why i use idxes only in subspace distance
+            # todo: why i use idxes only in subspace distance
 
             for metric_name, args in metric_updates.items():
                 if self.metrics_list is None or metric_name in self.metrics_list:
