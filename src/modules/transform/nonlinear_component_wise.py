@@ -38,6 +38,9 @@ class Network(nn.Module):
             func = lambda x: [
                 5 * torch.sigmoid(x) + 0.3 * x,
                 5 * torch.sigmoid(x) + 0.3 * x,
+                5 * torch.sigmoid(x) + 0.3 * x,
+                5 * torch.sigmoid(x) + 0.3 * x,
+                5 * torch.sigmoid(x) + 0.3 * x,
                 # -3 * torch.tanh(x) - 0.2 * x,
                 5 * torch.sigmoid(x) + 0.3 * x
                 # 0.4 * torch.exp(x)
