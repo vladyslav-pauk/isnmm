@@ -97,7 +97,7 @@ class HyperspectralDataset(Dataset):
 
 if __name__ == "__main__":
     data_config = {"batch_size": 64, "val_batch_size": 64, "num_workers": 4, "shuffle": True, "snr": 20, "dataset_size": 300}
-    data_module = DataModule(data_config, transform=HyperspectralTransform(normalize=True))
+    data_module = DataModule(data_config, transform=HyperspectralTransform(normalize=True, output_channels=2, dataset_size=300))
     data_module.prepare_data()
     data_module.setup()
     print(f"Dataset size: {len(data_module.dataset)}")

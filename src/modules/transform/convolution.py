@@ -4,20 +4,20 @@ import matplotlib.pyplot as plt
 
 
 class HyperspectralTransform(nn.Module):
-    def __init__(self, output_channels=None, normalize=True, dataset_size=None, select_bands=True):
+    def __init__(self, output_channels=None, normalize=True, dataset_size=None):
         super().__init__()
 
         self.output_channels = output_channels
         self.normalize = normalize
         self.dataset_size = dataset_size
-        self.select_bands = select_bands
 
         self.min_val = None
         self.max_val = None
 
     def forward(self, x):
         input_channels, height, width = x.shape
-        self.input_channels = input_channels
+        if self.output_channels is None:
+            self.output_channels = input_channels
         self.height = height
         self.width = width
 
@@ -28,7 +28,7 @@ class HyperspectralTransform(nn.Module):
             self.crop_fraction = (self.dataset_size / height / width) ** 0.5
             x = self.crop_image(x)
 
-        if self.select_bands:
+        if self.output_channels is not None:
             x = self.select_bands_with_highest_variance(x)
 
         x = x.reshape(self.output_channels, -1)
@@ -60,9 +60,11 @@ class HyperspectralTransform(nn.Module):
         return x
 
     def select_bands_with_highest_variance(self, x):
-        band_variances = torch.var(x, dim=(1, 2))
-        _, selected_indices = torch.topk(band_variances, self.output_channels, largest=True)
-        return x[selected_indices]
+        if self.output_channels is not None:
+            band_variances = torch.var(x, dim=(1, 2))
+            _, selected_indices = torch.topk(band_variances, self.output_channels, largest=True)
+            x = x[selected_indices]
+        return x
 
     def normalize_to_range(self, tensor, min_val=0, max_val=1):
         self.min_val = torch.min(tensor)
@@ -82,9 +84,9 @@ class HyperspectralTransform(nn.Module):
 
 if __name__ == "__main__":
     torch.manual_seed(42)
-    data = 100 * torch.randn(3, 100, 100)
+    data = 100 * torch.randn(300, 100, 100)
 
-    transform = HyperspectralTransform(output_channels=2, normalize=True, dataset_size=10)
+    transform = HyperspectralTransform(output_channels=2, normalize=True, dataset_size=100)
 
     print(f"Input: {data.shape}")
     transformed_data = transform(data)
