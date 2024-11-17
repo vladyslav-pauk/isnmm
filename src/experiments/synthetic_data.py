@@ -64,6 +64,7 @@ class ModelMetrics(MetricCollection):
         return metrics
 
     def _update(self, observed_sample, model_output, labels, idxes, model):
+        # fixme: preprocess, spectral convolution
         if labels:
             latent_sample_true = labels["latent_sample"]
             latent_sample_qr = labels["latent_sample_qr"]
