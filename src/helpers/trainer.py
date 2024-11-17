@@ -29,7 +29,7 @@ def train_model(experiment_name, model_name, **kwargs):
 
     logger = _setup_logger(experiment_name, config, data_config, kwargs)
 
-    datamodule = _setup_data_module(data_config, config["data_loader"])
+    datamodule = _setup_data_module(data_config, config["data_loader"], experiment_name)
     model = _setup_model(config, logger)
     trainer = _setup_trainer(config, logger)
 
@@ -40,8 +40,9 @@ def train_model(experiment_name, model_name, **kwargs):
     return logger.experiment.id
 
 
-def _setup_data_module(data_config, config):
-    datamodule_class = getattr(data_package, config["module_name"]).DataModule
+def _setup_data_module(data_config, config, experiment_name):
+    data_name = experiment_name.split('_')[0]
+    datamodule_class = getattr(data_package, data_name).DataModule
     return datamodule_class(data_config, **config)
 
 

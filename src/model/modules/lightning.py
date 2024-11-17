@@ -28,19 +28,29 @@ class Module(LightningModule):
         return model_output
 
     def training_step(self, batch, batch_idx):
-        data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
         loss = self._loss_function(data, self(data), idxes)
         self.log_dict(loss)
         return sum(loss.values())
 
     def validation_step(self, batch, batch_idx):
-        data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        else:
+            labels = None
         validation_loss = {"validation_loss": sum(self._loss_function(data, self(data), idxes).values())}
         self.metrics._update(data, self(data), labels, idxes, self)
         self.log_dict({**validation_loss, **self.metrics.compute()})
 
     def test_step(self, batch, batch_idx):
-        data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        else:
+            labels = None
         model_outputs = self(data)
         self.metrics._update(data, model_outputs, labels, idxes, self)
 
@@ -48,7 +58,11 @@ class Module(LightningModule):
         self.metrics.save_metrics(final_metrics)
 
     def predict_step(self, batch, batch_idx, dataloader_idx=None):
-        data, labels, idxes = batch["data"], batch["labels"], batch["idxes"]
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        else:
+            labels = None
         model_outputs = self(data)
         self.metrics._update(data, model_outputs, labels, idxes, self)
         final_metrics = self.metrics.compute()
@@ -83,7 +97,7 @@ class Module(LightningModule):
 
             self.observed_dim = data_sample["data"].shape[1]
 
-            if data_sample["labels"]:
+            if "labels" in data_sample.keys():
                 print("Labelled data found")
 
                 if self.latent_dim is None:
@@ -91,6 +105,9 @@ class Module(LightningModule):
 
                 if self.sigma is None:
                     self.sigma = datamodule.sigma
+
+            if self.trainer.model.latent_dim:
+                self.latent_dim = self.trainer.model.latent_dim
 
             if self.unmixing:
                 print(f"Unmixing latent sample with {self.unmixing}")

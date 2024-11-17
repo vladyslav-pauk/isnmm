@@ -13,6 +13,8 @@ class Model(LightningModule, VariationalAutoencoder):
         self.latent_dim = model_config["latent_dim"]
         self.metrics = metrics
 
+        self.model_config = model_config
+
         self.optimizer_config = optimizer_config
         self.prior_config = model_config["prior"]
         self.posterior_config = model_config["posterior"]

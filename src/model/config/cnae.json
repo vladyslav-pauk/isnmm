@@ -3,7 +3,7 @@
   "torch_seed": 1,
     "metric": {
     "goal": "minimize",
-    "name": "latent_mse"
+    "name": "validation_loss"
   },
   "data_loader": {
     "module_name": "synthetic",

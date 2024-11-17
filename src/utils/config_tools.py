@@ -51,7 +51,7 @@ def convert_yaml_to_json(yaml_str):
 
 
 def load_data_config(experiment):
-    path = f'../src/modules/data/synthetic.json'
+    path = f'../src/modules/data/{experiment.split('_')[0]}.json'
 
     if os.path.exists(path):
         with open(path, 'r') as f:

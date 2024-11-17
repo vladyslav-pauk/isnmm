@@ -4,7 +4,7 @@ import torch.distributions as td
 
 class MultivariateNormal(td.MultivariateNormal):
     def __init__(self, loc, scale):
-        scale.clamp(min=1e-12)
+        scale = scale.clamp(min=1e-12)
         super().__init__(loc, diag_embed(scale**2))
 
 

@@ -1,0 +1,13 @@
+{
+  "scale": 5,
+  "data_model": "convolution",
+  "observed_dim": 10,
+  "latent_dim": 3,
+  "nonlinear_transform_init": null,
+  "mixing_matrix_init": null,
+  "normalize": true,
+  "degree": null,
+  "snr": 25,
+  "dataset_size": 100000,
+  "data_seed": 21
+}

@@ -71,7 +71,7 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "synthetic_data", "7n9lzbvl")
+        "hyperspectral_unmixing", "j8e6dyc6")
     plot_training_history(model)
 
 # todo: unmixing plots
