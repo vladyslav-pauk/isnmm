@@ -5,7 +5,7 @@ from src.helpers.sweep_runner import Sweep
 
 from analyze_sweep import analyze_sweep
 from src.utils.wandb_tools import login_wandb
-from src.utils.utils import logging_setup
+from src.utils.utils import logging_setup, clean_up
 from src.scripts.explore_model import predict, plot_training_history
 
 
@@ -23,21 +23,18 @@ if __name__ == '__main__':
     sweep = Sweep(sweep_config, train_model)
     sweep.run(save=True)
 
-    _, data = analyze_sweep(experiment, sweep.id, save=True)
+    _, data = analyze_sweep(
+        experiment, sweep.id, metric='validation_loss', covariate='snr', comparison='model_name', save=True)
 
     show_plots = False
     if show_plots:
         model = next(iter(data['run_ids']))
         run_id = data['run_ids'][model][0]
-        model = predict(experiment, model, run_id)
+        model, _ = predict(experiment, model, run_id)
         plot_training_history(model)
         # todo: instead of this just pass show_plot = True in test_run config (too complicated)
 
-    import os
-    import shutil
-    path_to_remove = f"{os.path.dirname(os.path.abspath(__file__)).split('src')[0]}experiments/{experiment}/nisca"
-    if os.path.exists(path_to_remove):
-        shutil.rmtree(path_to_remove, ignore_errors=False)
+    clean_up(experiment)
 
 
 # todo: discard run, if metrics is below threshold (-10 positive mse_db)

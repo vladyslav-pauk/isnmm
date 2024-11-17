@@ -15,17 +15,24 @@ class SweepAnalyzer:
         self.output_dir = f"{project_root}experiments/{experiment}/results/sweep-{self.sweep_id}"
         os.makedirs(self.output_dir, exist_ok=True)
         self.sweep_data = self._fetch_data()
+        self.extracted_data = None
 
     def extract_metrics(self, metric=None, covariate=None, comparison=None):
+        # if not metric:
+        #     metric = next(iter(self.sweep_data.values()))['config']['metric']['name']
+        #
+        # if not covariate:
+        #     covariate = 'snr'
+        #
+        # if not comparison:
+        #     comparison = 'model_name'
+
         refactored_data = {
             'covariate': {'name': covariate, 'values': defaultdict(list)},
             'metric': {'name': metric, 'values': defaultdict(list)},
             'comparison': {'name': comparison, 'values': defaultdict(list)},
             'run_ids': defaultdict(list)
         }
-
-        if not metric:
-            metric = next(iter(self.sweep_data.values()))['config']['metric']['name']
 
         for run_id, content in self.sweep_data.items():
             seed = content['config']['torch_seed']
@@ -38,6 +45,7 @@ class SweepAnalyzer:
             refactored_data['comparison']['values'][content['config'][comparison]].append(seed)
             refactored_data['run_ids'][content['config'][comparison]].append(run_id)
 
+        self.extracted_data = refactored_data
         return refactored_data
 
     def average_seeds(self, refactored_data):
@@ -106,8 +114,8 @@ class SweepAnalyzer:
 
         raise FileNotFoundError(f"Metrics file not found at {data_path}")
 
-    def save_comparison_data(self, save_dir=None, metric=None, covariate=None, comparison=None):
-        extracted_data = self.extract_metrics(metric=metric, covariate=covariate, comparison=comparison)
+    def save_comparison_data(self, save_dir=None):
+        extracted_data = self.extracted_data
         averaged_data = self.average_seeds(extracted_data)
         averaged_data = json.loads(json.dumps(averaged_data, default=lambda o: o.tolist() if isinstance(o, np.ndarray) else o))
 

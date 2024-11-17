@@ -2,11 +2,11 @@ import torch
 from scipy.optimize import linear_sum_assignment
 
 
-def spectral_angle_mapper(a_true, a_est):
+def spectral_angle_mapper(a_est, a_true):
     num = torch.sum(a_true * a_est, dim=0)
     denom = torch.norm(a_true, dim=0) * torch.norm(a_est, dim=0)
 
-    angle = torch.acos(torch.clamp(num / denom, -1.0, 1.0))
+    angle = torch.acos((torch.clamp(num / denom, -1.0, 1.0)))
     angle = angle.mean()
 
     # from torchmetrics.image import SpectralAngleMapper
@@ -60,4 +60,5 @@ def match_components(matrix_true, matrix_est, vector_est=None):
     vector_est_matched = None
     if vector_est is not None:
         vector_est_matched = vector_est[:, col_ind]
-    return matrix_est_matched, vector_est_matched
+        return matrix_est_matched, vector_est_matched
+    return matrix_est_matched

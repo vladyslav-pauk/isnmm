@@ -28,11 +28,25 @@ class ModelMetrics(MetricCollection):
                 show_plot=self.show_plots, log_plot=self.log_plots, save_plot=self.save_plots
             ),
             'latent_mse': metric.data_mse.DataMse(),
+            'latent_sam': metric.SpectralAngle(),
             # 'mixture_mse_db': metric.MatrixMse(db=True),
             # 'mixture_sam': metric.SpectralAngle(),
             # 'mixture_matrix_change': metric.MatrixChange(),
             # 'mixture_log_volume': metric.MatrixVolume()
         }
+        # fixme: add unmixing metric
+
+        # base_model = 'MVES'
+        # latent_sample_true = datamodule.latent_sample
+        # observed_data = datamodule.observed_sample
+        # unmixing_model = getattr(model_package, base_model).Model
+        # unmixing = unmixing_model(latent_dim=latent_sample_true.size(-1), dataset_size=latent_sample_true.size(0))
+        # with torch.no_grad():
+        #     latent_sample_mixed = model(observed_data)['reconstructed_sample'].mean(0)
+        #     linear_mixture = model.decoder.linear_mixture.matrix.cpu().detach()
+        # latent_sample = unmixing.estimate_abundances(latent_sample_mixed)
+        # print(linear_mixture)
+        # unmixing.compute_metrics(linear_mixture, latent_sample, latent_sample_true)
 
         if not self.metrics_list:
             self.metrics_list = all_metrics.keys()
@@ -53,14 +67,18 @@ class ModelMetrics(MetricCollection):
         if labels:
             latent_sample_true = labels["latent_sample"]
             latent_sample_qr = labels["latent_sample_qr"]
-            latent_sample_mean = model_output["latent_sample_mean"].mean(0)
-            linearly_mixed_sample = model.decoder.linear_mixture(model_output["latent_sample"].mean(0))
-            latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, model, latent_sample_true.size(-1))
+            # latent_sample_averaged = model_output["latent_sample_mean"].mean(0)
+            latent_sample_mean = model_output["latent_sample"].mean(0)
+            model.unmixing = None
+            latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, model)
+
+            linearly_mixed_sample = model.decoder.linear_mixture(latent_sample_mean)
 
             metric_updates = {
                 'subspace_distance': (idxes, latent_sample_unmixed, latent_sample_qr),
                 'r_square': (model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed),
-                'latent_mse': (model_output["latent_sample"].mean(0), latent_sample_true),
+                'latent_mse': (latent_sample_unmixed, latent_sample_true),
+                'latent_sam': (latent_sample_unmixed, latent_sample_true),
                 # 'mixture_mse_db': (self.linear_mixture_true, linear_mixture),
                 # 'mixture_sam': (self.linear_mixture_true, linear_mixture),
                 # 'mixture_log_volume': (linear_mixture,),
@@ -110,15 +128,18 @@ class ModelMetrics(MetricCollection):
         for key, value in metrics.items():
             print(f"\t{key} = {value}")
 
-    def unmix(self, latent_sample, model, latent_dim):
+    def unmix(self, latent_sample, model):
         if model.unmixing:
-            unmixing_model = getattr(model_package, model.unmixing).Model
+            latent_dim = latent_sample.size(-1)
+            unmixing_model = getattr(model_package, model.unmixing.upper()).Model
             unmixing = unmixing_model(
-                observed_dim=model.observed_dim,
                 latent_dim=latent_dim,
                 dataset_size=model.trainer.datamodule.dataset_size,
             )
-            latent_sample = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
-            mixing_matrix = unmixing.fit(latent_sample.squeeze().cpu().detach())[0]
+            latent_sample, mixing_matrix = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
+
+            # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
+            # unmixing.plot_mse_image(rows=100, cols=10)
+
             return latent_sample, mixing_matrix
         return latent_sample, model.decoder.linear_mixture.matrix

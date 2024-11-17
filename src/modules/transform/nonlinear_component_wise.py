@@ -43,6 +43,8 @@ class Network(nn.Module):
                 # 0.4 * torch.exp(x)
             ]
             x = func(x)[coefficient]
+        elif self.model == 'linear':
+            x = x
         return x
 
     def inverse(self, y, tol=1e-6, max_iter=10000):

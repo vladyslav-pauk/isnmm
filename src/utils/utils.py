@@ -2,6 +2,8 @@ import argparse
 import hashlib
 import warnings
 import numpy as np
+import os
+import shutil
 
 
 def logging_setup():
@@ -98,6 +100,13 @@ def format_string(s):
     if 'Db' in s:
         s = s.replace('Db', 'dB')
     return s
+
+
+def clean_up(experiment):
+    path_to_remove = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)).split('src')[0], f"experiments/{experiment}/nisca")
+    if os.path.exists(path_to_remove):
+        shutil.rmtree(path_to_remove, ignore_errors=False)
 
 
 # log_format = "%(asctime)s - %(levelname)s - %(message)s"

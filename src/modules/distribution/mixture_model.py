@@ -33,7 +33,7 @@ class GenerativeModel:  # (Distribution)
         if self.seed:
             seed_everything(self.seed, workers=True)
 
-        self.nonlinearity = config["nonlinearity"]
+        self.nonlinearity = config["data_model"]
         self.degree = config["degree"]
         self.snr_db = config["snr"]
         self.sigma = None

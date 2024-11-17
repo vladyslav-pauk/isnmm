@@ -1,9 +1,9 @@
 {
   "degree": null,
   "scale": 5,
+  "data_model": "cnae",
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
-  "nonlinearity": "cnae",
   "observed_dim": 3,
   "latent_dim": 3,
   "snr": 25,

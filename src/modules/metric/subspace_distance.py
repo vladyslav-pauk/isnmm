@@ -43,9 +43,8 @@ class SubspaceDistance(torchmetrics.Metric):
         return best_perm
 
     def compute(self):
-        # Combine all subspace distances and compute their mean
         if len(self.subspace_distances) > 0:
             subspace_dist_tensor = torch.cat(self.subspace_distances)
             return torch.mean(subspace_dist_tensor)
         else:
-            return torch.tensor(0.0)  # Return 0 if no data has been accumulated
+            return torch.tensor(0.0)

@@ -174,9 +174,9 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
     })
 
     num_components = kwargs[list(kwargs.keys())[0]][0].shape[-1]
-    n_cols = 3
-    n_rows = 1
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 5 * n_rows))
+    n_cols = 3 + 1e-5
+    n_rows = int(num_components // n_cols) + 1
+    fig, axes = plt.subplots(n_rows, int(n_cols), figsize=(5 * n_cols, 5 * n_rows))
     axes = axes.flatten()
     markers = ['o', 'o']
 

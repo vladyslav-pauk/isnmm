@@ -6,7 +6,7 @@ from src.utils.utils import logging_setup, tabulate_dict
 from src.helpers.sweep_analyzer import SweepAnalyzer
 
 
-def analyze_sweep(experiment, sweep_id, metric, covariate, comparison, save=True, save_dir=None):
+def analyze_sweep(experiment, sweep_id, metric=None, covariate=None, comparison=None, save=True, save_dir=None):
     try:
         analyzer = SweepAnalyzer(experiment, sweep_id)
     except FileNotFoundError as e:
@@ -18,7 +18,7 @@ def analyze_sweep(experiment, sweep_id, metric, covariate, comparison, save=True
     analyzer.plot_metric(averaged_data, save=save, save_dir=save_dir)
 
     if save:
-        analyzer.save_comparison_data(save_dir=save_dir, metric=metric, covariate=covariate, comparison=comparison)
+        analyzer.save_comparison_data(save_dir=save_dir)
 
     project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
     metrics_path = f"{project_root}experiments/{experiment}/results/sweep-{sweep_id}/sweep_data.json"
@@ -43,7 +43,7 @@ def analyze_sweep(experiment, sweep_id, metric, covariate, comparison, save=True
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "m46bou5w"
+    sweep_id = "am53vx1r"
     logging_setup()
     login_wandb(experiment)
 

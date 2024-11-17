@@ -8,8 +8,8 @@ from src.helpers.run_analyzer import RunAnalyzer
 from src.utils.utils import logging_setup
 
 
-def load_model(run_id, model_name, experiment_name):
-    module = getattr(model_package, model_name.upper())
+def load_model(run_id, experiment_name):
+
     checkpoints_dir = f"../experiments/{experiment_name}/checkpoints/{run_id}/"
     checkpoint_files = [f for f in os.listdir(checkpoints_dir) if f.endswith(".ckpt")]
 
@@ -20,6 +20,7 @@ def load_model(run_id, model_name, experiment_name):
     checkpoint = torch.load(best_model_path)
     config = checkpoint["hyper_parameters"]
 
+    module = getattr(model_package, config['model_name'].upper())
     encoder = module.Encoder(config=config['encoder'])
     decoder = module.Decoder(config=config['decoder'])
     encoder.construct(latent_dim=config['data_config']['latent_dim'],
@@ -43,53 +44,37 @@ def load_model(run_id, model_name, experiment_name):
     return model, config
 
 
-def predict(experiment, model_name, run_id):
+def predict(experiment, run_id):
     os.environ["EXPERIMENT"] = experiment
     os.environ["RUN_ID"] = run_id
 
     logging_setup()
-    model, config = load_model(run_id, model_name, experiment)
+    model, config = load_model(run_id, experiment)
 
     torch.manual_seed(config['torch_seed'])
     trainer = Trainer(**config['trainer'], logger=False)
     datamodule = DataModule(config['data_config'], **config['data_loader'])
     trainer.predict(model, datamodule)
-    return model
+    return model, datamodule
 
 
 def plot_training_history(model):
-    analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
+    try:
+        analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
+    except FileNotFoundError as e:
+        print(e)
+        return
     analyzer.plot_training_history(metric_key='validation_loss')
     for metric in model.metrics.metrics_list:
         analyzer.plot_training_history(metric_key=metric)
 
 
 if __name__ == "__main__":
-    model = predict("synthetic_data", 'nisca', "he5knkb8")
+    model, datamodule = predict(
+        "synthetic_data", "64ru5z6i")
     plot_training_history(model)
 
-    # fixme: latent sam and angle
-    # fixme: unmixing plots
-
-    # base_model = 'MVES'
-    # datamodule.prepare_data()
-    # datamodule.setup()
-    # observed_data, latent_data = datamodule.observed_sample, datamodule.latent_sample
-    # with torch.no_grad():
-    #     latent_sample_mixed = model(observed_data)['reconstructed_sample'].mean(0)
-    #     linear_mixture = model.decoder.linear_mixture.matrix.cpu().detach()
-    # linear_mixture_true = datamodule.linear_mixture
-    # latent_sample_true = latent_data
-    #
-    # unmixing_model = getattr(model_package, base_model).Model
-    # unmixing = unmixing_model(observed_dim=observed_data.size(-1), latent_dim=latent_data.size(-1), dataset_size=observed_data.size(0))
-    # latent_sample = unmixing.estimate_abundances(latent_sample_mixed)
-    #
-    # print("Mean SAM Endmembers: {}\nMean SAM Abundances: {}".format(*unmixing.compute_metrics(linear_mixture, latent_sample, latent_sample_true)))
-
-    # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
-    # unmixing.plot_mse_image(rows=100, cols=100)
-
+# todo: unmixing plots
 # todo: kl and reconstruction plots
 # task: load config from the loaded model snapshot wandb
 # task: hyperparameters (configs) not saved to checkpoints

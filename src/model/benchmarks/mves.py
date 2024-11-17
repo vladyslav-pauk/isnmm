@@ -8,12 +8,11 @@ from src.utils.matrix_tools import kmeans_torch, match_components, spectral_angl
 
 
 class Model:
-    def __init__(self, observed_dim, latent_dim, dataset_size):
-        self.observed_dim = observed_dim
+    def __init__(self, latent_dim, dataset_size):
         self.latent_dim = latent_dim
         self.dataset_size = dataset_size
-        self.device = torch.device('cpu')
 
+        self.device = torch.device('cpu')
         self.linear_mixture_est = None
 
     def fit(self, x):
@@ -63,7 +62,7 @@ class Model:
         s_tilde = H @ x_projected.T - g[:, None]
         s_last = 1 - s_tilde.sum(dim=0, keepdim=True)
         s_est = torch.cat((s_tilde, s_last), dim=0).T
-        return torch.clamp(s_est, min=0)
+        return torch.clamp(s_est, min=0), self.linear_mixture_est
 
     # def estimate_abundances(self, latent_sample_mixed):
     #     linear_mixture_est, _, _, _, _ = self.fit(latent_sample_mixed)
@@ -95,17 +94,19 @@ class Model:
     #     self.s_est = self.s_est / sums
     #     return self.s_est
 
-    def compute_metrics(self, linear_mixture_true, latent_sample_true, latent_sample):
+    def compute_metrics(self, linear_mixture_true, linear_mixture, latent_sample_true, latent_sample):
         self.latent_sample_true = latent_sample_true
-        self.linear_mixture_est_matched, self.s_est_matched = match_components(linear_mixture_true, self.linear_mixture_est, latent_sample)
+        self.s_est_matched, self.linear_mixture_est_matched = match_components(latent_sample_true, latent_sample, linear_mixture)
 
         self.mean_sam_linear_mixture = spectral_angle_mapper(linear_mixture_true, self.linear_mixture_est_matched)
+
         # from src.modules.metric.spectral_angle import SpectralAngle
         # sam = SpectralAngle()
         # sam.update(self.linear_mixture_est_matched, linear_mixture_true)
         # self.mean_sam_linear_mixture = sam.compute()
-        print(f"Mean SAM (Endmembers): "
-              f"{self.mean_sam_linear_mixture.item() * 180 / np.pi:.2f} degrees")
+
+        # print(f"Mean SAM (Endmembers): "
+        #       f"{self.mean_sam_linear_mixture.item() * 180 / np.pi:.2f} degrees")
 
         self.mean_sam_latent_sample = spectral_angle_mapper(latent_sample_true.T, self.s_est_matched.T)
         print(f"Mean SAM (Abundances): "
@@ -226,7 +227,7 @@ if __name__ == '__main__':
 
     model = Model(M, N, L)
 
-    latent_sample = model.estimate_abundances(X)
+    latent_sample, mixing_matrix = model.estimate_abundances(X)
     model.compute_metrics(A_true, abundances_true, latent_sample)
 
     # model.plot_mse_image(rows=100, cols=100)
