@@ -43,7 +43,7 @@ def analyze_sweep(experiment, sweep_id, metric=None, covariate=None, comparison=
 
 if __name__ == "__main__":
     experiment = "synthetic_data"
-    sweep_id = "xndqzjeq"
+    sweep_id = "1s395afn"
     logging_setup()
     login_wandb(experiment)
 

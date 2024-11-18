@@ -91,6 +91,14 @@ def font_style():
     return font
 
 
+def deep_update_dict(target, source):
+    for key, value in source.items():
+        if isinstance(value, dict) and key in target and isinstance(target[key], dict):
+            deep_update_dict(target[key], value)
+        else:
+            target[key] = value
+
+
 def format_string(s):
     s = s.replace('_', ' ').title()
     abbr = ['Snr', 'Mse', 'Sam', 'Vasca', 'Nisca', 'Snae', 'Cnae']

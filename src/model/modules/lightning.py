@@ -104,7 +104,7 @@ class Module(LightningModule):
         else:
             labels = None
         validation_loss = {"validation_loss": sum(self._loss_function(data, self(data), idxes).values())}
-        self.metrics._update(data, self(data), labels, idxes, self)
+        self.metrics.update(data, self(data), labels, idxes, self)
         self.log_dict({**validation_loss, **self.metrics.compute()})
 
     def on_test_start(self):
@@ -121,7 +121,7 @@ class Module(LightningModule):
         else:
             labels = None
         model_outputs = self(data)
-        self.metrics._update(data, model_outputs, labels, idxes, self)
+        self.metrics.update(data, model_outputs, labels, idxes, self)
 
     def on_test_end(self) -> None:
         final_metrics = self.metrics.compute()
@@ -141,7 +141,7 @@ class Module(LightningModule):
         else:
             labels = None
         model_outputs = self(data)
-        self.metrics._update(data, model_outputs, labels, idxes, self)
+        self.metrics.update(data, model_outputs, labels, idxes, self)
 
     def on_predict_end(self) -> None:
         final_metrics = self.metrics.compute()

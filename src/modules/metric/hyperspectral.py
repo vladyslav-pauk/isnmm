@@ -57,16 +57,17 @@ class Hyperspectral(torchmetrics.Metric):
         plt.rcParams.update({
             "text.usetex": True,
             "font.family": ["Computer Modern Roman"],
-            "font.serif": ["Computer Modern Roman"],  # Default LaTeX font
-            "axes.labelsize": 20,  # Label font size
-            "font.size": 20,  # General font size
-            "legend.fontsize": 18,  # Legend font size
-            "xtick.labelsize": 16,  # Tick label font size
-            "ytick.labelsize": 16,  # Tick label font size
-            "figure.dpi": 300,  # Increase figure resolution
-            "savefig.dpi": 300,  # Save figure resolution
-            "text.latex.preamble": r"\usepackage{amsmath}"  # Enable AMS math symbols
+            "font.serif": ["Computer Modern Roman"],
+            "axes.labelsize": 20,
+            "font.size": 20,
+            "legend.fontsize": 18,
+            "xtick.labelsize": 16,
+            "ytick.labelsize": 16,
+            "figure.dpi": 300,
+            "savefig.dpi": 300,
+            "text.latex.preamble": r"\usepackage{amsmath}"
         })
+        # fixme: define once for all project
 
         if len(plot_data) == 1:
             rows = (channels + 2) // 3
@@ -80,10 +81,9 @@ class Hyperspectral(torchmetrics.Metric):
                 col = i % 3
                 component = data[i].cpu().numpy()
                 axs[row, col].imshow(component, cmap='viridis')
-                axs[row, col].set_title(f'{key.replace("_", ' ').capitalize()} {i}')
+                axs[row, col].set_title(f'{key.replace("_", ' ').capitalize()} {i+1}')
                 axs[row, col].axis('off')
 
-            # fig.subplots_adjust(left=0.1, right=0.98, top=0.92, bottom=0.1)
             plt.tight_layout()
             if self.show_plot:
                 plt.show()
@@ -104,7 +104,7 @@ class Hyperspectral(torchmetrics.Metric):
                     component = data[comp_idx].cpu().numpy()
 
                     axs[idx].imshow(component, cmap='viridis')
-                    axs[idx].set_title(f'{key.replace("_", " ").capitalize()} {comp_idx}')
+                    axs[idx].set_title(f'{key.replace("_", " ").capitalize()} {comp_idx+1}')
                     axs[idx].axis('off')
 
                 plt.tight_layout()
@@ -117,7 +117,7 @@ class Hyperspectral(torchmetrics.Metric):
                     print(
                         f"Saved {', '.join(list(plot_data.keys()))} component {comp_idx} image to '{dir}/{key}_component_{comp_idx}.png'")
 
-            plt.close()
+                plt.close()
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@ import json
 import wandb
 
 
+from src.utils.utils import deep_update_dict
 from src.utils.wandb_tools import init_run, fetch_wandb_sweep
 from src.helpers.generate_data import initialize_data_model
 
@@ -40,13 +41,6 @@ class Sweep:
 
         return sweep_data
 
-    def deep_update_dict(self, target, source):
-        for key, value in source.items():
-            if isinstance(value, dict) and key in target and isinstance(target[key], dict):
-                self.deep_update_dict(target[key], value)
-            else:
-                target[key] = value
-
     def save_data(self, sweep_data):
         save_dir = f"../experiments/{self.experiment}/results/sweep-{self.id}"
         if not os.path.exists(save_dir):
@@ -61,7 +55,7 @@ class Sweep:
 
         for key, value in sweep_data.items():
             if key in existing_data:
-                self.deep_update_dict(existing_data[key], value)
+                deep_update_dict(existing_data[key], value)
             else:
                 existing_data[key] = value
 

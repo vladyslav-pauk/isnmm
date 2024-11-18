@@ -1,11 +1,11 @@
-from src.helpers.trainer import train_model
 from src.utils.config_tools import load_sweep_config
 from src.utils.utils import sweep_parser
-from src.helpers.sweep_runner import Sweep
-
-from analyze_sweep import analyze_sweep
 from src.utils.wandb_tools import login_wandb
 from src.utils.utils import logging_setup, clean_up
+
+from src.helpers.sweep_runner import Sweep
+from src.helpers.trainer import train_model
+from analyze_sweep import analyze_sweep
 from src.scripts.explore_model import predict, plot_training_history
 
 
@@ -26,16 +26,13 @@ if __name__ == '__main__':
     _, data = analyze_sweep(
         experiment, sweep.id, metric='validation_loss', covariate='snr', comparison='model_name', save=True)
 
-    show_plots = False
+    show_plots = True
     if show_plots:
-        model = next(iter(data['run_ids']))
-        run_id = data['run_ids'][model][0]
-        model, _ = predict(experiment, model, run_id)
+        run_id = data['run_ids'][next(iter(data['run_ids']))][0]
+        model, _ = predict(experiment, run_id)
         plot_training_history(model)
-        # todo: instead of this just pass show_plot = True in test_run config (too complicated)
+        # todo: use latest run here
 
     clean_up(experiment)
 
-
 # todo: discard run, if metrics is below threshold (-10 positive mse_db)
-# task: latent_sample contains nans -> skip

@@ -54,10 +54,7 @@ def _setup_model(config, logger):
 
     metrics_module = getattr(exp_module, logger._project)
     metrics = metrics_module.ModelMetrics(
-        monitor=config['metric']['name'],
-        show_plot=True,
-        log_plot=False,
-        save_plot=True
+        monitor=config['metric']['name']
     )
 
     model = model_module.Model(

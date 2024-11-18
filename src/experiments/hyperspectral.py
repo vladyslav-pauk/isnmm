@@ -40,7 +40,7 @@ class ModelMetrics(MetricCollection):
         super().__init__(metrics)
         return metrics
 
-    def _update(self, observed_sample, model_output, labels, idxes, model):
+    def update(self, observed_sample, model_output, labels, idxes, model):
         metric_updates = {
             'denoising': {
                 "noiseless": observed_sample,#labels['noiseless_sample'],
@@ -96,6 +96,9 @@ class ModelMetrics(MetricCollection):
         # for key, value in metrics.items():
         #     print(f"\t{key} = {value}")
 
-# fixme: plot all components in one for abundances,
-#  and all kwargs for each component for reconstructed (noiseless, reconstructed, noisy)
+# fixme: fill in right data for plots
+# fixme: implement partially labeled metric:
+#  (some data points are clear 1 material), find appropriate image
 # fixme: save metrics data to files
+# todo: where is split dataset used?
+# fixme: rec and kl save too

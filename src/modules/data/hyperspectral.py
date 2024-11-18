@@ -61,9 +61,9 @@ class DataModule(LightningDataModule):
         return DataLoader(self.dataset, batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers)
 
     def predict_dataloader(self):
-        return DataLoader(self.dataset, batch_size=len(self.dataset), shuffle=False, num_workers=self.num_workers)
+        return DataLoader(self.dataset, batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers)
 
-    def plot_side_by_side(self, layer_index=0, **kwargs):
+    def plot(self, layer_index=0, **kwargs):
         datasets = list(kwargs.values())
         names = list(kwargs.keys())
         height, width = datasets[0].shape[1], datasets[0].shape[2]
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     original_data = data_module.noisy_data
     processed_data = data_module.transform.unflatten(data_module.transform(original_data))
 
-    data_module.plot_side_by_side(layer_index=0, original_data=original_data, processed_data=processed_data)
+    data_module.plot(layer_index=0, original_data=original_data, processed_data=processed_data)
 
     # print(f"Dataset size: {len(data_module.dataset)}")
     # for batch in data_module.train_dataloader():
