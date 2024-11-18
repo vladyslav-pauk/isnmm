@@ -21,7 +21,7 @@ parameters:
   dataset_size:
     - 100
   snr:
-    - 40
+    - 20
   model.sigma:
     - 0.1
   decoder.hidden_layers:

@@ -2,6 +2,12 @@
   "degree": null,
   "scale": 5,
   "data_model": "cnae",
+  "metrics": [
+    "subspace_distance",
+    "r_square",
+    "latent_mse",
+    "latent_sam"
+  ],
   "mixing_matrix_init": "normal_",
   "nonlinear_transform_init": null,
   "observed_dim": 3,

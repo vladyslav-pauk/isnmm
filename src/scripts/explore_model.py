@@ -73,7 +73,7 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "nrza4fk7")
+        "hyperspectral", "4oennog9")
     plot_training_history(model)
 
 # todo: unmixing plots

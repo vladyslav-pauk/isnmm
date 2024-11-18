@@ -15,7 +15,7 @@ def analyze_sweep(experiment, sweep_id, metric=None, covariate=None, comparison=
 
     data = analyzer.extract_metrics(metric=metric, covariate=covariate, comparison=comparison)
     averaged_data = analyzer.average_seeds(data)
-    analyzer.plot_metric(averaged_data, save=save, save_dir=save_dir)
+    analyzer.plot_metric(averaged_data, save=save, show=save, save_dir=save_dir)
 
     if save:
         analyzer.save_comparison_data(save_dir=save_dir)
@@ -42,16 +42,19 @@ def analyze_sweep(experiment, sweep_id, metric=None, covariate=None, comparison=
 
 
 if __name__ == "__main__":
-    experiment = "synthetic_data"
-    sweep_id = "1s395afn"
+    experiment = "hyperspectral"
+    sweep_id = "ki40kvzm"
     logging_setup()
     login_wandb(experiment)
 
+    # metrics_to_analyze = [
+    #     ("subspace_distance", "snr"),
+    #     ("validation_loss", "dataset_size"),
+    #     ("latent_mse", "latent_dim"),
+    #     ("_runtime", "dataset_size")
+    # ]
     metrics_to_analyze = [
-        ("subspace_distance", "snr"),
-        ("validation_loss", "dataset_size"),
-        ("latent_mse", "latent_dim"),
-        ("_runtime", "dataset_size")
+        ("psnr", "snr")
     ]
 
     for metric, covariate in metrics_to_analyze:
@@ -63,9 +66,9 @@ if __name__ == "__main__":
 # todo: unique definition of run path for all calls via wandb tools
 # todo: fix directories, run from project root, define all in utils file (enviroment variables?)
 
-# fixme: instead of h1, h2, ... use depth and width, make both, if not depth, width read h1, h2...
-# fixme: run analyze sweep in the sweep_run, run explore_model best for hyperparameter search
-# fixme: min 1500 epochs, set in config
+# todo: instead of h1, h2, ... use depth and width, make both, if not depth, width read h1, h2...
+# todo: run analyze sweep in the sweep_run, run explore_model best for hyperparameter search
+# todo: min 1500 epochs, set in config
 
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)

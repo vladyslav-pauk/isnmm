@@ -72,7 +72,7 @@ class SweepAnalyzer:
 
         return formatted_data
 
-    def plot_metric(self, averaged_data, save=True, save_dir=None):
+    def plot_metric(self, averaged_data, save=True, show=False, save_dir=None):
         font = font_style()
         plt.rc('font', **font)
 
@@ -99,7 +99,10 @@ class SweepAnalyzer:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             save_dir = save_dir or f'experiments/{self.experiment}/results/sweep-{self.sweep_id}'
             plt.savefig(os.path.join(project_root, save_dir, f"{metric_name}-{covariate_name}.png"))
-            print(f"Saved plot to {os.path.join(project_root, save_dir, f'{metric_name}-{covariate_name}.png')}")
+            print(f"Saved {metric_name} vs {covariate_name} plot to {os.path.join(project_root, save_dir, f'{metric_name}-{covariate_name}.png')}")
+
+        if show:
+            plt.show()
 
         plt.close()
 

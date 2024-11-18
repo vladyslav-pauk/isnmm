@@ -1,6 +1,9 @@
 {
   "scale": 5,
   "data_model": "convolution",
+  "metrics": [
+    "psnr"
+  ],
   "observed_dim": 10,
   "latent_dim": 3,
   "nonlinear_transform_init": null,

@@ -69,14 +69,16 @@ class Hyperspectral(torchmetrics.Metric):
         })
         # fixme: define once for all project
 
+        key, data = next(iter(plot_data.items()))
+        num_components = data.shape[-1]
+        data = data.view(num_components, height, width)
+        rows = (num_components + 2) // 3
+
         if len(plot_data) == 1:
-            rows = (channels + 2) // 3
             fig, axs = plt.subplots(rows, 3, figsize=(9, 4.5 * rows), dpi=300)
             axs = np.atleast_2d(axs)
 
-            key, data = next(iter(plot_data.items()))
-            data = data.view(channels, height, width)
-            for i in range(channels):
+            for i in range(num_components):
                 row = i // 3
                 col = i % 3
                 component = data[i].cpu().numpy()
@@ -95,12 +97,12 @@ class Hyperspectral(torchmetrics.Metric):
             plt.close()
 
         else:
-            for comp_idx in range(channels):
+            for comp_idx in range(num_components):
                 fig, axs = plt.subplots(1, len(plot_data), figsize=(3 * len(plot_data), 4.5), dpi=300)
                 axs = np.atleast_1d(axs)
 
                 for idx, (key, data) in enumerate(plot_data.items()):
-                    data = data.view(channels, height, width)
+                    data = data.view(num_components, height, width)
                     component = data[comp_idx].cpu().numpy()
 
                     axs[idx].imshow(component, cmap='viridis')

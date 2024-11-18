@@ -7,6 +7,7 @@ from .matrix_volume import MatrixVolume as MatrixVolume
 from .matrix_change import MatrixChange as MatrixChange
 from .constraint_error import ConstraintError as ConstraintError
 from .hyperspectral import Hyperspectral as Hyperspectral
+from .psnr import PSNR as PSNR
 
 # task: check these
 # def mse_matrix_db(A0, A_hat):
