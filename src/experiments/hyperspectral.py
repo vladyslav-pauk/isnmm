@@ -23,18 +23,18 @@ class ModelMetrics(MetricCollection):
         self.metrics_list = metrics_list
         dims = self.true_model.transform.unflatten(self.true_model.dataset.data).shape
         all_metrics = {
-            # 'reconstruction': metric.Hyperspectral(
-            #     image_dims=dims,
-            #     show_plot=self.show_plot,
-            #     log_plot=self.log_plot,
-            #     save_plot=self.save_plot
-            # ),
-            # 'abundance': metric.Hyperspectral(
-            #     image_dims=dims,
-            #     show_plot=self.show_plot,
-            #     log_plot=self.log_plot,
-            #     save_plot=self.save_plot
-            # ),
+            'reconstruction': metric.Hyperspectral(
+                image_dims=dims,
+                show_plot=self.show_plot,
+                log_plot=self.log_plot,
+                save_plot=self.save_plot
+            ),
+            'abundance': metric.Hyperspectral(
+                image_dims=dims,
+                show_plot=self.show_plot,
+                log_plot=self.log_plot,
+                save_plot=self.save_plot
+            ),
             'psnr': metric.PSNR(
                 image_dims=dims,
                 show_plot=self.show_plot,
@@ -53,19 +53,19 @@ class ModelMetrics(MetricCollection):
 
     def update(self, observed_sample, model_output, labels, idxes, model):
         metric_updates = {
-            # 'reconstruction': {
-            #     "noiseless": labels['noiseless_data'],
-            #     "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
-            #     "noisy": observed_sample,
-            #     # "noise": model_output['reconstructed_sample'].std(dim=0) if model_output['reconstructed_sample'].shape[0] > 1 else model.sigma,
-            #     "mse": ((model_output['reconstructed_sample'] - labels['noiseless_data']) ** 2).mean(dim=0)
-            # },
-            # 'abundance': {
-            #     "abundance": model_output['latent_sample'].mean(dim=0),
-            #     "noise": model.transform(model_output['posterior_parameterization'][1])
-            #     # if model_output['latent_sample'].shape[0] == 1
-            #     # else model_output['latent_sample'].std(dim=0),
-            # },
+            'reconstruction': {
+                "noiseless": labels['noiseless_data'],
+                "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
+                "noisy": observed_sample,
+                # "noise": model_output['reconstructed_sample'].std(dim=0) if model_output['reconstructed_sample'].shape[0] > 1 else model.sigma,
+                "mse": ((model_output['reconstructed_sample'] - labels['noiseless_data']) ** 2).mean(dim=0)
+            },
+            'abundance': {
+                "abundance": model_output['latent_sample'].mean(dim=0),
+                "noise": model.transform(model_output['posterior_parameterization'][1])
+                # if model_output['latent_sample'].shape[0] == 1
+                # else model_output['latent_sample'].std(dim=0),
+            },
             'psnr': {
                 "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
                 "target": labels['noiseless_data']
