@@ -60,13 +60,13 @@ def predict(experiment, run_id):
     return model, datamodule
 
 
-def plot_training_history(model, metric_key='validation_loss'):
+def plot_training_history(model, metrics=None):
     try:
         analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
     except FileNotFoundError as e:
         print(e)
         return
-    analyzer.plot_training_history(metric_key=metric_key)
+    analyzer.plot_training_history()
     for metric in model.metrics.metrics_list:
         analyzer.plot_training_history(metric_key=metric)
 
@@ -85,9 +85,7 @@ if __name__ == "__main__":
         ("psnr", "snr")
     ]
 
-    plot_training_history(model)
-    for metric, covariate in metrics_to_analyze:
-        plot_training_history(model, metric_key=metric)
+    plot_training_history(model, metrics=metrics_to_analyze)
 
 # todo: unmixing plots
 # todo: kl and reconstruction plots

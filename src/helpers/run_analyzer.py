@@ -77,7 +77,7 @@ class RunAnalyzer:
             json.dump(extracted_data, f, indent=4)
         print(f"Saved run summary to {os.path.join(save_dir, summary_file_name)}")
 
-    def plot_training_history(self, metric_key="latent_mse"):
+    def plot_training_history(self, metric_key="validation_loss"):
         if self.run_data and "data" in self.run_data and metric_key in self.run_data["data"]:
             metric_values = np.array(self.run_data["data"][metric_key])
             steps = np.array(self.run_data["data"].get("_step", range(len(metric_values))))
