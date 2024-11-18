@@ -24,11 +24,11 @@ class PSNR(torchmetrics.Metric):
 
     def compute(self):
         psnr_avg = torch.mean(torch.stack(self.psnr_values))
-        self.plot_data({"psnr": self.psnr_values})
+        self.plot({"psnr": self.psnr_values})
         self.psnr_values.clear()
         return psnr_avg
 
-    def plot_data(self, plot_data):
+    def plot(self, plot_data):
         channels, height, width = self.image_dims
 
         num_components = next(iter(plot_data.values()))[0].shape[-1]

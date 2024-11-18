@@ -96,7 +96,7 @@ class Module(LightningModule):
         self.metrics.log_plots = False
         self.metrics.show_plots = False
         self.metrics.save_plot = False
-        # self.metrics.setup_metrics(metrics_list=[])
+        self.metrics.setup_metrics(metrics_list=[])
 
     def validation_step(self, batch, batch_idx):
         data, idxes = batch["data"], batch["idxes"]

@@ -73,7 +73,7 @@ def plot_training_history(model, metric_key='validation_loss'):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "0x3f71rx")
+        "hyperspectral", "1s6ltw2e")
 
     # metrics_to_analyze = [
     #     ("subspace_distance", "snr"),

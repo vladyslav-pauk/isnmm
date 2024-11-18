@@ -21,16 +21,17 @@ class Hyperspectral(torchmetrics.Metric):
         self.state_dict = {}
 
     def update(self, **kwargs):
-        for key, value in kwargs.items():
-            if key not in self.state_dict:
-                self.state_dict[key] = []
-            self.state_dict[key].append(value.clone().detach().cpu())
+        pass
+        # for key, value in kwargs.items():
+            # if key not in self.state_dict:
+            #     self.state_dict[key] = []
+            # self.state_dict[key].append(value.clone().detach().cpu())
 
     def compute(self):
         plot_data = {key: torch.cat(val, dim=0) for key, val in self.state_dict.items() if key != 'labels'}
-        self.plot_data(plot_data)
+        # self.plot_data(plot_data)
         self.state_dict.clear()
-        return {}
+        return torch.tensor([0.0])
 
     # def plot_data(self, plot_data):
     #     channels, height, width = self.image_dims
