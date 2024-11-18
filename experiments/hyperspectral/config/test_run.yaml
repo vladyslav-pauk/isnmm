@@ -1,40 +1,38 @@
 method: grid
 metric:
   goal: minimize
-  name: latent_mse
+  name: validation_loss
 parameters:
-  experiment_name: synthetic_data
+  experiment_name: hyperspectral
   data_model:
-    - cnae
+    - convolution
   model_name:
-    - nisca
-    - cnae
     - vasca
   trainer.max_epochs:
-    - 2000
-  batch_size:
-    - 100
+    - 10
+  early_stopping.min_delta:
+    - 1e-3
+  data_loader.batch_size:
+    - 1000
   observed_dim:
-    - 3
-  latent_dim:
+    - 6
+  model.latent_dim:
     - 3
   dataset_size:
-    - 1000
-    - 5000
-    - 10000
+    - 100
   snr:
-    - 30
+    - 40
+  model.sigma:
+    - 0.1
   decoder.hidden_layers:
     - h1: 128
   encoder.hidden_layers:
-    - h1: 128
+    - h1: 256
+      h2: 256
+      h3: 256
   model.mc_samples:
       - 1
   torch_seed:
-      - 17
-      - 12
-      - 2
-      - 42
-      - 7
+      - 1
   data_seed:
       - 12

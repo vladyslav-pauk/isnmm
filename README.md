@@ -27,10 +27,10 @@ python train.py --config experiments/{experiment_name}/model_config.json
 
 ### Scripts
 
-Run evaluate.py to evaluate a model with a specific config file.
+Run run_sweep.py to train a model with a specific config file.
 
 ```bash
-python evaluate.py --config experiments/{experiment_name}/model_config.json
+python run_sweep.py ....
 ```
 
 Run schedule.py to schedule a model with a specific config file.

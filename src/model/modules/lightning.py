@@ -91,10 +91,9 @@ class Module(LightningModule):
             self.zero_grad()
 
     def setup(self, stage=None):
-        if stage == 'fit' or stage is None:
+        if stage == 'fit' or stage == 'predict' or stage is None:
             datamodule = self.trainer.datamodule
             data_sample = next(iter(datamodule.train_dataloader()))
-
             self.observed_dim = data_sample["data"].shape[1]
 
             if "labels" in data_sample.keys():
@@ -117,7 +116,7 @@ class Module(LightningModule):
             self.encoder.construct(self.latent_dim, self.observed_dim)
             self.decoder.construct(self.latent_dim, self.observed_dim)
 
-            self.metrics.true_model = datamodule
+            self.metrics.true_model = self.trainer.datamodule
 
     def on_train_start(self) -> None:
         if self.metrics.log_wandb:
@@ -127,23 +126,19 @@ class Module(LightningModule):
                     wandb.define_metric(name=metric_name, summary='max')
 
     def on_test_start(self):
-        self.metrics.metrics_list = []
-        self.metrics.true_model = self.trainer.datamodule
-        self.metrics._setup_metrics()
+        self.metrics.init_metrics(metrics_list=[])
 
         self.metrics.show_plots = False
         self.metrics.log_plots = False
         self.metrics.save_plots = False
 
     def on_predict_start(self) -> None:
+        self.metrics.init_metrics(metrics_list=[])
+
         self.metrics.log_wandb = False
         self.metrics.show_plots = True
         self.metrics.save_plots = True
         self.metrics.log_plots = False
-
-        self.metrics.metrics_list = []
-        self.metrics.true_model = self.trainer.datamodule
-        self.metrics._setup_metrics()
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])

@@ -30,6 +30,7 @@ def train_model(experiment_name, model_name, **kwargs):
     logger = _setup_logger(experiment_name, config, data_config, kwargs)
 
     datamodule = _setup_data_module(data_config, config["data_loader"], experiment_name)
+
     model = _setup_model(config, logger)
     trainer = _setup_trainer(config, logger)
 
@@ -52,7 +53,7 @@ def _setup_model(config, logger):
     decoder = model_module.Decoder(config=config['decoder'])
 
     metrics_module = getattr(exp_module, logger._project)
-    metrics = metrics_module.ModelMetrics(monitor=config['metric']['name']).eval()
+    metrics = metrics_module.ModelMetrics(monitor=config['metric']['name'])
 
     model = model_module.Model(
         encoder=encoder,

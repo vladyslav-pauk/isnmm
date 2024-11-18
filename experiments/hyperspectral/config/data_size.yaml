@@ -3,7 +3,7 @@ metric:
   goal: minimize
   name: latent_mse
 parameters:
-  experiment_name: synthetic_data
+  experiment_name: hyperspectral
   data_model:
     - cnae
   model_name:

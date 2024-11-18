@@ -3,29 +3,25 @@ metric:
   goal: minimize
   name: latent_mse
 parameters:
-  experiment_name: synthetic_data
+  experiment_name: synthetic
   data_model:
     - cnae
   model_name:
     - nisca
-    - cnae
-    - vasca
   trainer.max_epochs:
-    - 2000
-  early_stopping.patience:
-    - 10
-  batch_size:
-    - 100
+    - 10000
+  early_stopping.min_delta:
+    - 1e-3
+  data_loader.batch_size:
+    - 1000
   observed_dim:
-    - 3
+    - 6
   latent_dim:
     - 3
   dataset_size:
     - 10000
   snr:
     - 10
-    - 20
-    - 30
   decoder.hidden_layers:
     - h1: 128
   encoder.hidden_layers:
@@ -33,10 +29,6 @@ parameters:
   model.mc_samples:
       - 1
   torch_seed:
-      - 17
-      - 12
-      - 2
-      - 42
-      - 7
+      - 1
   data_seed:
       - 12

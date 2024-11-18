@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import matplotlib.pyplot as plt
@@ -16,33 +17,25 @@ class HyperspectralTransform(nn.Module):
 
     def forward(self, x):
         input_channels, height, width = x.shape
-        if self.output_channels is None:
-            self.output_channels = input_channels
+        self.input_channels = input_channels
         self.height = height
         self.width = width
+
+        if self.dataset_size:
+            x = self.crop_image(x)
+
+        if self.output_channels:
+            x = self.select_bands_with_highest_variance(x)
 
         if self.normalize:
             x = self.normalize_to_range(x)
 
-        if self.dataset_size:
-            self.crop_fraction = (self.dataset_size / height / width) ** 0.5
-            x = self.crop_image(x)
-
-        if self.output_channels is not None:
-            x = self.select_bands_with_highest_variance(x)
-
-        x = x.reshape(self.output_channels, -1)
+        x = self.flatten(x)
 
         return x
 
-    def backward(self, x):
-        flattened_size = self.height * self.width
-
-        if x.numel() != self.output_channels * flattened_size:
-            raise ValueError(
-                f"Cannot reshape tensor. Expected {self.output_channels * flattened_size} elements, but got {x.numel()}.")
-
-        x = x.view(self.output_channels, self.height, self.width)
+    def inverse(self, x):
+        x = self.unflatten(x)
 
         if self.normalize:
             x = self.inverse_normalize(x)
@@ -50,8 +43,9 @@ class HyperspectralTransform(nn.Module):
         return x
 
     def crop_image(self, x):
-        crop_height = int(self.height * self.crop_fraction)
-        crop_width = int(self.width * self.crop_fraction)
+        crop_pixels = int(self.dataset_size)
+        crop_height = int(np.sqrt(crop_pixels * self.height / self.width))
+        crop_width = crop_pixels // crop_height
         top = (self.height - crop_height) // 2
         left = (self.width - crop_width) // 2
         x = x[:, top:top + crop_height, left:left + crop_width]
@@ -60,11 +54,10 @@ class HyperspectralTransform(nn.Module):
         return x
 
     def select_bands_with_highest_variance(self, x):
-        if self.output_channels is not None:
-            band_variances = torch.var(x, dim=(1, 2))
-            _, selected_indices = torch.topk(band_variances, self.output_channels, largest=True)
-            x = x[selected_indices]
-        return x
+        band_variances = torch.var(x, dim=(1, 2))
+        k = self.output_channels if self.output_channels else x.shape[0]  # Default to input channels if not set
+        _, selected_indices = torch.topk(band_variances, k, largest=True)
+        return x[selected_indices]
 
     def normalize_to_range(self, tensor, min_val=0, max_val=1):
         self.min_val = torch.min(tensor)
@@ -76,24 +69,14 @@ class HyperspectralTransform(nn.Module):
             raise ValueError("Normalization parameters not set. Ensure forward normalization is applied first.")
         return tensor * (self.max_val - self.min_val) + self.min_val
 
-    def plot_image(self, x):
-        plt.imshow(x.numpy(), cmap='gray')
-        plt.axis('off')
-        plt.show()
+    def flatten(self, x):
+        return x.reshape(-1, x.size(0))
 
+    def unflatten(self, x):
+        return x.view(self.output_channels, self.height, self.width)
 
-if __name__ == "__main__":
-    torch.manual_seed(42)
-    data = 100 * torch.randn(300, 100, 100)
-
-    transform = HyperspectralTransform(output_channels=2, normalize=True, dataset_size=100)
-
-    print(f"Input: {data.shape}")
-    transformed_data = transform(data)
-    print(f"Transformed: {transformed_data.shape}")
-
-    reconstructed_data = transform.backward(transformed_data)
-    print(f"Reconstructed: {reconstructed_data.shape}")
-
-    transform.plot_image(data[0])
-    transform.plot_image(reconstructed_data[0])
+    def calculate_transformed_dimensions(self, height, width):
+        crop_pixels = int(self.dataset_size)
+        crop_height = int(np.sqrt(crop_pixels * height / width))
+        crop_width = crop_pixels // crop_height
+        return crop_height, crop_width

@@ -2,7 +2,7 @@ import os
 import torch
 from pytorch_lightning import Trainer
 import src.model as model_package
-from src.modules.data.synthetic import DataModule
+import src.modules.data as data_package
 import src.experiments as exp_module
 from src.helpers.run_analyzer import RunAnalyzer
 from src.utils.utils import logging_setup
@@ -53,7 +53,7 @@ def predict(experiment, run_id):
 
     torch.manual_seed(config['torch_seed'])
     trainer = Trainer(**config['trainer'], logger=False)
-    datamodule = DataModule(config['data_config'], **config['data_loader'])
+    datamodule = getattr(data_package, experiment).DataModule(config['data_config'], **config['data_loader'])
     trainer.predict(model, datamodule)
     return model, datamodule
 
@@ -71,7 +71,7 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral_unmixing", "j8e6dyc6")
+        "hyperspectral", "1e2etzer")
     plot_training_history(model)
 
 # todo: unmixing plots

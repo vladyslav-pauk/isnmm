@@ -10,18 +10,18 @@ import src.model as model_package
 
 
 class ModelMetrics(MetricCollection):
-    def __init__(self, true_model=None, monitor=None):
+    def __init__(self, monitor=None):
+        super().__init__([])
         self.metrics_list = [monitor]
         self.monitor = monitor
         self.show_plots = False
         self.log_plots = False
         self.log_wandb = True
         self.save_plots = False
-        self.true_model = true_model
+        self.true_model = None
 
-        self._setup_metrics()
-
-    def _setup_metrics(self):
+    def setup_metrics(self, metrics_list=None):
+        self.metrics_list = metrics_list
         all_metrics = {
             'subspace_distance': metric.SubspaceDistance(),
             'r_square': metric.ResidualNonlinearity(
