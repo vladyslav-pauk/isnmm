@@ -60,21 +60,34 @@ def predict(experiment, run_id):
     return model, datamodule
 
 
-def plot_training_history(model):
+def plot_training_history(model, metric_key='validation_loss'):
     try:
         analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
     except FileNotFoundError as e:
         print(e)
         return
-    analyzer.plot_training_history(metric_key='validation_loss')
+    analyzer.plot_training_history(metric_key=metric_key)
     for metric in model.metrics.metrics_list:
         analyzer.plot_training_history(metric_key=metric)
 
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "4oennog9")
+        "hyperspectral", "0x3f71rx")
+
+    # metrics_to_analyze = [
+    #     ("subspace_distance", "snr"),
+    #     ("validation_loss", "dataset_size"),
+    #     ("latent_mse", "latent_dim"),
+    #     ("_runtime", "dataset_size")
+    # ]
+    metrics_to_analyze = [
+        ("psnr", "snr")
+    ]
+
     plot_training_history(model)
+    for metric, covariate in metrics_to_analyze:
+        plot_training_history(model, metric_key=metric)
 
 # todo: unmixing plots
 # todo: kl and reconstruction plots

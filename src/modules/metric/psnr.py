@@ -59,8 +59,8 @@ class PSNR(torchmetrics.Metric):
             plt.show()
         if self.save_plot:
             dir = run_dir('predictions')
-            plt.savefig(f"{dir}/component_{comp_idx}.png", transparent=True, dpi=300)
-            print(f"Saved PSNR for component {comp_idx} image to '{dir}/component_{comp_idx}.png'")
+            plt.savefig(f"{dir}/psnr.png", transparent=True, dpi=300)
+            print(f"Saved PSNR images to '{dir}/psnr.png'")
 
         plt.close()
 

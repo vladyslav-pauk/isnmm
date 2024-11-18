@@ -43,7 +43,7 @@ def analyze_sweep(experiment, sweep_id, metric=None, covariate=None, comparison=
 
 if __name__ == "__main__":
     experiment = "hyperspectral"
-    sweep_id = "ki40kvzm"
+    sweep_id = "inermjg0"
     logging_setup()
     login_wandb(experiment)
 
