@@ -48,6 +48,8 @@ def predict(experiment, run_id):
     os.environ["EXPERIMENT"] = experiment
     os.environ["RUN_ID"] = run_id
 
+    print(f"Predicting for experiment {experiment} and run ID {run_id}")
+
     logging_setup()
     model, config = load_model(run_id, experiment)
 

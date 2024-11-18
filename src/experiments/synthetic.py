@@ -10,14 +10,14 @@ import src.model as model_package
 
 
 class ModelMetrics(MetricCollection):
-    def __init__(self, monitor=None):
+    def __init__(self, show_plot=False, log_plot=False, save_plot=False, monitor=None):
         super().__init__([])
         self.metrics_list = [monitor]
         self.monitor = monitor
-        self.show_plots = False
-        self.log_plots = False
+        self.show_plot = show_plot
+        self.save_plot = save_plot
+        self.log_plot = log_plot
         self.log_wandb = True
-        self.save_plots = False
         self.true_model = None
 
     def setup_metrics(self, metrics_list=None):
@@ -25,7 +25,7 @@ class ModelMetrics(MetricCollection):
         all_metrics = {
             'subspace_distance': metric.SubspaceDistance(),
             'r_square': metric.ResidualNonlinearity(
-                show_plot=self.show_plots, log_plot=self.log_plots, save_plot=self.save_plots
+                show_plot=self.show_plot, log_plot=self.log_plot, save_plot=self.save_plot
             ),
             'latent_mse': metric.data_mse.DataMse(),
             'latent_sam': metric.SpectralAngle(),
@@ -52,7 +52,6 @@ class ModelMetrics(MetricCollection):
             self.metrics_list = all_metrics.keys()
 
         metrics = {name: m for name, m in all_metrics.items() if name in self.metrics_list}
-
         # if self.log_wandb:
         #     for metric_name in metrics:
         #         if metric_name == self.monitor:

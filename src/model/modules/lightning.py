@@ -27,51 +27,6 @@ class Module(LightningModule):
         }
         return model_output
 
-    def training_step(self, batch, batch_idx):
-        data, idxes = batch["data"], batch["idxes"]
-        if "labels" in batch.keys():
-            labels = batch["labels"]
-        loss = self._loss_function(data, self(data), idxes)
-        self.log_dict(loss)
-        return sum(loss.values())
-
-    def validation_step(self, batch, batch_idx):
-        data, idxes = batch["data"], batch["idxes"]
-        if "labels" in batch.keys():
-            labels = batch["labels"]
-        else:
-            labels = None
-        validation_loss = {"validation_loss": sum(self._loss_function(data, self(data), idxes).values())}
-        self.metrics._update(data, self(data), labels, idxes, self)
-        self.log_dict({**validation_loss, **self.metrics.compute()})
-
-    def test_step(self, batch, batch_idx):
-        data, idxes = batch["data"], batch["idxes"]
-        if "labels" in batch.keys():
-            labels = batch["labels"]
-        else:
-            labels = None
-        model_outputs = self(data)
-        self.metrics._update(data, model_outputs, labels, idxes, self)
-
-        final_metrics = self.metrics.compute()
-        self.metrics.save_metrics(final_metrics)
-
-    def predict_step(self, batch, batch_idx, dataloader_idx=None):
-        data, idxes = batch["data"], batch["idxes"]
-        if "labels" in batch.keys():
-            labels = batch["labels"]
-        else:
-            labels = None
-        model_outputs = self(data)
-        self.metrics._update(data, model_outputs, labels, idxes, self)
-        final_metrics = self.metrics.compute()
-
-        self.metrics.save_metrics(final_metrics, save_dir=f'predictions')
-
-    def val_dataloader(self):
-        return self.train_dataloader()
-
     def on_after_backward(self):
         valid_gradients = True
         for name, param in self.named_parameters():
@@ -125,20 +80,72 @@ class Module(LightningModule):
                     import wandb
                     wandb.define_metric(name=metric_name, summary='max')
 
-    def on_test_start(self):
-        self.metrics.init_metrics(metrics_list=[])
+    def training_step(self, batch, batch_idx):
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        loss = self._loss_function(data, self(data), idxes)
+        self.log_dict(loss)
+        return sum(loss.values())
 
-        self.metrics.show_plots = False
+    def val_dataloader(self):
+        return self.train_dataloader()
+
+    def on_validation_start(self):
+        self.metrics.log_wandb = True
         self.metrics.log_plots = False
-        self.metrics.save_plots = False
+        self.metrics.show_plots = False
+        self.metrics.save_plot = False
+
+    def validation_step(self, batch, batch_idx):
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        else:
+            labels = None
+        validation_loss = {"validation_loss": sum(self._loss_function(data, self(data), idxes).values())}
+        self.metrics._update(data, self(data), labels, idxes, self)
+        self.log_dict({**validation_loss, **self.metrics.compute()})
+
+    def on_test_start(self):
+        self.metrics.log_wandb = False
+        self.metrics.log_plots = False
+        self.metrics.show_plots = False
+        self.metrics.save_plot = False
+        self.metrics.setup_metrics(metrics_list=[])
+
+    def test_step(self, batch, batch_idx):
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        else:
+            labels = None
+        model_outputs = self(data)
+        self.metrics._update(data, model_outputs, labels, idxes, self)
+
+    def on_test_end(self) -> None:
+        final_metrics = self.metrics.compute()
+        self.metrics.save_metrics(final_metrics)
 
     def on_predict_start(self) -> None:
-        self.metrics.init_metrics(metrics_list=[])
-
         self.metrics.log_wandb = False
-        self.metrics.show_plots = True
-        self.metrics.save_plots = True
-        self.metrics.log_plots = False
+        self.metrics.log_plot = False
+        self.metrics.show_plot = True
+        self.metrics.save_plot = True
+        self.metrics.setup_metrics(metrics_list=[])
+
+    def predict_step(self, batch, batch_idx, dataloader_idx=None):
+        data, idxes = batch["data"], batch["idxes"]
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        else:
+            labels = None
+        model_outputs = self(data)
+        self.metrics._update(data, model_outputs, labels, idxes, self)
+
+    def on_predict_end(self) -> None:
+        final_metrics = self.metrics.compute()
+        self.metrics.save_metrics(final_metrics, save_dir=f'predictions')
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])

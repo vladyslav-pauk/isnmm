@@ -84,7 +84,9 @@ class DataModule(LightningDataModule):
 
         fig.colorbar(im, ax=axs, orientation='vertical', fraction=0.58, pad=0.0)
         fig.subplots_adjust(left=-0.1, right=0.94, top=0.89, bottom=0.1)
-        plt.savefig(f"../../../notebooks/figures/hyperspectral_data_processing.png", transparent=True, dpi=300)
+        path = f"../../../notebooks/figures/hyperspectral_data_processing.png"
+        plt.savefig(path, transparent=True, dpi=300)
+        print(f"Saved hyperspectral data processing plot to '{path}'")
         plt.show()
 
 

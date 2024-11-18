@@ -10,15 +10,15 @@ from src.utils.wandb_tools import run_dir
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=True, save_plot=True):
+    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=False, save_plot=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.add_state("sum_r_squared", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
         self.fitter = LineFitter()
 
         self.show_plot = show_plot
-        self.log_plot = log_plot
         self.save_plot = save_plot
+        self.log_plot = log_plot
 
     def update(self, model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed):
 
@@ -38,13 +38,13 @@ class ResidualNonlinearity(torchmetrics.Metric):
         self.count += r_squared_values.shape[0]
 
     def compute(self):
-        self.plot(show_plot=self.show_plot)
+        self.plot(show_plot=self.show_plot, save_plot=self.save_plot)
         r_squared_average = self.sum_r_squared / self.count
         self.sum_r_squared = torch.tensor(0.0)
         self.count = torch.tensor(0.0)
         return r_squared_average
 
-    def match_components(self, matrix_model, matrix_true):
+    def _match_components(self, matrix_model, matrix_true):
         num_cols = matrix_model.size(1)
         import itertools
         col_permutations = itertools.permutations(range(num_cols))
@@ -62,7 +62,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
 
         return best_perm
 
-    def plot(self, show_plot=False):
+    def plot(self, show_plot=False, save_plot=False):
 
         plot_components(
             model=(self.reconstructed_sample, self.linearly_mixed_sample),
@@ -71,7 +71,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
             # nr=(self.reconstructed_sample, self.noiseless_sample_true),
             scale=True,
             show_plot=show_plot,
-            save_plot=self.save_plot,
+            save_plot=save_plot,
             name=f"model_true_nonlinearity"
         )
         # plot_components(
@@ -91,12 +91,12 @@ class ResidualNonlinearity(torchmetrics.Metric):
         # )
 
         plot_components(
-            model=(self.latent_sample_true, self.match_components(self.latent_sample, self.latent_sample_true)),
+            model=(self.latent_sample_true, self._match_components(self.latent_sample, self.latent_sample_true)),
             true=(torch.linspace(0, 1, 100).repeat(3, 1).t(), torch.linspace(0, 1, 100).repeat(3, 1).t()),
             scale=False,
             max_points=300,
             show_plot=show_plot,
-            save_plot=self.save_plot,
+            save_plot=save_plot,
             name=f"latent_correlation"
         )
 
@@ -222,6 +222,7 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
         path = f"{dir}/{name}.png"
 
         fig.savefig(path, transparent=True)
+        print(f"Saved {name} plot to '{path}'")
     plt.close()
     return plt
 

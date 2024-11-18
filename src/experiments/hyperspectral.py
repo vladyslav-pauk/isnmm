@@ -1,51 +1,60 @@
-import os
-import json
-import wandb
-
-import torch
 from torchmetrics import MetricCollection
 
 import src.modules.metric as metric
-from src.modules.data.hyperspectral import DataModule
-from src.modules.transform.convolution import HyperspectralTransform
 
 
 class ModelMetrics(MetricCollection):
-    def __init__(self, show_plot=False, log_plot=True, save_plot=True, monitor=None):
+    def __init__(self, show_plot=False, log_plot=False, save_plot=False, monitor=None):
         super().__init__([])
         self.metrics_list = [monitor]
+        self.monitor = monitor
         self.show_plot = show_plot
         self.log_plot = log_plot
         self.save_plot = save_plot
-        self.log_wandb = False
-        self.monitor = monitor
+        self.log_wandb = True
         self.true_model = None
 
-    def _update(self, observed_sample, model_output, labels, idxes, model):
-        metric_updates = {
-            'hyperspectral': {
-                "observed_sample": observed_sample
-            },
-        }
-
-        for metric_name, kwargs in metric_updates.items():
-            if self.metrics_list is None or metric_name in self.metrics_list:
-                self[metric_name].update(**kwargs)
-
-    def init_metrics(self, metrics_list=None):
+    def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
-
         dims = self.true_model.transform.unflatten(self.true_model.dataset.data).shape
         all_metrics = {
-            'hyperspectral': metric.Hyperspectral(image_dims=dims)
+            'denoising': metric.Hyperspectral(
+                image_dims=dims,
+                show_plot=self.show_plot,
+                log_plot=self.log_plot,
+                save_plot=self.save_plot
+            ),
+            'abundance': metric.Hyperspectral(
+                image_dims=dims,
+                show_plot=self.show_plot,
+                log_plot=self.log_plot,
+                save_plot=self.save_plot
+            ),
         }
 
         if not self.metrics_list:
             self.metrics_list = all_metrics.keys()
 
         metrics = {name: m for name, m in all_metrics.items() if name in self.metrics_list}
+
         super().__init__(metrics)
         return metrics
+
+    def _update(self, observed_sample, model_output, labels, idxes, model):
+        metric_updates = {
+            'denoising': {
+                "noiseless": observed_sample,#labels['noiseless_sample'],
+                "reconstructed": observed_sample,
+                "noisy": observed_sample#labels['noisy_sample']
+            },
+            'abundance': {
+                "eabundance": observed_sample
+            },
+        }
+
+        for metric_name, kwargs in metric_updates.items():
+            if self.metrics_list is None or metric_name in self.metrics_list:
+                self[metric_name].update(**kwargs)
 
     def save_metrics(self, metrics, save_dir=None):
         pass

@@ -49,6 +49,7 @@ class RunAnalyzer:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             save_dir = save_dir or f'experiments/{self.experiment}/results/run-{self.run_id}'
             plt.savefig(os.path.join(project_root, save_dir, f"{metric}-history.png"))
+            print(f"Saved metric history plot to {os.path.join(project_root, save_dir, f'{metric}-history.png')}")
         plt.close()
 
     def _fetch_data(self):
@@ -64,7 +65,7 @@ class RunAnalyzer:
                 sweep_data = json.load(f)
                 if self.run_id in sweep_data:
                     self.run_data = sweep_data[self.run_id]
-                    print(f"Found data for run ID {self.run_id} in '{sweep_file}'")
+                    # print(f"Found history data for run ID {self.run_id} in '{sweep_file}'")
                     return
         raise FileNotFoundError(f"Run ID {self.run_id} not found in any 'sweep_data.json' files in {results_dir}")
 
@@ -94,5 +95,6 @@ class RunAnalyzer:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             save_dir = f'experiments/{self.experiment}/predictions/{self.run_id}'
             plt.savefig(os.path.join(project_root, save_dir, f"training-history-{metric_key}.png"))
+            print(f"Saved {metric_key} training history plot to {os.path.join(project_root, save_dir, f'training-history-{metric_key}.png')}")
             plt.show()
             plt.close()
