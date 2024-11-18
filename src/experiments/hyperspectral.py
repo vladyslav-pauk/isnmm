@@ -114,10 +114,6 @@ class ModelMetrics(MetricCollection):
         for key, value in metrics.items():
             print(f"\t{key} = {value}")
 
-# fixme: error when running with logging during validation,
-#  error only when hyperspectral metric is included
-#  TypeError: 'dict' object is not callable
-
 # todo: make a parent experiment class module with save_metrics and other universal structures
 # todo: rec and kl save too
 # todo: check if training history for metrics (login additional during validation) works
