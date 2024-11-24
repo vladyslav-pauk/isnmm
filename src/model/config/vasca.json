@@ -64,14 +64,14 @@
   "trainer": {
     "accelerator": "cpu",
     "devices": 1,
+    "gradient_clip_val": null,
     "max_epochs": 20000,
+    "enable_progress_bar": false,
     "log_every_n_steps": null,
     "val_check_interval": null,
-    "limit_val_batches": 100,
-    "limit_test_batches": 100,
-    "gradient_clip_val": null,
+    "limit_val_batches": 1000,
     "check_val_every_n_epoch": 10,
-    "enable_progress_bar": false
+    "limit_test_batches": 1000
   },
   "checkpoint": {
     "save_top_k": 1,

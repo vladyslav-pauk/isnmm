@@ -42,20 +42,20 @@ def analyze_sweep(experiment, sweep_id, metric=None, covariate=None, comparison=
 
 
 if __name__ == "__main__":
-    experiment = "hyperspectral"
-    sweep_id = "m1rxckun"
+    experiment = "synthetic"
+    sweep_id = "v8e8a8wl"
     logging_setup()
     login_wandb(experiment)
 
-    # metrics_to_analyze = [
-    #     ("subspace_distance", "snr"),
-    #     ("validation_loss", "dataset_size"),
-    #     ("latent_mse", "latent_dim"),
-    #     ("_runtime", "dataset_size")
-    # ]
     metrics_to_analyze = [
-        ("psnr", "snr")
+        ("subspace_distance", "snr"),
+        ("validation_loss", "dataset_size"),
+        ("latent_mse", "latent_dim"),
+        ("_runtime", "dataset_size")
     ]
+    # metrics_to_analyze = [
+    #     ("psnr", "snr")
+    # ]
 
     for metric, covariate in metrics_to_analyze:
         analyze_sweep(experiment, sweep_id, metric=metric, covariate=covariate, comparison="model_name")

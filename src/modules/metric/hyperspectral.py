@@ -7,7 +7,7 @@ import torchmetrics
 from src.modules.data.hyperspectral import DataModule
 from src.modules.transform.convolution import HyperspectralTransform
 from src.utils.wandb_tools import run_dir
-# todo: rewrite using torch add_state interface
+# fixme: rewrite using torch add_state interface
 
 
 class Hyperspectral(torchmetrics.Metric):

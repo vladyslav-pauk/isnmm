@@ -8,6 +8,7 @@ parameters:
     - convolution
   model_name:
     - vasca
+    - nisca
   trainer.max_epochs:
     - 10
   early_stopping.min_delta:
@@ -22,6 +23,7 @@ parameters:
     - 3
   snr:
     - 20
+    - 10
   model.sigma:
     - 0.1
   decoder.hidden_layers:
@@ -32,5 +34,6 @@ parameters:
       - 1
   torch_seed:
       - 1
+      - 2
   data_seed:
       - 12

@@ -74,7 +74,7 @@ class ModelMetrics(MetricCollection):
             linearly_mixed_sample = model.decoder.linear_mixture(latent_sample_mean)
 
             metric_updates = {
-                'subspace_distance': (idxes, latent_sample_unmixed, latent_sample_qr),
+                'subspace_distance': (latent_sample_unmixed, latent_sample_qr),
                 'r_square': (model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed),
                 'latent_mse': (latent_sample_unmixed, latent_sample_true),
                 'latent_sam': (latent_sample_unmixed, latent_sample_true),
@@ -90,7 +90,7 @@ class ModelMetrics(MetricCollection):
                     self[metric_name].update(*args)
 
     def save_metrics(self, metrics, save_dir=None):
-        if wandb.run is not None and save_dir is None:  # Check if wandb.run is active
+        if wandb.run is not None and save_dir is None:
             base_dir = os.path.join(wandb.run.dir.split('wandb')[0], 'results')
             sweep_id = wandb.run.dir.split('/')[-4].split('-')[-1]
             output_path = os.path.join(base_dir, f'sweep-{sweep_id}', "sweep_data.json")
@@ -123,7 +123,7 @@ class ModelMetrics(MetricCollection):
         with open(output_path, 'w') as f:
             json.dump(existing_data, f, indent=2)
 
-        print("Final metrics:")
+        print("Final metrics saved:")
         for key, value in metrics.items():
             print(f"\t{key} = {value}")
 

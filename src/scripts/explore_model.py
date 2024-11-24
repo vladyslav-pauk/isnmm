@@ -73,17 +73,17 @@ def plot_training_history(model, metrics=None):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "4zv34nn7")
+        "synthetic", "r3yup1d2")
 
-    # metrics_to_analyze = [
-    #     ("subspace_distance", "snr"),
-    #     ("validation_loss", "dataset_size"),
-    #     ("latent_mse", "latent_dim"),
-    #     ("_runtime", "dataset_size")
-    # ]
     metrics_to_analyze = [
-        ("psnr", "snr")
+        ("subspace_distance", "snr"),
+        ("validation_loss", "dataset_size"),
+        ("latent_mse", "latent_dim"),
+        ("_runtime", "dataset_size")
     ]
+    # metrics_to_analyze = [
+    #     ("psnr", "snr")
+    # ]
 
     plot_training_history(model, metrics=metrics_to_analyze)
 

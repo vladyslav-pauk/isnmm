@@ -7,6 +7,7 @@ import torch.nn as nn
 import torchmetrics
 
 from src.utils.wandb_tools import run_dir
+# fixme: correct batch for testing and validation
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
@@ -212,10 +213,10 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
 
     if show_plot:
         plt.show()
-    else:
-        wandb.log({
-            name: plt
-        })
+    # else:
+    #     wandb.log({
+    #         name: plt
+    #     })
 
     if save_plot:
         dir = run_dir('predictions')

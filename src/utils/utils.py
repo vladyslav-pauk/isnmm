@@ -76,11 +76,17 @@ def flatten_dict(d, parent_key='', sep='.'):
 
 
 def tabulate_dict(data):
-    return [
-        {key: (value[0] if isinstance(value, (np.ndarray, list)) and len(value) > 0 else value) for key, value in item.items()}
-        for item in data]
+    expanded_data = []
+    for item in data:
+        max_len = max((len(value) if isinstance(value, (np.ndarray, list)) else 1) for value in item.values())
+        for i in range(max_len):
+            expanded_data.append({
+                key: (value[i] if isinstance(value, (np.ndarray, list)) and i < len(value) else value)
+                for key, value in item.items()
+            })
+    return expanded_data
 
-# fixme: shows only 1 snr in final table
+
 def font_style():
     font = {
         'family': 'serif',

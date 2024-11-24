@@ -140,4 +140,4 @@ if __name__ == "__main__":
     #     print(f"Batch shape: {batch['data'].shape}")
     #     break
 
-# fixme: separate val dataloader and test, for synthetic and hyperspectral
+# todo: separate val dataloader and test, for synthetic and hyperspectral

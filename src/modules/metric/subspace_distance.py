@@ -1,29 +1,33 @@
 import torch
 import torchmetrics
-import scipy.linalg
+from scipy.linalg import subspace_angles
 import itertools
+
 
 class SubspaceDistance(torchmetrics.Metric):
     def __init__(self, dist_sync_on_step=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
-        # State to store subspace distance over multiple updates
-        self.add_state("subspace_distances", default=[], dist_reduce_fx=None)
 
-    def update(self, idxes, latent_sample, latent_sample_qr):
-        # Detach and move to CPU
-        latent_sample = latent_sample[idxes].detach().cpu()
-        latent_sample_qr = latent_sample_qr[idxes].detach().cpu()
+        self.add_state("latent_sample_qr", default=[], dist_reduce_fx='cat')
+        self.add_state("latent_sample", default=[], dist_reduce_fx='cat')
 
-        # QR decomposition to get orthonormal basis of latent_sample
+    def update(self, latent_sample, latent_sample_qr):
+
+        latent_sample_qr = latent_sample_qr.detach().cpu()
+        latent_sample = latent_sample.detach().cpu()
+
+        self.latent_sample_qr.append(latent_sample_qr)
+        self.latent_sample.append(latent_sample)
+
+    def compute(self):
+        latent_sample_qr = torch.cat(self.latent_sample_qr)
+        latent_sample = torch.cat(self.latent_sample)
         qf, _ = torch.linalg.qr(latent_sample)
 
-        # Find best permutation to match components and compute subspace angles
-        matched_qf = self.match_components(qf, latent_sample_qr)
-        subspace_angles = torch.tensor(scipy.linalg.subspace_angles(latent_sample_qr, matched_qf))
-        subspace_dist = torch.sin(subspace_angles)
+        angles = torch.tensor(subspace_angles(latent_sample_qr, qf))
+        subspace_dist = torch.sin(angles)
 
-        # Store the subspace distance
-        self.subspace_distances.append(subspace_dist)
+        return torch.sum(subspace_dist.pow(2))
 
     def match_components(self, matrix_model, matrix_true):
         num_cols = matrix_model.size(1)
@@ -41,10 +45,3 @@ class SubspaceDistance(torchmetrics.Metric):
                 best_perm = permuted_matrix
 
         return best_perm
-
-    def compute(self):
-        if len(self.subspace_distances) > 0:
-            subspace_dist_tensor = torch.cat(self.subspace_distances)
-            return torch.mean(subspace_dist_tensor)
-        else:
-            return torch.tensor(0.0)

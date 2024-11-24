@@ -13,8 +13,8 @@ class DataMse(torchmetrics.Metric):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.db = db
-        self.add_state("model_data", default=[], dist_reduce_fx=None)
-        self.add_state("true_data", default=[], dist_reduce_fx=None)
+        self.add_state("model_data", default=[], dist_reduce_fx='cat')
+        self.add_state("true_data", default=[], dist_reduce_fx='cat')
 
     def update(self, model_A, true_A):
         self.model_data.append(model_A.clone().detach().cpu())
@@ -24,17 +24,15 @@ class DataMse(torchmetrics.Metric):
         model_data = torch.cat(self.model_data, dim=0)
         true_data = torch.cat(self.true_data, dim=0)
 
-        best_mse = self.find_best_permutation_mse(model_data, true_data)
+        best_mse = self.best_permutation_mse(model_data, true_data)
 
         if self.db:
-            return 10 * torch.log10(best_mse)
-        else:
-            return best_mse
+            best_mse = 10 * torch.log10(best_mse)
 
-    def find_best_permutation_mse(self, model_A, true_A):
-        num_cols = model_A.size(1)
-        col_permutations = itertools.permutations(range(num_cols))
+        return best_mse
 
+    def best_permutation_mse(self, model_A, true_A):
+        col_permutations = itertools.permutations(range(model_A.size(1)))
         best_mse = float('inf')
 
         for perm in col_permutations:

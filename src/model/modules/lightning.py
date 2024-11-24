@@ -46,7 +46,7 @@ class Module(LightningModule):
             self.zero_grad()
 
     def setup(self, stage=None):
-        if stage == 'fit' or stage == 'predict' or stage is None:
+        if stage == 'fit' or stage is None:
             datamodule = self.trainer.datamodule
             data_sample = next(iter(datamodule.train_dataloader()))
             self.observed_dim = data_sample["data"].shape[1]
@@ -78,12 +78,10 @@ class Module(LightningModule):
             for metric_name in self.metrics:
                 if metric_name == self.metrics.monitor:
                     import wandb
-                    wandb.define_metric(name=metric_name, summary='max')
+                    wandb.define_metric(name=metric_name, summary='min')
 
     def training_step(self, batch, batch_idx):
         data, idxes = batch["data"], batch["idxes"]
-        if "labels" in batch.keys():
-            labels = batch["labels"]
         loss = self._loss_function(data, self(data), idxes)
         self.log_dict(loss)
         return sum(loss.values())
