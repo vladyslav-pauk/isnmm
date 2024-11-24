@@ -107,7 +107,11 @@ class Module(LightningModule):
 
         validation_loss = {"validation_loss": sum(self._loss_function(data, self(data), idxes).values())}
         self.metrics.update(data, self(data), labels, idxes, self)
-        self.log_dict({**validation_loss, **self.metrics.compute()})
+        self.log_dict(validation_loss)
+        return validation_loss
+
+    def validation_end(self, batch, outs) -> None:
+        self.log_dict({**self.metrics.compute()})
 
     def on_test_start(self):
         self.metrics.log_wandb = False
@@ -115,7 +119,6 @@ class Module(LightningModule):
         self.metrics.show_plots = False
         self.metrics.save_plot = False
         self.metrics.setup_metrics(metrics_list=[])
-
 
     def test_step(self, batch, batch_idx):
         data, idxes = batch["data"], batch["idxes"]

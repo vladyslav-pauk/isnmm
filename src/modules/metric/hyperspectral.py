@@ -7,6 +7,7 @@ import torchmetrics
 from src.modules.data.hyperspectral import DataModule
 from src.modules.transform.convolution import HyperspectralTransform
 from src.utils.wandb_tools import run_dir
+# todo: rewrite using torch add_state interface
 
 
 class Hyperspectral(torchmetrics.Metric):
@@ -71,6 +72,7 @@ class Hyperspectral(torchmetrics.Metric):
 
         key, data = next(iter(plot_data.items()))
         num_components = data.shape[-1]
+
         data = data.view(num_components, height, width)
         rows = (num_components + 2) // 3
 

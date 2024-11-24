@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     print(f"Experiment '{experiment}'")
     sweep = Sweep(sweep_config, train_model)
+
     sweep.run(save=True)
 
     _, data = analyze_sweep(
@@ -36,3 +37,5 @@ if __name__ == '__main__':
     clean_up(experiment)
 
 # todo: discard run, if metrics is below threshold (-10 positive mse_db)
+# todo: analyze all metrics, by getting metrics list from the model
+# fixme: model_sigma in test_run

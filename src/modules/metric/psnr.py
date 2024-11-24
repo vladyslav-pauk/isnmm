@@ -15,7 +15,8 @@ class PSNR(torchmetrics.Metric):
         self.show_plot = show_plot
         self.save_plot = save_plot
         self.image_dims = image_dims
-        self.add_state("psnr_values", default=[], dist_reduce_fx="mean")
+
+        self.add_state("psnr_values", default=[], dist_reduce_fx="cat")
 
     def update(self, reconstructed, target):
         mse = ((reconstructed - target) ** 2)
@@ -23,16 +24,14 @@ class PSNR(torchmetrics.Metric):
         self.psnr_values.append(psnr)
 
     def compute(self):
-        psnr_avg = torch.mean(torch.stack(self.psnr_values))
-        self.plot({"psnr": self.psnr_values})
+        psnr_avg = torch.cat(self.psnr_values, dim=0).mean()
+        self.plot({"psnr": torch.cat(self.psnr_values, dim=0)})
         self.psnr_values.clear()
         return psnr_avg
 
     def plot(self, plot_data):
         channels, height, width = self.image_dims
-
-        num_components = next(iter(plot_data.values()))[0].shape[-1]
-
+        num_components = next(iter(plot_data.values())).shape[-1]
         rows = (num_components + 2) // 3
         cols = 3
 
@@ -43,7 +42,7 @@ class PSNR(torchmetrics.Metric):
 
             for idx, (key, data) in enumerate(plot_data.items()):
 
-                data = data[0].view(num_components, height, width)
+                data = data.view(num_components, height, width)
                 component = data[comp_idx].cpu().numpy()
 
                 row = comp_idx // cols

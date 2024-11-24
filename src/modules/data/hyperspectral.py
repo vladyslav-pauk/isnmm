@@ -139,3 +139,5 @@ if __name__ == "__main__":
     # for batch in data_module.train_dataloader():
     #     print(f"Batch shape: {batch['data'].shape}")
     #     break
+
+# fixme: separate val dataloader and test, for synthetic and hyperspectral
