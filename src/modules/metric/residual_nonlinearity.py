@@ -1,13 +1,9 @@
-import matplotlib.pyplot as plt
-import math
-
-import wandb
 import torch
 import torch.nn as nn
 import torchmetrics
 
 from src.utils.wandb_tools import run_dir
-# fixme: correct batch for testing and validation
+from src.utils.utils import init_plot
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
@@ -157,22 +153,7 @@ class LineFitter(nn.Module):
 
 
 def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, name=None, max_points=10e8, **kwargs):
-    import warnings
-    warnings.filterwarnings("ignore", message=".*path .*")
-    font_size = 24
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": "serif",
-        "font.serif": ["Computer Modern Roman"],
-        "axes.labelsize": font_size,
-        "font.size": font_size,
-        "legend.fontsize": font_size,
-        "xtick.labelsize": font_size,
-        "ytick.labelsize": font_size,
-        "figure.dpi": 300,
-        "savefig.dpi": 300,
-        "text.latex.preamble": r"\usepackage{amsmath}"
-    })
+    plt = init_plot()
 
     num_components = kwargs[list(kwargs.keys())[0]][0].shape[-1]
     n_cols = 3 + 1e-5

@@ -41,6 +41,7 @@ class DataModule(LightningDataModule):
     def setup(self, stage=None):
         transformed_data = self.transform(self.noisy_data).detach().cpu()
         noiseless_data = self.transform(self.tensor_data).detach().cpu()
+        self.sigma /= self.transform.max_val - self.transform.min_val
 
         labels = {
             "noiseless_data": noiseless_data
@@ -48,8 +49,9 @@ class DataModule(LightningDataModule):
         self.dataset = HyperspectralDataset(data=transformed_data, labels=labels)
 
     def add_gaussian_noise(self, tensor, snr_db):
-        noise_power = torch.mean(tensor ** 2) / (10 ** (snr_db / 10))
-        return tensor + torch.randn_like(tensor) * torch.sqrt(noise_power)
+        noise_power = tensor.pow(2).mean(dim=tuple(range(1, tensor.ndim))).sum() / (10 ** (snr_db / 10))
+        self.sigma = torch.sqrt(noise_power)
+        return tensor + torch.randn_like(tensor) * self.sigma
 
     def train_dataloader(self):
         return DataLoader(self.dataset, batch_size=self.batch_size, shuffle=self.shuffle, num_workers=self.num_workers)

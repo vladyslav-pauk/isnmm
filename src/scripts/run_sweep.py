@@ -38,4 +38,3 @@ if __name__ == '__main__':
 
 # todo: discard run, if metrics is below threshold (-10 positive mse_db)
 # todo: analyze all metrics, by getting metrics list from the model
-# fixme: model_sigma in test_run

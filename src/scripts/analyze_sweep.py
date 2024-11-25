@@ -42,8 +42,8 @@ def analyze_sweep(experiment, sweep_id, metric=None, covariate=None, comparison=
 
 
 if __name__ == "__main__":
-    experiment = "synthetic"
-    sweep_id = "v8e8a8wl"
+    experiment = "hyperspectral"
+    sweep_id = "fphc1rbk"
     logging_setup()
     login_wandb(experiment)
 

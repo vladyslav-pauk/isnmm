@@ -73,6 +73,9 @@ class Module(LightningModule):
 
             self.metrics.true_model = self.trainer.datamodule
 
+        if stage == 'predict':
+            self.metrics.true_model = self.trainer.datamodule
+
     def on_train_start(self) -> None:
         if self.metrics.log_wandb:
             for metric_name in self.metrics:

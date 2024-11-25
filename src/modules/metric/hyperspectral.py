@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 import torch
 import torchmetrics
@@ -7,7 +6,8 @@ import torchmetrics
 from src.modules.data.hyperspectral import DataModule
 from src.modules.transform.convolution import HyperspectralTransform
 from src.utils.wandb_tools import run_dir
-# fixme: rewrite using torch add_state interface
+from src.utils.utils import init_plot
+# todo: rewrite using torch add_state interface
 
 
 class Hyperspectral(torchmetrics.Metric):
@@ -55,20 +55,7 @@ class Hyperspectral(torchmetrics.Metric):
     def plot_data(self, plot_data):
         channels, height, width = self.image_dims
 
-        plt.rcParams.update({
-            "text.usetex": True,
-            "font.family": ["Computer Modern Roman"],
-            "font.serif": ["Computer Modern Roman"],
-            "axes.labelsize": 20,
-            "font.size": 20,
-            "legend.fontsize": 18,
-            "xtick.labelsize": 16,
-            "ytick.labelsize": 16,
-            "figure.dpi": 300,
-            "savefig.dpi": 300,
-            "text.latex.preamble": r"\usepackage{amsmath}"
-        })
-        # fixme: define once for all project
+        plt = init_plot()
 
         key, data = next(iter(plot_data.items()))
         num_components = data.shape[-1]
