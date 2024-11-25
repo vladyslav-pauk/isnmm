@@ -73,7 +73,7 @@ def plot_training_history(model, metrics=None):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "q2xc2u2b")
+        "hyperspectral", "gbrdpv7b")
 
     # metrics_to_analyze = [
     #     ("subspace_distance", "snr"),
@@ -87,6 +87,7 @@ if __name__ == "__main__":
 
     plot_training_history(model, metrics=metrics_to_analyze)
 
+# todo: automatic metrics list and arg parsing
 # todo: unmixing plots
 # todo: kl and reconstruction plots
 # task: load config from the loaded model snapshot wandb

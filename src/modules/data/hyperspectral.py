@@ -49,7 +49,7 @@ class DataModule(LightningDataModule):
         self.dataset = HyperspectralDataset(data=transformed_data, labels=labels)
 
     def add_gaussian_noise(self, tensor, snr_db):
-        noise_power = tensor.pow(2).mean(dim=tuple(range(1, tensor.ndim))).sum() / (10 ** (snr_db / 10))
+        noise_power = tensor.pow(2).mean() / (10 ** (snr_db / 10))
         self.sigma = torch.sqrt(noise_power)
         return tensor + torch.randn_like(tensor) * self.sigma
 
@@ -143,3 +143,4 @@ if __name__ == "__main__":
     #     break
 
 # todo: separate val dataloader and test, for synthetic and hyperspectral
+# fixme: fix dimension reduction in hyperspectral data processing

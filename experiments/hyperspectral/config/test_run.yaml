@@ -13,15 +13,15 @@ parameters:
   early_stopping.min_delta:
     - 1e-3
   data_loader.batch_size:
-    - 1000
+    - 100
   dataset_size:
     - 10000
   observed_dim:
-    - 6
+    - 48
   model.latent_dim:
     - 3
   snr:
-    - 20
+    - 10
   model.sigma:
     -
   decoder.hidden_layers:

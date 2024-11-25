@@ -104,7 +104,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
         #     wandb.log({
         #         "Latent Space": plt
         #     })
-        plt.close()
+
 
 
 class LineFitter(nn.Module):

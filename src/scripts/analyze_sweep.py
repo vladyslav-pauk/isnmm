@@ -70,7 +70,8 @@ if __name__ == "__main__":
 # todo: run analyze sweep in the sweep_run, run explore_model best for hyperparameter search
 # todo: min 1500 epochs, set in config
 
-# fixme: unify module structures and make base classes for all modules
+# todo: unify module structures and make base classes for all modules
+# fixme: hyperspectral image looks incorrectly unflattned, check if it is correct
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)
 # fixme: make a container and run on server

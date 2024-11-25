@@ -79,10 +79,12 @@ class GenerativeModel:  # (Distribution)
 
         snr = torch.tensor(10.0).pow(self.snr_db / 10)
         self.sigma = torch.sqrt(
-            self.noiseless_sample.pow(2).sum() / self.noiseless_sample.numel() / snr
+            self.noiseless_sample.pow(2).mean() / snr
         )
         if self.snr_db is None:
             self.sigma = torch.tensor(0.0)
+
+        # fixme: make sure sigma is computed right
             
         self.observed_sample = self.noiseless_sample + self.sigma * noise_sample
         return self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)
