@@ -41,7 +41,8 @@ class DataModule(LightningDataModule):
     def setup(self, stage=None):
         transformed_data = self.transform(self.noisy_data).detach().cpu()
         noiseless_data = self.transform(self.tensor_data).detach().cpu()
-        self.sigma /= self.transform.max_val - self.transform.min_val
+        if self.data_config["normalize"]:
+            self.sigma /= self.transform.max_val - self.transform.min_val
 
         labels = {
             "noiseless_data": noiseless_data
@@ -80,7 +81,9 @@ class DataModule(LightningDataModule):
 
             layer = dataset[layer_index].reshape(height, width).detach().cpu().numpy()
 
-            im = axs[idx].imshow(layer, cmap='viridis', norm=mcolors.Normalize(vmin=np.min(layer), vmax=np.max(layer)))
+            if None:
+                norm = mcolors.Normalize(vmin=np.min(layer), vmax=np.max(layer))
+            im = axs[idx].imshow(layer, cmap='viridis', norm=norm)
             axs[idx].set_title(f'{names[idx].replace("_", " ").capitalize()}, 0 layer')
             axs[idx].axis('off')
 
@@ -116,7 +119,7 @@ if __name__ == "__main__":
         "batch_size": 128,
         "val_batch_size": 128,
         "shuffle": True,
-        "snr": 25,
+        "snr": 10,
         "dataset_size": 10000
     }
     config = {"num_workers": 4}
@@ -143,4 +146,3 @@ if __name__ == "__main__":
     #     break
 
 # todo: separate val dataloader and test, for synthetic and hyperspectral
-# fixme: fix dimension reduction in hyperspectral data processing

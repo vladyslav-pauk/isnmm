@@ -71,12 +71,16 @@ if __name__ == "__main__":
 # todo: min 1500 epochs, set in config
 
 # todo: unify module structures and make base classes for all modules
-# fixme: hyperspectral image looks incorrectly unflattned, check if it is correct
+
+# fixme: implement ground truth image (vasca)
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)
 # fixme: make a container and run on server
+
 # fixme: notebooks for exploring models and analyzing sweeps
 #  (scripts do standard extraction, pandas analysis is in notebooks)
+
 # fixme: main readme describing scripts usage and what they do, as well as notebooks
 # fixme: experiment docs describing setups, metrics, datasets, models and results
+
 # fixme: clean up the code (when finished, copy to template before cleaning todos)

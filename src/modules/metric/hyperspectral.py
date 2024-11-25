@@ -53,64 +53,113 @@ class Hyperspectral(torchmetrics.Metric):
     #         plt.close()
 
     def plot_data(self, plot_data):
+        plt = init_plot()
         _, height, width = self.image_dims
 
-        plt = init_plot()
+        # Compute global min and max for normalization
+        all_data = torch.cat([data.T.view(-1, height, width) for data in plot_data.values()], dim=0)
+        global_min = all_data.min().item()
+        global_max = all_data.max().item()
+        print(f"Global normalization: min={global_min}, max={global_max}")
 
-        key, data = next(iter(plot_data.items()))
+        # Iterate over each key and its associated data
+        for key, data in plot_data.items():
+            # Reshape the data for plotting
+            data = data.T.view(-1, height, width)
+            num_components = data.shape[0]
 
-        data = data.T.view(-1, height, width)
+            # Determine the grid layout
+            rows = (num_components + 2) // 3  # 3 components per row
 
-        num_components = data.shape[0]
-
-        rows = (num_components + 2) // 3
-
-        if len(plot_data) == 1:
+            # Create a figure and axes
             fig, axs = plt.subplots(rows, 3, figsize=(9, 4.5 * rows), dpi=300)
-            axs = np.atleast_2d(axs)
+            axs = np.atleast_2d(axs)  # Ensure 2D array of axes for consistency
 
+            # Plot each component
             for i in range(num_components):
-                row = i // 3
-                col = i % 3
+                row, col = divmod(i, 3)  # Calculate grid position
                 component = data[i].cpu().numpy()
-                axs[row, col].imshow(component, cmap='viridis')
-                axs[row, col].set_title(f'{key.replace("_", ' ').capitalize()} {i+1}')
+                axs[row, col].imshow(component, cmap='viridis', vmin=global_min, vmax=global_max)
+                axs[row, col].set_title(f'{key.replace("_", " ").capitalize()} {i + 1}')
                 axs[row, col].axis('off')
 
+            # Turn off unused axes
+            for i in range(num_components, rows * 3):
+                row, col = divmod(i, 3)
+                axs[row, col].axis('off')
+
+            # Adjust layout
             plt.tight_layout()
+
+            # Show or save the plot
             if self.show_plot:
                 plt.show()
             if self.save_plot:
                 dir = run_dir('predictions')
-                plt.savefig(f"{dir}/{key}-components.png", transparent=True, dpi=300)
-                print(
-                    f"Saved {key} components image to '{dir}/{key}_components.png'")
+                plt.savefig(f"{dir}/{key}_components.png", transparent=True, dpi=300)
+                print(f"Saved {key} components image to '{dir}/{key}_components.png'")
+
+            # Close the figure
             plt.close()
 
-        else:
-            for comp_idx in range(num_components):
-                fig, axs = plt.subplots(1, len(plot_data), figsize=(3 * len(plot_data), 4.5), dpi=300)
-                axs = np.atleast_1d(axs)
-
-                for idx, (key, data) in enumerate(plot_data.items()):
-                    data = data.T.view(-1, height, width)
-                    component = data[comp_idx].cpu().numpy()
-
-                    axs[idx].imshow(component, cmap='viridis')
-                    axs[idx].set_title(f'{key.replace("_", " ").capitalize()} {comp_idx+1}')
-                    axs[idx].axis('off')
-
-                plt.tight_layout()
-
-                if self.show_plot:
-                    plt.show()
-                if self.save_plot:
-                    dir = run_dir('predictions')
-                    plt.savefig(f"{dir}/component_{comp_idx}.png", transparent=True, dpi=300)
-                    print(
-                        f"Saved {', '.join(list(plot_data.keys()))} component {comp_idx} image to '{dir}/{key}_component_{comp_idx}.png'")
-
-                plt.close()
+    # def plot_data(self, plot_data):
+    #     _, height, width = self.image_dims
+    #
+    #     plt = init_plot()
+    #
+    #     key, data = next(iter(plot_data.items()))
+    #
+    #     data = data.T.view(-1, height, width)
+    #
+    #     num_components = data.shape[0]
+    #
+    #     rows = (num_components + 2) // 3
+    #
+    #     if len(plot_data) == 1:
+    #         fig, axs = plt.subplots(rows, 3, figsize=(9, 4.5 * rows), dpi=300)
+    #         axs = np.atleast_2d(axs)
+    #
+    #         for i in range(num_components):
+    #             row = i // 3
+    #             col = i % 3
+    #             component = data[i].cpu().numpy()
+    #             axs[row, col].imshow(component, cmap='viridis')
+    #             axs[row, col].set_title(f'{key.replace("_", ' ').capitalize()} {i+1}')
+    #             axs[row, col].axis('off')
+    #
+    #         plt.tight_layout()
+    #         if self.show_plot:
+    #             plt.show()
+    #         if self.save_plot:
+    #             dir = run_dir('predictions')
+    #             plt.savefig(f"{dir}/{key}-components.png", transparent=True, dpi=300)
+    #             print(
+    #                 f"Saved {key} components image to '{dir}/{key}_components.png'")
+    #         plt.close()
+    #
+    #     else:
+    #         for comp_idx in range(num_components):
+    #             fig, axs = plt.subplots(1, len(plot_data), figsize=(3 * len(plot_data), 4.5), dpi=300)
+    #             axs = np.atleast_1d(axs)
+    #
+    #             for idx, (key, data) in enumerate(plot_data.items()):
+    #                 data = data.T.view(-1, height, width)
+    #                 component = data[comp_idx].cpu().numpy()
+    #                 axs[idx].imshow(component, cmap='viridis')
+    #                 axs[idx].set_title(f'{key.replace("_", " ").capitalize()} {comp_idx+1}')
+    #                 axs[idx].axis('off')
+    #
+    #             plt.tight_layout()
+    #
+    #             if self.show_plot:
+    #                 plt.show()
+    #             if self.save_plot:
+    #                 dir = run_dir('predictions')
+    #                 plt.savefig(f"{dir}/component_{comp_idx}.png", transparent=True, dpi=300)
+    #                 print(
+    #                     f"Saved {', '.join(list(plot_data.keys()))} component {comp_idx} image to '{dir}/{key}_component_{comp_idx}.png'")
+    #
+    #             plt.close()
 
 
 if __name__ == "__main__":

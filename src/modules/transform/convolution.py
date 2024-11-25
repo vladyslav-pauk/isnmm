@@ -14,6 +14,7 @@ class HyperspectralTransform(nn.Module):
 
         self.min_val = None
         self.max_val = None
+        self.selected_indices = None
 
     def forward(self, x):
         input_channels, height, width = x.shape
@@ -25,7 +26,7 @@ class HyperspectralTransform(nn.Module):
             x = self.crop_image(x)
 
         if self.output_channels:
-            x = self.select_bands_with_highest_variance(x)
+            x, self.selected_indices = self.select_bands_with_highest_variance(x)
 
         if self.normalize:
             x = self.normalize_to_range(x)
@@ -55,9 +56,12 @@ class HyperspectralTransform(nn.Module):
 
     def select_bands_with_highest_variance(self, x):
         band_variances = torch.var(x, dim=(1, 2))
-        k = self.output_channels if self.output_channels else x.shape[0]  # Default to input channels if not set
+        k = self.output_channels if self.output_channels else x.shape[0]
         _, selected_indices = torch.topk(band_variances, k, largest=True)
-        return x[selected_indices]
+
+        selected_indices = range(len(band_variances))[::len(band_variances) // k][:-1]
+
+        return x[selected_indices], selected_indices
 
     def normalize_to_range(self, tensor, min_val=0, max_val=1):
         self.min_val = torch.min(tensor)

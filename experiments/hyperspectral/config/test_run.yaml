@@ -7,7 +7,7 @@ parameters:
   data_model:
     - convolution
   model_name:
-    - vasca
+    - nisca
   trainer.max_epochs:
     - 200
   early_stopping.min_delta:
@@ -15,7 +15,7 @@ parameters:
   data_loader.batch_size:
     - 100
   dataset_size:
-    - 1000
+    - 10000
   observed_dim:
     - 12
   latent_dim:
@@ -23,15 +23,16 @@ parameters:
   model.latent_dim:
     - 6
   snr:
-    - 30
+    - 20
   model.sigma:
     -
   decoder.hidden_layers:
-    - h1: 128
+    - h1: 256
   encoder.hidden_layers:
     - h1: 512
       h2: 256
       h3: 128
+      h4: 64
   model.mc_samples:
       - 1
   torch_seed:
