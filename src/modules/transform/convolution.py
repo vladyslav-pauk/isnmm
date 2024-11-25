@@ -59,7 +59,7 @@ class HyperspectralTransform(nn.Module):
         k = self.output_channels if self.output_channels else x.shape[0]
         _, selected_indices = torch.topk(band_variances, k, largest=True)
 
-        selected_indices = range(len(band_variances))[::len(band_variances) // k][:-1]
+        selected_indices = np.linspace(0, len(band_variances) - 1, k, dtype=int)
 
         return x[selected_indices], selected_indices
 

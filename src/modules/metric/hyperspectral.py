@@ -34,16 +34,16 @@ class Hyperspectral(torchmetrics.Metric):
         # plot_data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
 
         if self.unmixing:
-            self.state_data["abundance"] = self.unmix(self.state_data["abundance"], model=self.unmixing)
+            self.state_data["abundance"] = self.unmix(self.state_data["abundance"], latent_dim=4, model=self.unmixing)
 
         plot_data = {key: val for key, val in self.state_data.items() if key != 'labels'}
         self.plot_data(plot_data)
         self.state_data.clear()
         return {}
 
-    def unmix(self, latent_sample, model=None):
+    def unmix(self, latent_sample, latent_dim, model=None):
         import src.model as model_package
-        latent_dim = 6
+        # fixme: dims fix
         dataset_size = latent_sample.size(0)
         unmixing_model = getattr(model_package, model).Model
         unmixing = unmixing_model(

@@ -9,7 +9,7 @@ import src.modules.metric as metric
 
 
 class ModelMetrics(MetricCollection):
-    def __init__(self, show_plot=False, log_plot=False, save_plot=False, monitor=None, unmixing=False):
+    def __init__(self, show_plot=False, log_plot=False, save_plot=False, monitor=None):
         super().__init__([])
         self.metrics_list = [monitor]
         self.monitor = monitor
@@ -18,7 +18,7 @@ class ModelMetrics(MetricCollection):
         self.save_plot = save_plot
         self.log_wandb = True
         self.true_model = None
-        self.unmixing = unmixing
+        self.unmixing = False
 
     def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
@@ -61,11 +61,12 @@ class ModelMetrics(MetricCollection):
                 "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
                 "noisy": observed_sample,
                 # "noise": model_output['reconstructed_sample'].std(dim=0) if model_output['reconstructed_sample'].shape[0] > 1 else model.sigma,
-                "mse": ((model_output['reconstructed_sample'] - labels['noiseless_data']) ** 2).mean(dim=0)
+                "rmse": ((model_output['reconstructed_sample'] - labels['noiseless_data']) ** 2).mean(dim=0).sqrt()
             },
             'abundance': {
                 "abundance": model_output['latent_sample'].mean(dim=0),
                 "noise": model.transform(model_output['posterior_parameterization'][1])
+                # fixme: why noise is 12?
                 # if model_output['latent_sample'].shape[0] == 1
                 # else model_output['latent_sample'].std(dim=0),
             },
