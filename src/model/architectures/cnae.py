@@ -19,6 +19,7 @@ class Model(LightningModule, Autoencoder):
         self.latent_dim = None
         self.mc_samples = 1
         self.sigma = 0
+        self.metrics.unmixing = model_config["unmixing"]
         self.unmixing = model_config["unmixing"]
 
         self.distance = model_config["distance"]
@@ -62,7 +63,7 @@ class Encoder(nn.Module):
     def forward(self, x):
         x = self.nonlinear_transform(x)
         x = self.linear_mixture_inv(x)
-        return x
+        return x, torch.zeros_like(x)
 
 
 class Decoder(nn.Module):

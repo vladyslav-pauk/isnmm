@@ -21,6 +21,7 @@ class DataModule(LightningDataModule):
         self.num_workers = config.get("num_workers")
         self.shuffle = config.get("shuffle")
         self.dataset = None
+        self.dataset_size = data_config["dataset_size"]
 
         self.transform = HyperspectralTransform(
             output_channels=data_config.get("observed_dim"),

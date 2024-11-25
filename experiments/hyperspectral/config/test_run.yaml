@@ -7,7 +7,7 @@ parameters:
   data_model:
     - convolution
   model_name:
-    - cnae
+    - vasca
   trainer.max_epochs:
     - 200
   early_stopping.min_delta:

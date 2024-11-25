@@ -9,7 +9,7 @@ import src.modules.metric as metric
 
 
 class ModelMetrics(MetricCollection):
-    def __init__(self, show_plot=False, log_plot=False, save_plot=False, monitor=None):
+    def __init__(self, show_plot=False, log_plot=False, save_plot=False, monitor=None, unmixing=False):
         super().__init__([])
         self.metrics_list = [monitor]
         self.monitor = monitor
@@ -18,6 +18,7 @@ class ModelMetrics(MetricCollection):
         self.save_plot = save_plot
         self.log_wandb = True
         self.true_model = None
+        self.unmixing = unmixing
 
     def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
@@ -33,7 +34,8 @@ class ModelMetrics(MetricCollection):
                 image_dims=dims,
                 show_plot=self.show_plot,
                 log_plot=self.log_plot,
-                save_plot=self.save_plot
+                save_plot=self.save_plot,
+                unmixing=self.unmixing
             ),
             'psnr': metric.PSNR(
                 image_dims=dims,
@@ -52,6 +54,7 @@ class ModelMetrics(MetricCollection):
         return metrics
 
     def update(self, observed_sample, model_output, labels, idxes, model):
+
         metric_updates = {
             'reconstruction': {
                 "noiseless": labels['noiseless_data'],
@@ -113,6 +116,7 @@ class ModelMetrics(MetricCollection):
         print("Final metrics saved:")
         for key, value in metrics.items():
             print(f"\t{key} = {value}")
+
 
 # todo: make a parent experiment class module with save_metrics and other universal structures
 # todo: rec and kl save too

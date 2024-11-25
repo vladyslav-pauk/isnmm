@@ -11,7 +11,7 @@ from src.utils.utils import init_plot
 
 
 class Hyperspectral(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=True, save_plot=True, image_dims=None):
+    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=True, save_plot=True, image_dims=None, unmixing=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.show_plot = show_plot
@@ -19,6 +19,7 @@ class Hyperspectral(torchmetrics.Metric):
         self.save_plot = save_plot
         self.image_dims = image_dims
 
+        self.unmixing = unmixing
         self.state_data = {}
 
     def update(self, **kwargs):
@@ -28,10 +29,32 @@ class Hyperspectral(torchmetrics.Metric):
             self.state_data[key].append(value.clone().detach().cpu())
 
     def compute(self):
-        plot_data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
+        for key, value in self.state_data.items():
+            self.state_data[key] = torch.cat(value, dim=0)
+        # plot_data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
+
+        if self.unmixing:
+            self.state_data["abundance"] = self.unmix(self.state_data["abundance"], model=self.unmixing)
+
+        plot_data = {key: val for key, val in self.state_data.items() if key != 'labels'}
         self.plot_data(plot_data)
         self.state_data.clear()
         return {}
+
+    def unmix(self, latent_sample, model=None):
+        import src.model as model_package
+        latent_dim = 6
+        dataset_size = latent_sample.size(0)
+        unmixing_model = getattr(model_package, model).Model
+        unmixing = unmixing_model(
+            latent_dim=latent_dim,
+            dataset_size=dataset_size
+        )
+        latent_sample, mixing_matrix = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
+        # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
+        # unmixing.plot_mse_image(rows=100, cols=10)
+
+        return latent_sample
 
     # def plot_data(self, plot_data):
     #     channels, height, width = self.image_dims
@@ -56,42 +79,34 @@ class Hyperspectral(torchmetrics.Metric):
         plt = init_plot()
         _, height, width = self.image_dims
 
-        # Compute global min and max for normalization
         all_data = torch.cat([data.T.view(-1, height, width) for data in plot_data.values()], dim=0)
         global_min = all_data.min().item()
         global_max = all_data.max().item()
         print(f"Global normalization: min={global_min}, max={global_max}")
 
-        # Iterate over each key and its associated data
         for key, data in plot_data.items():
-            # Reshape the data for plotting
             data = data.T.view(-1, height, width)
             num_components = data.shape[0]
 
-            # Determine the grid layout
-            rows = (num_components + 2) // 3  # 3 components per row
+            cols = 4
+            rows = (num_components + 2) // cols
 
-            # Create a figure and axes
-            fig, axs = plt.subplots(rows, 3, figsize=(9, 4.5 * rows), dpi=300)
-            axs = np.atleast_2d(axs)  # Ensure 2D array of axes for consistency
+            fig, axs = plt.subplots(rows, cols, figsize=(9, 4.5 * rows), dpi=300)
+            axs = np.atleast_2d(axs)
 
-            # Plot each component
             for i in range(num_components):
-                row, col = divmod(i, 3)  # Calculate grid position
+                row, col = divmod(i, cols)
                 component = data[i].cpu().numpy()
                 axs[row, col].imshow(component, cmap='viridis', vmin=global_min, vmax=global_max)
                 axs[row, col].set_title(f'{key.replace("_", " ").capitalize()} {i + 1}')
                 axs[row, col].axis('off')
 
-            # Turn off unused axes
-            for i in range(num_components, rows * 3):
-                row, col = divmod(i, 3)
+            for i in range(num_components, rows * cols):
+                row, col = divmod(i, cols)
                 axs[row, col].axis('off')
 
-            # Adjust layout
             plt.tight_layout()
 
-            # Show or save the plot
             if self.show_plot:
                 plt.show()
             if self.save_plot:
@@ -99,7 +114,6 @@ class Hyperspectral(torchmetrics.Metric):
                 plt.savefig(f"{dir}/{key}_components.png", transparent=True, dpi=300)
                 print(f"Saved {key} components image to '{dir}/{key}_components.png'")
 
-            # Close the figure
             plt.close()
 
     # def plot_data(self, plot_data):

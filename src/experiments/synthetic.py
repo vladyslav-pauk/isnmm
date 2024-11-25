@@ -68,7 +68,7 @@ class ModelMetrics(MetricCollection):
             latent_sample_qr = labels["latent_sample_qr"]
             # latent_sample_averaged = model_output["latent_sample_mean"].mean(0)
             latent_sample_mean = model_output["latent_sample"].mean(0)
-            model.unmixing = None
+            # model.unmixing = None
             latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, model)
 
             linearly_mixed_sample = model.decoder.linear_mixture(latent_sample_mean)

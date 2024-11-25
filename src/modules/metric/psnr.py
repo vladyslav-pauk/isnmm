@@ -32,8 +32,8 @@ class PSNR(torchmetrics.Metric):
     def plot(self, plot_data):
         channels, height, width = self.image_dims
         num_components = next(iter(plot_data.values())).shape[-1]
-        rows = (num_components + 2) // 3
-        cols = 3
+        cols = 4
+        rows = (num_components + 2) // cols
 
         fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(3 * cols, 4.5 * rows), dpi=300)
         axs = np.atleast_2d(axs)  # Ensure axs is at least 2D
