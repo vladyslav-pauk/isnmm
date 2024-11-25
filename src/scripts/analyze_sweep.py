@@ -72,6 +72,7 @@ if __name__ == "__main__":
 
 # todo: unify module structures and make base classes for all modules
 
+# fixme: plot panels arrange and font size
 # fixme: implement ground truth image (vasca)
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)

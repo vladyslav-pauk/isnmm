@@ -54,7 +54,7 @@ class Module(LightningModule):
             if "labels" in data_sample.keys():
                 print("Labelled data found")
 
-                if self.latent_dim is None:
+                if self.latent_dim is None and "latent_sample" in data_sample["labels"].keys():
                     self.latent_dim = data_sample["labels"]["latent_sample"].shape[-1]
 
                 if self.sigma is None:

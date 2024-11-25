@@ -7,7 +7,7 @@ parameters:
   data_model:
     - convolution
   model_name:
-    - nisca
+    - cnae
   trainer.max_epochs:
     - 200
   early_stopping.min_delta:
@@ -15,7 +15,7 @@ parameters:
   data_loader.batch_size:
     - 100
   dataset_size:
-    - 10000
+    - 2000
   observed_dim:
     - 12
   latent_dim:
@@ -27,12 +27,10 @@ parameters:
   model.sigma:
     -
   decoder.hidden_layers:
-    - h1: 256
-  encoder.hidden_layers:
     - h1: 512
+  encoder.hidden_layers:
+    - h1: 256
       h2: 256
-      h3: 128
-      h4: 64
   model.mc_samples:
       - 1
   torch_seed:
