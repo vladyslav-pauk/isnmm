@@ -42,7 +42,7 @@ class PSNR(torchmetrics.Metric):
 
             for idx, (key, data) in enumerate(plot_data.items()):
 
-                data = data.view(num_components, height, width)
+                data = data.T.view(-1, height, width)
                 component = data[comp_idx].cpu().numpy()
 
                 row = comp_idx // cols

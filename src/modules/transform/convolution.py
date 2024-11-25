@@ -69,11 +69,14 @@ class HyperspectralTransform(nn.Module):
             raise ValueError("Normalization parameters not set. Ensure forward normalization is applied first.")
         return tensor * (self.max_val - self.min_val) + self.min_val
 
-    def flatten(self, x):
-        return x.reshape(-1, x.size(0))
+    def flatten(self, data):
+        data = torch.flatten(data, start_dim=1).T
 
-    def unflatten(self, x):
-        return x.view(self.output_channels, self.height, self.width)
+        return data
+
+    def unflatten(self, data):
+        data = data.T.view(-1, self.height, self.width)
+        return data
 
     def calculate_transformed_dimensions(self, height, width):
         crop_pixels = int(self.dataset_size)

@@ -84,14 +84,15 @@ class GenerativeModel:  # (Distribution)
         if self.snr_db is None:
             self.sigma = torch.tensor(0.0)
 
-        # fixme: make sure sigma is computed right
-            
         self.observed_sample = self.noiseless_sample + self.sigma * noise_sample
         return self.observed_sample, (self.latent_sample, self.linearly_mixed_sample, self.noiseless_sample)
         # task: use dicts instead of tuples for forward method
 
     def sample(self):
-        sample_shape = torch.Size([self.config["dataset_size"]])
+        try:
+            sample_shape = torch.Size([self.config["dataset_size"]])
+        except:
+            sample_shape = torch.Size([1])
         self.latent_sample = self.latent_dist.sample(sample_shape)
         self.noise_sample = self.noise_dist.sample(sample_shape)
         self.latent_sample_qr, _ = np.linalg.qr(self.latent_sample)

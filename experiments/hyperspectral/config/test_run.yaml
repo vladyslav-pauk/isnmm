@@ -15,21 +15,23 @@ parameters:
   data_loader.batch_size:
     - 100
   dataset_size:
-    - 10000
+    - 1000
   observed_dim:
-    - 48
+    - 12
+  latent_dim:
+    - 6
   model.latent_dim:
-    - 3
+    - 6
   snr:
-    - 10
+    - 30
   model.sigma:
     -
   decoder.hidden_layers:
     - h1: 128
   encoder.hidden_layers:
-    - h1: 256
-      h2: 128
-      h3: 64
+    - h1: 512
+      h2: 256
+      h3: 128
   model.mc_samples:
       - 1
   torch_seed:

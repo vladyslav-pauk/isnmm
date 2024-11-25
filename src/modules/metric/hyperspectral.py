@@ -53,14 +53,16 @@ class Hyperspectral(torchmetrics.Metric):
     #         plt.close()
 
     def plot_data(self, plot_data):
-        channels, height, width = self.image_dims
+        _, height, width = self.image_dims
 
         plt = init_plot()
 
         key, data = next(iter(plot_data.items()))
-        num_components = data.shape[-1]
 
-        data = data.view(num_components, height, width)
+        data = data.T.view(-1, height, width)
+
+        num_components = data.shape[0]
+
         rows = (num_components + 2) // 3
 
         if len(plot_data) == 1:
@@ -91,7 +93,7 @@ class Hyperspectral(torchmetrics.Metric):
                 axs = np.atleast_1d(axs)
 
                 for idx, (key, data) in enumerate(plot_data.items()):
-                    data = data.view(num_components, height, width)
+                    data = data.T.view(-1, height, width)
                     component = data[comp_idx].cpu().numpy()
 
                     axs[idx].imshow(component, cmap='viridis')
@@ -120,9 +122,9 @@ if __name__ == "__main__":
     }
     data_config = {
         "snr": 25,
-        "dataset_size": 100,
+        "dataset_size": 1000,
         "observed_dim": 3,
-        "latent_dim": 2
+        "latent_dim": 3
     }
 
     data_module = DataModule(data_config, transform=HyperspectralTransform(
@@ -136,9 +138,13 @@ if __name__ == "__main__":
 
     observed_images = data_module.noisy_data
     transformed_data = data_module.transform(observed_images)
-    transformed_images = data_module.transform.unflatten(transformed_data)
-    reconstructed_images = data_module.transform.inverse(transformed_data)
+    transformed_images = transformed_data
 
-    hyperspectral_metric = Hyperspectral(show_plot=True, save_plot=False)
+    dat = data_module.transform.inverse(transformed_data)
+    reconstructed_images = data_module.transform.flatten(dat)
+
+    img_dims = (data_config["observed_dim"], data_module.transform.height, data_module.transform.width)
+
+    hyperspectral_metric = Hyperspectral(show_plot=True, save_plot=False, image_dims=img_dims)
     hyperspectral_metric.update(recovered_abundances=reconstructed_images, transformed_images=transformed_images)
     hyperspectral_metric.compute()
