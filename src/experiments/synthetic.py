@@ -69,7 +69,7 @@ class ModelMetrics(MetricCollection):
             # latent_sample_averaged = model_output["latent_sample_mean"].mean(0)
             latent_sample_mean = model_output["latent_sample"].mean(0)
             # model.unmixing = None
-            latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, model)
+            latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, latent_sample_true.shape[-1], model)
 
             linearly_mixed_sample = model.decoder.linear_mixture(latent_sample_mean)
 
@@ -127,9 +127,8 @@ class ModelMetrics(MetricCollection):
         for key, value in metrics.items():
             print(f"\t{key} = {value}")
 
-    def unmix(self, latent_sample, model):
+    def unmix(self, latent_sample, latent_dim, model):
         if model.unmixing:
-            latent_dim = latent_sample.size(-1)
             unmixing_model = getattr(model_package, model.unmixing.upper()).Model
             unmixing = unmixing_model(
                 latent_dim=latent_dim,

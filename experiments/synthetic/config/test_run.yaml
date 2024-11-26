@@ -5,9 +5,9 @@ metric:
 parameters:
   experiment_name: synthetic
   data_model:
-    - linear
+    - cnae
   model_name:
-    - vasca
+    - cnae
   trainer.max_epochs:
     - 1000
   early_stopping.min_delta:
@@ -16,6 +16,8 @@ parameters:
     - 100
   observed_dim:
     - 6
+  model.latent_dim:
+    - 3
   latent_dim:
     - 3
   dataset_size:
@@ -26,8 +28,7 @@ parameters:
     - h1: 128
   encoder.hidden_layers:
     - h1: 128
-      h2: 64
-      h3: 32
+      h2: 128
   model.mc_samples:
       - 1
   torch_seed:
