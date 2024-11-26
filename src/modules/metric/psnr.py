@@ -37,7 +37,7 @@ class PSNR(torchmetrics.Metric):
         cols = 4
         rows = (num_components + 2) // cols
 
-        fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(3 * cols, 4.5 * rows), dpi=300)
+        fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(9, 4.5 * rows), dpi=300)
         axs = np.atleast_2d(axs)
 
         for comp_idx in range(num_components):

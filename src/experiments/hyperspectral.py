@@ -62,8 +62,8 @@ class ModelMetrics(MetricCollection):
         metric_updates = {
             'reconstruction': {
                 "noiseless": labels['noiseless_data'],
-                "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
                 "noisy": observed_sample,
+                "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
                 # "noise": model_output['reconstructed_sample'].std(dim=0) if model_output['reconstructed_sample'].shape[0] > 1 else model.sigma,
                 "rmse": ((model_output['reconstructed_sample'] - labels['noiseless_data']) ** 2).mean(dim=0).sqrt()
             },

@@ -34,7 +34,10 @@ class Hyperspectral(torchmetrics.Metric):
             self.state_data[key] = torch.cat(value, dim=0)
         # plot_data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
         if self.unmixing:
-            self.state_data["abundance"] = self.unmix(self.state_data["abundance"], latent_dim=self.image_dims[0], model=self.unmixing)
+            self.state_data["abundance"], mixing_matrix = self.unmix(self.state_data["abundance"], latent_dim=self.image_dims[0], model=self.unmixing)
+            mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
+
+            self.state_data["noise"] = torch.matmul(mixing_matrix_pinv, self.state_data["noise"].T).T
 
         plot_data = {key: val for key, val in self.state_data.items() if key != 'labels'}
         self.plot_data(plot_data)
@@ -54,7 +57,7 @@ class Hyperspectral(torchmetrics.Metric):
         # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
         # unmixing.plot_mse_image(rows=100, cols=10)
 
-        return latent_sample
+        return latent_sample, mixing_matrix
 
     # def plot_data(self, plot_data):
     #     channels, height, width = self.image_dims
