@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from src.utils.wandb_tools import fetch_wandb_sweep
-from src.utils.utils import font_style, format_string
+from src.utils.utils import font_style, format_string, init_plot
 
 
 class SweepAnalyzer:
@@ -73,8 +73,7 @@ class SweepAnalyzer:
         return formatted_data
 
     def plot_metric(self, averaged_data, save=True, show=False, save_dir=None):
-        font = font_style()
-        plt.rc('font', **font)
+        init_plot()
 
         comparison_name = list(averaged_data[0].keys())[0]
         covariate_name = list(averaged_data[0].keys())[1]
