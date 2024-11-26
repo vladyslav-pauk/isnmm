@@ -1,6 +1,6 @@
 {
+  "data_model": "PaviaU",
   "scale": 5,
-  "data_model": "convolution",
   "metrics": [
     "psnr",
     "abundance",

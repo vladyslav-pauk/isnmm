@@ -71,8 +71,9 @@ if __name__ == "__main__":
 # todo: min 1500 epochs, set in config
 
 # todo: unify module structures and make base classes for all modules
+# todo: plot panels arrange and font size
 
-# fixme: plot panels arrange and font size
+# fixme: make comparison plots abundances for model*component
 # fixme: implement ground truth image (vasca)
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)

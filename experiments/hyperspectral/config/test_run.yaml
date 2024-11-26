@@ -4,8 +4,7 @@ metric:
   name: validation_loss
 parameters:
   experiment_name: hyperspectral
-  data_model:
-    - convolution
+  data_model: PaviaU
   model_name:
     - cnae
   trainer.max_epochs:

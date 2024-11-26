@@ -30,14 +30,24 @@ class DataModule(LightningDataModule):
         )
 
     def prepare_data(self):
-        file_path = os.path.join(os.path.abspath(__file__).split("src")[0], 'datasets/hyperspectral/PaviaU.mat')
-        url = "http://www.ehu.eus/ccwintco/uploads/e/ee/PaviaU.mat"
-        if not os.path.exists(file_path):
-            with open(file_path, "wb") as f:
-                f.write(requests.get(url).content)
-        hyperspectral_data = sio.loadmat(file_path)['paviaU']
+        hyperspectral_data = self.import_data()
+
         self.tensor_data = torch.tensor(hyperspectral_data, dtype=torch.float32).permute(2, 0, 1)
         self.noisy_data = self.add_gaussian_noise(self.tensor_data, self.data_config.get("snr"))
+
+    def import_data(self):
+        dataset = self.data_config["data_model"]
+        file_path = os.path.join(os.path.abspath(__file__).split("src")[0],
+                                 f'datasets/hyperspectral/{dataset}.mat')
+
+        if dataset == "PaviaU":
+            hyperspectral_data = sio.loadmat(file_path)['paviaU']
+            # url = "http://www.ehu.eus/ccwintco/uploads/e/ee/PaviaU.mat"
+            # if not os.path.exists(file_path):
+            #     with open(file_path, "wb") as f:
+            #         f.write(requests.get(url).content)
+
+        return hyperspectral_data
 
     def setup(self, stage=None):
         transformed_data = self.transform(self.noisy_data).detach().cpu()
@@ -115,7 +125,6 @@ class HyperspectralDataset(Dataset):
 
 
 if __name__ == "__main__":
-
     data_config = {
         "batch_size": 128,
         "val_batch_size": 128,
