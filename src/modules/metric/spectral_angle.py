@@ -13,7 +13,7 @@ class SpectralAngle(torchmetrics.Metric):
 
         self.degrees = degrees
 
-    def update(self, matrix_est, matrix_true):
+    def update(self, matrix_est=None, matrix_true=None):
         self.matrix_true.append(matrix_true)
         self.matrix_est.append(matrix_est)
 

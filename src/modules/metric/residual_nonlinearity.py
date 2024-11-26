@@ -18,7 +18,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
         self.save_plot = save_plot
         self.log_plot = log_plot
 
-    def update(self, model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed):
+    def update(self, model_output=None, labels=None, linearly_mixed_sample=None, observed_sample=None, latent_sample_unmixed=None):
 
         self.reconstructed_sample = model_output["reconstructed_sample"].mean(0)
         self.linearly_mixed_sample_true = labels["linearly_mixed_sample"]

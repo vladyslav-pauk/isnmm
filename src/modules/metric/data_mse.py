@@ -16,9 +16,10 @@ class DataMse(torchmetrics.Metric):
         self.add_state("model_data", default=[], dist_reduce_fx='cat')
         self.add_state("true_data", default=[], dist_reduce_fx='cat')
 
-    def update(self, model_A, true_A):
-        self.model_data.append(model_A.clone().detach().cpu())
-        self.true_data.append(true_A.clone().detach().cpu())
+    def update(self, matrix_true=None, matrix_est=None):
+
+        self.model_data.append(matrix_est.clone().detach().cpu())
+        self.true_data.append(matrix_true.clone().detach().cpu())
 
     def compute(self):
         model_data = torch.cat(self.model_data, dim=0)

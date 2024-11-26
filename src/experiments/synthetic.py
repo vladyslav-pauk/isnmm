@@ -74,10 +74,34 @@ class ModelMetrics(MetricCollection):
             linearly_mixed_sample = model.decoder.linear_mixture(latent_sample_mean)
 
             metric_updates = {
-                'subspace_distance': (latent_sample_unmixed, latent_sample_qr),
-                'r_square': (model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed),
-                'latent_mse': (latent_sample_unmixed, latent_sample_true),
-                'latent_sam': (latent_sample_unmixed, latent_sample_true),
+                # 'subspace_distance': (latent_sample_unmixed, latent_sample_qr),
+                # 'r_square': (model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed),
+                # # 'latent_mse': (latent_sample_unmixed, latent_sample_true),
+                # 'latent_mse': {
+                #     "reconstructed": latent_sample_unmixed,
+                #     "target": latent_sample_true
+                # },
+                # 'latent_sam': (latent_sample_unmixed, latent_sample_true),
+                # 'r_square': model_output, labels, linearly_mixed_sample, observed_sample, latent_sample_unmixed,
+                'r_square': {
+                    "model_output": model_output,
+                    "labels": labels,
+                    "linearly_mixed_sample": linearly_mixed_sample,
+                    "observed_sample": observed_sample,
+                    "latent_sample_unmixed": latent_sample_unmixed
+                },
+                'subspace_distance': {
+                    "sample": latent_sample_unmixed,
+                    "sample_qr": latent_sample_qr
+                },
+                'latent_mse': {
+                    "matrix_est": latent_sample_unmixed,
+                    "matrix_true": latent_sample_true
+                },
+                'latent_sam': {
+                    "matrix_est": latent_sample_unmixed,
+                    "matrix_true": latent_sample_true
+                }
                 # 'mixture_mse_db': (self.linear_mixture_true, linear_mixture),
                 # 'mixture_sam': (self.linear_mixture_true, linear_mixture),
                 # 'mixture_log_volume': (linear_mixture,),
@@ -85,9 +109,9 @@ class ModelMetrics(MetricCollection):
             }
             # todo: why i use idxes only in subspace distance
 
-            for metric_name, args in metric_updates.items():
+            for metric_name, kwargs in metric_updates.items():
                 if self.metrics_list is None or metric_name in self.metrics_list:
-                    self[metric_name].update(*args)
+                    self[metric_name].update(**kwargs)
 
     def save_metrics(self, metrics, save_dir=None):
         if wandb.run is not None and save_dir is None:

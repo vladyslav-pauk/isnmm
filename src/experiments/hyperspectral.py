@@ -47,7 +47,17 @@ class ModelMetrics(MetricCollection):
                 log_plot=self.log_plot,
                 save_plot=self.save_plot
             ),
+            'error': metric.Hyperspectral(
+                image_dims=image_dims,
+                show_plot=self.show_plot,
+                log_plot=self.log_plot,
+                save_plot=self.save_plot
+            ),
+            'latent_mse': metric.data_mse.DataMse(),
+            'latent_sam': metric.SpectralAngle(),
+            'subspace_distance': metric.SubspaceDistance(),
         }
+
 
         if not self.metrics_list:
             self.metrics_list = all_metrics.keys()
@@ -61,23 +71,62 @@ class ModelMetrics(MetricCollection):
 
         metric_updates = {
             'reconstruction': {
-                "noiseless": labels['noiseless_data'],
                 "noisy": observed_sample,
                 "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
-                # "noise": model_output['reconstructed_sample'].std(dim=0) if model_output['reconstructed_sample'].shape[0] > 1 else model.sigma,
-                "rmse": ((model_output['reconstructed_sample'] - labels['noiseless_data']) ** 2).mean(dim=0).sqrt()
             },
             'abundance': {
                 "abundance": model_output['latent_sample'].mean(dim=0),
                 "noise": model.transform(model_output['posterior_parameterization'][1])
                 # if model_output['latent_sample'].shape[0] == 1
                 # else model_output['latent_sample'].std(dim=0),
-            },
-            'psnr': {
-                "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
-                "target": labels['noiseless_data']
-            },
+            }
         }
+
+        if labels:
+            if labels['noiseless_data'] is not None:
+                metric_updates.update({
+                    'error': {
+                        "noiseless": labels['noiseless_data'],
+                        # "noise": model_output['reconstructed_sample'].std(dim=0) if model_output['reconstructed_sample'].shape[0] > 1 else model.sigma,
+                        "rmse": ((model_output['reconstructed_sample'] - labels['noiseless_data']) ** 2).mean(dim=0).sqrt()
+                    },
+                    'psnr': {
+                        "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
+                        "target": labels['noiseless_data']
+                    },
+                })
+
+            if labels['latent_sample'] is not None:
+
+                latent_sample_true = labels["latent_sample"]
+                # latent_sample_unmixed, linear_mixture = model.unmix(
+                #     model_output['latent_sample'].mean(dim=0), latent_sample_true.shape[-1]
+                # )
+                latent_sample_unmixed = model_output['latent_sample'].mean(dim=0)
+                latent_sample_qr = labels["latent_sample_qr"]
+                # fixme: implement unmixing for latent_metrics
+
+                metric_updates.update({
+                    'abundance': {
+                        "abundance": model_output['latent_sample'].mean(dim=0),
+                        "true": labels['latent_sample'],
+                        "noise": model.transform(model_output['posterior_parameterization'][1])
+                    },
+                    'latent_mse': {
+                        "matrix_est": latent_sample_unmixed,
+                        "matrix_true": latent_sample_true
+                    },
+                    'latent_sam': {
+                        "matrix_est": latent_sample_unmixed,
+                        "matrix_true": latent_sample_true
+                    },
+                    'subspace_distance': {
+                        "sample": latent_sample_unmixed,
+                        "sample_qr": latent_sample_qr
+                    }
+                })
+                # fixme: match components in plots
+                # fixme: make images for all metrics
 
         for metric_name, kwargs in metric_updates.items():
             if self.metrics_list is None or metric_name in self.metrics_list:
@@ -121,6 +170,8 @@ class ModelMetrics(MetricCollection):
         for key, value in metrics.items():
             print(f"\t{key} = {value}")
 
+
+# fixme: implement metrics for ground truth abundance
 
 # todo: make a parent experiment class module with save_metrics and other universal structures
 # todo: rec and kl save too

@@ -32,18 +32,26 @@ class PSNR(torchmetrics.Metric):
 
     def plot(self, plot_data):
         plt = init_plot()
+        import os
+
+        # A4 width in inches
+        A4_WIDTH = 8.27
+
         channels, height, width = self.image_dims
         num_components = next(iter(plot_data.values())).shape[-1]
         cols = 4
-        rows = (num_components + 2) // cols
+        rows = (num_components + cols - 1) // cols  # Ensure enough rows
 
-        fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(9, 4.5 * rows), dpi=300)
-        axs = np.atleast_2d(axs)
+        # Calculate aspect ratio and dynamic figure height
+        aspect_ratio = height / width
+        fig_width = A4_WIDTH
+        fig_height = fig_width * rows / cols * aspect_ratio
+
+        fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(fig_width, fig_height), dpi=300)
+        axs = np.atleast_2d(axs)  # Ensure axes are in 2D array form
 
         for comp_idx in range(num_components):
-
             for idx, (key, data) in enumerate(plot_data.items()):
-
                 data = data.T.view(-1, height, width)
                 component = data[comp_idx].cpu().numpy()
 
@@ -54,10 +62,16 @@ class PSNR(torchmetrics.Metric):
                 axs[row, col].set_title(f'{key.replace("_", " ").capitalize()}, {comp_idx}')
                 axs[row, col].axis('off')
 
+        # Turn off unused axes
+        for i in range(num_components, rows * cols):
+            row, col = divmod(i, cols)
+            axs[row, col].axis('off')
+
         plt.tight_layout()
 
         if self.save_plot:
             dir = run_dir('predictions')
+            os.makedirs(dir, exist_ok=True)  # Ensure the directory exists
             plt.savefig(f"{dir}/psnr.png", transparent=True, dpi=300)
             print(f"Saved PSNR images to '{dir}/psnr.png'")
 

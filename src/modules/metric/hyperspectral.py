@@ -79,7 +79,11 @@ class Hyperspectral(torchmetrics.Metric):
     #         plt.close()
 
     def plot_data(self, plot_data):
+        import os
         plt = init_plot()
+
+        # A4 width in inches (8.27 inches)
+        A4_WIDTH = 8.27
 
         _, height, width = self.image_dims
 
@@ -93,9 +97,14 @@ class Hyperspectral(torchmetrics.Metric):
             num_components = data.shape[0]
 
             cols = 4
-            rows = (num_components + 2) // cols
+            rows = (num_components + cols - 1) // cols  # Ensure enough rows
 
-            fig, axs = plt.subplots(rows, cols, figsize=(9, 4.5 * rows), dpi=300)
+            # Dynamically calculate height to maintain aspect ratio
+            aspect_ratio = height / width
+            fig_width = A4_WIDTH
+            fig_height = fig_width * rows / cols * aspect_ratio  # Scale height by rows and aspect ratio
+
+            fig, axs = plt.subplots(rows, cols, figsize=(fig_width, fig_height), dpi=300)
             axs = np.atleast_2d(axs)
 
             for i in range(num_components):
@@ -113,6 +122,7 @@ class Hyperspectral(torchmetrics.Metric):
 
             if self.save_plot:
                 dir = run_dir('predictions')
+                os.makedirs(dir, exist_ok=True)
                 plt.savefig(f"{dir}/{key}_components.png", transparent=True, dpi=300)
                 print(f"Saved {key} components image to '{dir}/{key}_components.png'")
 

@@ -29,34 +29,58 @@ class DataModule(LightningDataModule):
             dataset_size=data_config.get("dataset_size")
         )
 
+        self.latent_transform = HyperspectralTransform(
+            output_channels=data_config.get("latent_dim"),
+            normalize=data_config.get("normalize", True),
+            dataset_size=data_config.get("dataset_size")
+        )
+
     def prepare_data(self):
-        hyperspectral_data = self.import_data()
+        hyperspectral_data, labels = self.import_data()
 
         self.tensor_data = torch.tensor(hyperspectral_data, dtype=torch.float32).permute(2, 0, 1)
         self.noisy_data = self.add_gaussian_noise(self.tensor_data, self.data_config.get("snr"))
+        self.latent_sample = torch.tensor(labels, dtype=torch.float32) if labels is not None else None
 
     def import_data(self):
         dataset = self.data_config["data_model"]
-        file_path = os.path.join(os.path.abspath(__file__).split("src")[0],
-                                 f'datasets/hyperspectral/{dataset}.mat')
+        data_dir = os.path.join(os.path.abspath(__file__).split("src")[0],
+                                 f'datasets/hyperspectral/{dataset}')
 
         if dataset == "PaviaU":
-            hyperspectral_data = sio.loadmat(file_path)['paviaU']
+            hyperspectral_data = sio.loadmat(data_dir + "/data.mat")['paviaU']
+            labels = None
             # url = "http://www.ehu.eus/ccwintco/uploads/e/ee/PaviaU.mat"
             # if not os.path.exists(file_path):
             #     with open(file_path, "wb") as f:
             #         f.write(requests.get(url).content)
 
-        return hyperspectral_data
+        if dataset == "Urban_R162":
+            mat_data = sio.loadmat(data_dir + "/data.mat")
+            n_row = int(mat_data['nRow'][0, 0])
+            n_col = int(mat_data['nCol'][0, 0])
+
+            hyperspectral_data = mat_data['Y']
+            hyperspectral_data = hyperspectral_data.reshape(-1, n_row, n_col).transpose(1, 2, 0)
+
+            labels = sio.loadmat(data_dir + "/end4_groundTruth.mat")['A']
+            labels = labels.reshape(-1, n_row, n_col).transpose(1, 2, 0)
+
+        return hyperspectral_data, labels
 
     def setup(self, stage=None):
         transformed_data = self.transform(self.noisy_data).detach().cpu()
         noiseless_data = self.transform(self.tensor_data).detach().cpu()
+        latent_data = self.latent_transform(self.latent_sample.permute(2, 0, 1)).detach().cpu() if self.latent_sample is not None else None
+        self.latent_sample_qr, _ = np.linalg.qr(latent_data)
+
         if self.data_config["normalize"]:
             self.sigma /= self.transform.max_val - self.transform.min_val
 
         labels = {
-            "noiseless_data": noiseless_data
+            "noiseless_data": noiseless_data,
+            "latent_sample": latent_data,
+            "latent_sample_qr": self.latent_sample_qr
         }
         self.dataset = HyperspectralDataset(data=transformed_data, labels=labels)
 

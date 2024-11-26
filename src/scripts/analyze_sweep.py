@@ -74,7 +74,7 @@ if __name__ == "__main__":
 # todo: plot panels arrange and font size
 
 # fixme: make comparison plots abundances for model*component
-# fixme: implement ground truth image (vasca)
+
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)
 # fixme: make a container and run on server
@@ -86,3 +86,5 @@ if __name__ == "__main__":
 # fixme: experiment docs describing setups, metrics, datasets, models and results
 
 # fixme: clean up the code (when finished, copy to template before cleaning todos)
+
+# fixme: implement other data classes and experiments for the datasets for PNL
