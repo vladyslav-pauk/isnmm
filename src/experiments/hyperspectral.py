@@ -1,4 +1,5 @@
 from torchmetrics import MetricCollection
+import torch
 
 from src.modules.utils import save_metrics, plot_data
 import src.modules.metric as metric
@@ -49,9 +50,11 @@ class ModelMetrics(MetricCollection):
                 save_plot=self.save_plot,
                 unmixing=self.unmixing
             ),
-            'latent_mse': metric.data_mse.DataMse(),
-            'latent_sam': metric.SpectralAngle(),
-            'subspace_distance': metric.SubspaceDistance(),
+            'latent_mse': metric.data_mse.DataMse(
+                unmixing=self.unmixing
+            ),
+            # 'latent_sam': metric.SpectralAngle(unmixing=self.unmixing),
+            # 'subspace_distance': metric.SubspaceDistance(unmixing=self.unmixing)
         }
 
         if not self.metrics_list:
@@ -70,7 +73,7 @@ class ModelMetrics(MetricCollection):
                 "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
             },
             'abundance': {
-                "abundance": model_output['latent_sample'].mean(dim=0),
+                "latent_sample": model_output['latent_sample'].mean(dim=0),
                 "noise": model.transform(model_output['posterior_parameterization'][1])
                 # if model_output['latent_sample'].shape[0] == 1
                 # else model_output['latent_sample'].std(dim=0),
@@ -93,34 +96,30 @@ class ModelMetrics(MetricCollection):
 
             if labels['latent_sample'] is not None:
 
+                latent_sample = model_output['latent_sample'].mean(dim=0)
                 latent_sample_true = labels["latent_sample"]
-                # latent_sample_unmixed, linear_mixture = model.unmix(
-                #     model_output['latent_sample'].mean(dim=0), latent_sample_true.shape[-1]
-                # )
-                latent_sample_unmixed = model_output['latent_sample'].mean(dim=0)
                 latent_sample_qr = labels["latent_sample_qr"]
-                # fixme: implement unmixing for latent_metrics
-                # fixme: add permutation to unmix, apply to all metrics
+                # fixme: clean unmixing for latent_metrics
 
                 # fixme: make comparison plots abundances for model*component
                 # fixme: training history and comparison match sizes
 
                 metric_updates.update({
                     'abundance': {
-                        "abundance": model_output['latent_sample'].mean(dim=0),
-                        "true": labels['latent_sample'],
+                        "latent_sample": latent_sample,
+                        "true": latent_sample_true,
                         "noise": model.transform(model_output['posterior_parameterization'][1])
                     },
                     'latent_mse': {
-                        "matrix_est": latent_sample_unmixed,
+                        "matrix_est": latent_sample,
                         "matrix_true": latent_sample_true
                     },
                     'latent_sam': {
-                        "matrix_est": latent_sample_unmixed,
+                        "matrix_est": latent_sample,
                         "matrix_true": latent_sample_true
                     },
                     'subspace_distance': {
-                        "sample": latent_sample_unmixed,
+                        "sample": latent_sample,
                         "sample_qr": latent_sample_qr
                     }
                 })
@@ -136,17 +135,21 @@ class ModelMetrics(MetricCollection):
         metrics = {}
         for metric_name in self.metrics_list:
             if metric_name in self:
+
                 metric_value = self[metric_name].compute()
+
                 if metric_value is not None:
                     metrics[metric_name] = metric_value
 
-        self.plot_images()
-        return metrics
+                if self[metric_name].tensor is not None:
+                    plot_data(
+                        {metric_name: self[metric_name].tensor},
+                        self.image_dims,
+                        show_plot=self.show_plot,
+                        save_plot=self.save_plot
+                    )
 
-    def plot_images(self):
-        for metric_name in self.metrics_list:
-            if metric_name in self and self[metric_name].tensor is not None:
-                plot_data({metric_name: self[metric_name].tensor}, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
+        return metrics
 
     # def plot_data(self, plot_data):
     #     channels, height, width = self.image_dims

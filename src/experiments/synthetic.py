@@ -166,3 +166,4 @@ class ModelMetrics(MetricCollection):
             return latent_sample, mixing_matrix
         return latent_sample, model.decoder.linear_mixture.matrix
     # fixme: move to utils
+    # fixme: check synthetic after refactor

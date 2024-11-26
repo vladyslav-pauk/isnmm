@@ -73,7 +73,7 @@ def plot_training_history(model, metrics=None):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "mzn0rge0")
+        "hyperspectral", "veq5dwmg")
 
     # metrics_to_analyze = [
     #     ("subspace_distance", "snr"),

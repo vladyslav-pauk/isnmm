@@ -11,7 +11,7 @@ from src.modules.utils import plot_data
 
 
 class DataMse(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False, db=False):
+    def __init__(self, unmixing=None, dist_sync_on_step=False, db=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.db = db
@@ -19,17 +19,22 @@ class DataMse(torchmetrics.Metric):
         self.add_state("true_data", default=[], dist_reduce_fx='cat')
 
         self.tensor = None
+        self.unmixing = unmixing
 
     def update(self, matrix_true=None, matrix_est=None):
-
         self.model_data.append(matrix_est.clone().detach().cpu())
         self.true_data.append(matrix_true.clone().detach().cpu())
 
     def compute(self):
-        model_data = torch.cat(self.model_data, dim=0)
-        true_data = torch.cat(self.true_data, dim=0)
+        state_data = {
+            "latent_sample": self.model_data,
+            "true_data": self.true_data
+        }
+        for key, value in state_data.items():
+            state_data[key] = torch.cat(value, dim=0)
 
-        mean_mse, mse = self.best_permutation_mse(model_data, true_data)
+
+        state_data, mean_mse, mse = self.unmix(state_data)
 
         if self.db:
             mean_mse = 10 * torch.log10(mean_mse)
@@ -40,7 +45,8 @@ class DataMse(torchmetrics.Metric):
         self.tensor = mse
         return mean_mse
         # fixme: final metrics wrong, not from the last checkpoint in run hyperspectral
-
+        # fixme: rename to components_mse
+        # fixme: make permutation for all models even when no unmixing
     # def best_permutation_mse(self, model_A, true_A):
     #     col_permutations = itertools.permutations(range(model_A.size(1)))
     #     best_mse = float('inf')
@@ -67,6 +73,45 @@ class DataMse(torchmetrics.Metric):
             mse = (true_A - permuted_model_A).pow(2)
 
             if mean_mse < best_mse:
+                permutation = list(perm)
                 best_mse = mean_mse
 
-        return best_mse, mse.detach().cpu()
+        return permutation, best_mse, mse.detach().cpu()
+
+    # def unmix(self, state_data):
+    #     from src.modules.utils import unmix
+    #     for key, value in state_data.items():
+    #         if key == "model_data":
+    #             self.model_data, mixing_matrix = unmix(
+    #                 self.model_data,
+    #                 latent_dim=self.image_dims[0],
+    #                 model=self.unmixing)
+    #             mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
+    #             state_data[key] = torch.matmul(mixing_matrix_pinv, value.T).T
+    #     return state_data
+
+    def unmix(self, state_data):
+        from src.modules.utils import unmix
+        for key, value in state_data.items():
+            if key == "latent_sample":
+                if self.unmixing:
+                    state_data["latent_sample"], mixing_matrix = unmix(
+                        state_data["latent_sample"],
+                        latent_dim=4,
+                        # fixme: latent_dim
+                        model=self.unmixing)
+                    mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
+
+                permutation, mean_mse, mse = self.best_permutation_mse(state_data["latent_sample"],
+                                                                       state_data["true_data"])
+
+                print(permutation)
+                # fixme: fix mse value
+
+                state_data["latent_sample"] = state_data["latent_sample"][:, permutation]
+                if self.unmixing:
+                    mixing_matrix_pinv = mixing_matrix_pinv[permutation]
+            elif key != "true_data":
+                state_data[key] = torch.matmul(mixing_matrix_pinv, value.T).T
+
+        return state_data, mean_mse, mse
