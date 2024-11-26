@@ -141,6 +141,7 @@ def init_plot():
         "savefig.dpi": 300,
         "text.latex.preamble": r"\usepackage{amsmath}"
     })
+    # todo: my color palette
 
     return plt
 

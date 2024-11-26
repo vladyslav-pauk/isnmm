@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 import torch
 import torchmetrics
@@ -32,9 +33,8 @@ class Hyperspectral(torchmetrics.Metric):
         for key, value in self.state_data.items():
             self.state_data[key] = torch.cat(value, dim=0)
         # plot_data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
-
         if self.unmixing:
-            self.state_data["abundance"] = self.unmix(self.state_data["abundance"], latent_dim=4, model=self.unmixing)
+            self.state_data["abundance"] = self.unmix(self.state_data["abundance"], latent_dim=self.image_dims[0], model=self.unmixing)
 
         plot_data = {key: val for key, val in self.state_data.items() if key != 'labels'}
         self.plot_data(plot_data)
@@ -43,7 +43,7 @@ class Hyperspectral(torchmetrics.Metric):
 
     def unmix(self, latent_sample, latent_dim, model=None):
         import src.model as model_package
-        # fixme: dims fix
+
         dataset_size = latent_sample.size(0)
         unmixing_model = getattr(model_package, model).Model
         unmixing = unmixing_model(
@@ -77,6 +77,7 @@ class Hyperspectral(torchmetrics.Metric):
 
     def plot_data(self, plot_data):
         plt = init_plot()
+
         _, height, width = self.image_dims
 
         all_data = torch.cat([data.T.view(-1, height, width) for data in plot_data.values()], dim=0)
@@ -107,12 +108,13 @@ class Hyperspectral(torchmetrics.Metric):
 
             plt.tight_layout()
 
-            if self.show_plot:
-                plt.show()
             if self.save_plot:
                 dir = run_dir('predictions')
                 plt.savefig(f"{dir}/{key}_components.png", transparent=True, dpi=300)
                 print(f"Saved {key} components image to '{dir}/{key}_components.png'")
+
+            if self.show_plot:
+                plt.show()
 
             plt.close()
 

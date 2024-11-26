@@ -9,10 +9,12 @@ class Module(LightningModule):
 
         self.latent_dim = None
         self.observed_dim = None
-        self.encoder = encoder
-        self.decoder = decoder
         self.metrics = None
         self.unmixing = False
+
+        self.encoder = encoder
+        self.decoder = decoder
+
 
     def forward(self, observed_batch):
         posterior_parameterization = self.encoder(observed_batch)
@@ -60,8 +62,8 @@ class Module(LightningModule):
                 if self.sigma is None:
                     self.sigma = datamodule.sigma
 
-            if self.trainer.model.latent_dim:
-                self.latent_dim = self.trainer.model.latent_dim
+            if self.trainer.model.model_config["latent_dim"]:
+                self.latent_dim = self.trainer.model.model_config["latent_dim"]
 
             if self.unmixing:
                 print(f"Unmixing latent sample with {self.unmixing}")
@@ -72,9 +74,13 @@ class Module(LightningModule):
             self.decoder.construct(self.latent_dim, self.observed_dim)
 
             self.metrics.true_model = self.trainer.datamodule
+            self.metrics.latent_dim = self.latent_dim
 
         if stage == 'predict':
+            if self.trainer.model.model_config["latent_dim"]:
+                self.latent_dim = self.trainer.model.model_config["latent_dim"]
             self.metrics.true_model = self.trainer.datamodule
+            self.metrics.latent_dim = self.trainer.model.latent_dim
 
     def on_train_start(self) -> None:
         if self.metrics.log_wandb:

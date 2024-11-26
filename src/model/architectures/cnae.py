@@ -15,8 +15,8 @@ class Model(LightningModule, Autoencoder):
         self.optimizer_config = optimizer_config
 
         self.metrics = metrics
+        self.model_config = model_config
 
-        self.latent_dim = None
         self.mc_samples = 1
         self.sigma = 0
         self.metrics.unmixing = model_config["unmixing"]

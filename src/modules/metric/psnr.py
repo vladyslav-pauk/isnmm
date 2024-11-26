@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from src.modules.data.hyperspectral import DataModule
 from src.modules.transform.convolution import HyperspectralTransform
 from src.utils.wandb_tools import run_dir
+from src.utils.utils import init_plot
 
 
 class PSNR(torchmetrics.Metric):
@@ -30,13 +31,14 @@ class PSNR(torchmetrics.Metric):
         return psnr_avg
 
     def plot(self, plot_data):
+        plt = init_plot()
         channels, height, width = self.image_dims
         num_components = next(iter(plot_data.values())).shape[-1]
         cols = 4
         rows = (num_components + 2) // cols
 
         fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(3 * cols, 4.5 * rows), dpi=300)
-        axs = np.atleast_2d(axs)  # Ensure axs is at least 2D
+        axs = np.atleast_2d(axs)
 
         for comp_idx in range(num_components):
 
@@ -48,18 +50,19 @@ class PSNR(torchmetrics.Metric):
                 row = comp_idx // cols
                 col = comp_idx % cols
 
-                axs[row, col].imshow(component, cmap='viridis')  # Show first channel
+                axs[row, col].imshow(component, cmap='viridis')
                 axs[row, col].set_title(f'{key.replace("_", " ").capitalize()}, {comp_idx}')
                 axs[row, col].axis('off')
 
         plt.tight_layout()
 
-        if self.show_plot:
-            plt.show()
         if self.save_plot:
             dir = run_dir('predictions')
             plt.savefig(f"{dir}/psnr.png", transparent=True, dpi=300)
             print(f"Saved PSNR images to '{dir}/psnr.png'")
+
+        if self.show_plot:
+            plt.show()
 
         plt.close()
 

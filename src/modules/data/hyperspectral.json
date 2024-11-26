@@ -7,7 +7,6 @@
     "reconstruction"
   ],
   "observed_dim": 10,
-  "latent_dim": 3,
   "nonlinear_transform_init": null,
   "mixing_matrix_init": null,
   "normalize": true,

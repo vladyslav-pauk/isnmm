@@ -4,6 +4,7 @@ import torchmetrics
 
 from src.utils.wandb_tools import run_dir
 from src.utils.utils import init_plot
+import matplotlib.pyplot as plt
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
@@ -187,10 +188,18 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
         if labels is not None:
             if show_plot:
                 print(f"R-squared for component {i}: {labels[i]:.4f}")
+
     plt.tight_layout()
 
     plt.xlabel(r"$A z$")
     plt.ylabel(r"$f(A z)$")
+
+    if save_plot:
+        dir = run_dir('predictions')
+        path = f"{dir}/{name}.png"
+
+        fig.savefig(path, transparent=True)
+        print(f"Saved {name} plot to '{path}'")
 
     if show_plot:
         plt.show()
@@ -199,12 +208,6 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
     #         name: plt
     #     })
 
-    if save_plot:
-        dir = run_dir('predictions')
-        path = f"{dir}/{name}.png"
-
-        fig.savefig(path, transparent=True)
-        print(f"Saved {name} plot to '{path}'")
     plt.close()
     return plt
 

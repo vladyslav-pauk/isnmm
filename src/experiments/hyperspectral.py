@@ -20,25 +20,29 @@ class ModelMetrics(MetricCollection):
         self.true_model = None
         self.unmixing = False
 
+        self.latent_dim = None
+
     def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
-        dims = self.true_model.transform.unflatten(self.true_model.dataset.data).shape
+        image_dims = list(self.true_model.transform.unflatten(self.true_model.dataset.data).shape)
+        image_dims[0] = self.latent_dim
+
         all_metrics = {
             'reconstruction': metric.Hyperspectral(
-                image_dims=dims,
+                image_dims=image_dims,
                 show_plot=self.show_plot,
                 log_plot=self.log_plot,
                 save_plot=self.save_plot
             ),
             'abundance': metric.Hyperspectral(
-                image_dims=dims,
+                image_dims=image_dims,
                 show_plot=self.show_plot,
                 log_plot=self.log_plot,
                 save_plot=self.save_plot,
                 unmixing=self.unmixing
             ),
             'psnr': metric.PSNR(
-                image_dims=dims,
+                image_dims=image_dims,
                 show_plot=self.show_plot,
                 log_plot=self.log_plot,
                 save_plot=self.save_plot
@@ -66,7 +70,6 @@ class ModelMetrics(MetricCollection):
             'abundance': {
                 "abundance": model_output['latent_sample'].mean(dim=0),
                 "noise": model.transform(model_output['posterior_parameterization'][1])
-                # fixme: why noise is 12?
                 # if model_output['latent_sample'].shape[0] == 1
                 # else model_output['latent_sample'].std(dim=0),
             },

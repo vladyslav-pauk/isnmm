@@ -26,9 +26,10 @@ class Sweep:
     def step(self):
         config = init_run(self.experiment, self.id)
 
-        data_model = initialize_data_model(**config)
-        data_model.sample()
-        data_model.save_data()
+        if self.experiment == "synthetic":
+            data_model = initialize_data_model(**config)
+            data_model.sample()
+            data_model.save_data()
 
         self.train_model(**config)
 

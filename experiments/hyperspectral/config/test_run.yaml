@@ -7,7 +7,7 @@ parameters:
   data_model:
     - convolution
   model_name:
-    - cnae
+    - nisca
   trainer.max_epochs:
     - 200
   early_stopping.min_delta:
@@ -18,12 +18,10 @@ parameters:
     - 2000
   observed_dim:
     - 12
-  latent_dim:
-    - 4
-  model.latent_dim:
-    - 4
   snr:
     - 20
+  model.latent_dim:
+    - 4
   model.sigma:
     -
   decoder.hidden_layers:
