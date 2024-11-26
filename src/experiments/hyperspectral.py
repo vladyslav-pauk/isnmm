@@ -128,7 +128,7 @@ class ModelMetrics(MetricCollection):
             if self.metrics_list is None or metric_name in self.metrics_list:
                 self[metric_name].update(**kwargs)
 
-    def save(self, metrics, save_dir):
+    def save(self, metrics, save_dir=None):
         save_metrics(metrics, save_dir)
 
     def compute(self):

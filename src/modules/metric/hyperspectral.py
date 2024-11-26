@@ -35,6 +35,7 @@ class Hyperspectral(torchmetrics.Metric):
             state_data[key] = torch.cat(value, dim=0)
 
         state_data = self.unmix(state_data)
+        state_data = self.permute(state_data)
 
         data = {key: val for key, val in state_data.items() if key != 'labels'}
         plot_data(data, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
@@ -42,26 +43,26 @@ class Hyperspectral(torchmetrics.Metric):
         return None
 
     def unmix(self, state_data):
-        for key, value in state_data.items():
-            if key == "latent_sample":
-                if self.unmixing:
-                    state_data["latent_sample"], mixing_matrix = unmix(
-                        state_data["latent_sample"],
-                        latent_dim=self.image_dims[0],
-                        model=self.unmixing)
-                    mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
+        if self.unmixing and "latent_sample" in state_data:
+            state_data["latent_sample"], mixing_matrix = unmix(
+                state_data["latent_sample"],
+                latent_dim=self.image_dims[0],
+                model=self.unmixing
+            )
+            mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
 
-                permutation, _ = self.best_permutation_mse(
-                    state_data["latent_sample"],
-                    state_data["true"]
-                )
-
-                state_data["latent_sample"] = state_data["latent_sample"][:, permutation]
-                if self.unmixing:
-                    mixing_matrix_pinv = mixing_matrix_pinv[permutation]
-            elif key != "true":
-                if self.unmixing:
+            for key, value in state_data.items():
+                if key != "latent_sample" and key != "true":
                     state_data[key] = torch.matmul(mixing_matrix_pinv, value.T).T
+
+        return state_data
+
+    def permute(self, state_data):
+        if "latent_sample" in state_data:
+            permutation, _ = self.best_permutation_mse(state_data["latent_sample"], state_data["true"])
+            for key in state_data:
+                if key != "true":
+                    state_data[key] = state_data[key][:, permutation]
         return state_data
 
     def best_permutation_mse(self, model_A, true_A):
@@ -81,6 +82,7 @@ class Hyperspectral(torchmetrics.Metric):
                 best_mse = mean_mse
 
         return permutation, best_mse
+    # fixme: factor out unmixing and permutation to experiments?
 
 
 if __name__ == "__main__":

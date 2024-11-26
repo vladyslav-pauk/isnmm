@@ -19,6 +19,7 @@ def load_model(run_id, experiment_name):
     best_model_path = os.path.join(checkpoints_dir, checkpoint_files[0])
     checkpoint = torch.load(best_model_path)
     config = checkpoint["hyper_parameters"]
+    print(f"Loaded model {config["model_name"]} from {best_model_path}")
 
     module = getattr(model_package, config['model_name'].upper())
     encoder = module.Encoder(config=config['encoder'])
@@ -73,7 +74,7 @@ def plot_training_history(model, metrics=None):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "veq5dwmg")
+        "hyperspectral", "bkyrxgk7")
 
     # metrics_to_analyze = [
     #     ("subspace_distance", "snr"),

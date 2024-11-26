@@ -42,9 +42,6 @@ class DataMse(torchmetrics.Metric):
         # plot_data(mse, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
         self.tensor = mse
         return mean_mse
-        # fixme: final metrics wrong, not from the last checkpoint in run hyperspectral
-        # fixme: rename to components_mse
-        # fixme: make permutation for all models even when no unmixing
 
     # def best_permutation_mse(self, model_A, true_A):
     #     col_permutations = itertools.permutations(range(model_A.size(1)))
@@ -78,6 +75,7 @@ class DataMse(torchmetrics.Metric):
                 best_mse = mse
 
         return permutation, best_mean_mse, best_mse.detach().cpu()
+    # fixme: factor out permutation
 
     # def unmix(self, state_data):
     #     from src.modules.utils import unmix
@@ -98,8 +96,7 @@ class DataMse(torchmetrics.Metric):
                 if self.unmixing:
                     state_data["latent_sample"], mixing_matrix = unmix(
                         state_data["latent_sample"],
-                        latent_dim=4,
-                        # fixme: latent_dim
+                        latent_dim=state_data["true_data"].shape[-1],
                         model=self.unmixing)
                     mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
 
@@ -107,8 +104,6 @@ class DataMse(torchmetrics.Metric):
                     state_data["latent_sample"],
                     state_data["true_data"]
                 )
-
-                # fixme: fix mse value
 
                 state_data["latent_sample"] = state_data["latent_sample"][:, permutation]
                 if self.unmixing:
