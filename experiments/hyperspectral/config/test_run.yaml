@@ -6,7 +6,7 @@ parameters:
   experiment_name: hyperspectral
   data_model: Urban_R162
   model_name:
-    - vasca
+    - cnae
   trainer.max_epochs:
     - 200
   early_stopping.min_delta:

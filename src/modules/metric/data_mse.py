@@ -2,7 +2,6 @@ import torch
 import torchmetrics
 import itertools
 
-
 import torch
 import torchmetrics
 import itertools
@@ -33,7 +32,6 @@ class DataMse(torchmetrics.Metric):
         for key, value in state_data.items():
             state_data[key] = torch.cat(value, dim=0)
 
-
         state_data, mean_mse, mse = self.unmix(state_data)
 
         if self.db:
@@ -47,6 +45,7 @@ class DataMse(torchmetrics.Metric):
         # fixme: final metrics wrong, not from the last checkpoint in run hyperspectral
         # fixme: rename to components_mse
         # fixme: make permutation for all models even when no unmixing
+
     # def best_permutation_mse(self, model_A, true_A):
     #     col_permutations = itertools.permutations(range(model_A.size(1)))
     #     best_mse = float('inf')
@@ -65,18 +64,20 @@ class DataMse(torchmetrics.Metric):
 
     def best_permutation_mse(self, model_A, true_A):
         col_permutations = itertools.permutations(range(model_A.size(1)))
-        best_mse = float('inf')
+        best_mean_mse = float('inf')
+        best_mse = torch.tensor(float('inf'))
 
         for perm in col_permutations:
             permuted_model_A = model_A[:, list(perm)]
             mean_mse = torch.mean((true_A - permuted_model_A).pow(2))
             mse = (true_A - permuted_model_A).pow(2)
 
-            if mean_mse < best_mse:
+            if mean_mse < best_mean_mse:
                 permutation = list(perm)
-                best_mse = mean_mse
+                best_mean_mse = mean_mse
+                best_mse = mse
 
-        return permutation, best_mse, mse.detach().cpu()
+        return permutation, best_mean_mse, best_mse.detach().cpu()
 
     # def unmix(self, state_data):
     #     from src.modules.utils import unmix
@@ -102,10 +103,11 @@ class DataMse(torchmetrics.Metric):
                         model=self.unmixing)
                     mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
 
-                permutation, mean_mse, mse = self.best_permutation_mse(state_data["latent_sample"],
-                                                                       state_data["true_data"])
+                permutation, mean_mse, mse = self.best_permutation_mse(
+                    state_data["latent_sample"],
+                    state_data["true_data"]
+                )
 
-                print(permutation)
                 # fixme: fix mse value
 
                 state_data["latent_sample"] = state_data["latent_sample"][:, permutation]

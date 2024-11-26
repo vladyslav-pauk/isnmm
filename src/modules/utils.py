@@ -21,6 +21,7 @@ def unmix(latent_sample, latent_dim, model=None):
         dataset_size=dataset_size
     )
     latent_sample, mixing_matrix = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
+    latent_sample = latent_sample / latent_sample.sum(dim=-1, keepdim=True)
     # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
     # unmixing.plot_mse_image(rows=100, cols=10)
 

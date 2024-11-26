@@ -51,8 +51,11 @@ class Hyperspectral(torchmetrics.Metric):
                         model=self.unmixing)
                     mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
 
-                permutation, _ = self.best_permutation_mse(state_data["latent_sample"], state_data["true"])
-                print(f"Permutation: {permutation}")
+                permutation, _ = self.best_permutation_mse(
+                    state_data["latent_sample"],
+                    state_data["true"]
+                )
+
                 state_data["latent_sample"] = state_data["latent_sample"][:, permutation]
                 if self.unmixing:
                     mixing_matrix_pinv = mixing_matrix_pinv[permutation]
