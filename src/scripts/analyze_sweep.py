@@ -73,14 +73,13 @@ if __name__ == "__main__":
 # todo: unify module structures and make base classes for all modules
 # todo: plot panels arrange and font size
 
-# fixme: make comparison plots abundances for model*component
-
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)
 # fixme: make a container and run on server
 
 # fixme: notebooks for exploring models and analyzing sweeps
 #  (scripts do standard extraction, pandas analysis is in notebooks)
+# fixme: further experiments on using the model in jupyter notebooks (portfolio, etc)
 
 # fixme: main readme describing scripts usage and what they do, as well as notebooks
 # fixme: experiment docs describing setups, metrics, datasets, models and results

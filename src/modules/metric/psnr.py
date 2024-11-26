@@ -18,6 +18,7 @@ class PSNR(torchmetrics.Metric):
         self.image_dims = image_dims
 
         self.add_state("psnr_values", default=[], dist_reduce_fx="cat")
+        self.tensor = None
 
     def update(self, reconstructed, target):
         mse = ((reconstructed - target) ** 2)

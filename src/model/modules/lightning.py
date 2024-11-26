@@ -138,7 +138,7 @@ class Module(LightningModule):
 
     def on_test_end(self) -> None:
         final_metrics = self.metrics.compute()
-        self.metrics.save_metrics(final_metrics)
+        self.metrics.save(final_metrics)
 
     def on_predict_start(self) -> None:
         self.metrics.log_wandb = False
@@ -158,7 +158,7 @@ class Module(LightningModule):
 
     def on_predict_end(self) -> None:
         final_metrics = self.metrics.compute()
-        self.metrics.save_metrics(final_metrics, save_dir=f'predictions')
+        self.metrics.save(final_metrics, save_dir=f'predictions')
 
     def configure_optimizers(self):
         optimizer_class = getattr(optim, self.optimizer_config["name"])

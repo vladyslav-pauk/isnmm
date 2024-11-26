@@ -10,6 +10,7 @@ class SubspaceDistance(torchmetrics.Metric):
 
         self.add_state("latent_sample_qr", default=[], dist_reduce_fx='cat')
         self.add_state("latent_sample", default=[], dist_reduce_fx='cat')
+        self.tensor = None
 
     def update(self, sample=None, sample_qr=None):
 

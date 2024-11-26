@@ -1,13 +1,10 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
 import torch
 import torchmetrics
 
 from src.modules.data.hyperspectral import DataModule
 from src.modules.transform.convolution import HyperspectralTransform
-from src.utils.wandb_tools import run_dir
-from src.utils.utils import init_plot
+from src.modules.utils import plot_data
+
 # todo: rewrite using torch add_state interface
 
 
@@ -22,6 +19,7 @@ class Hyperspectral(torchmetrics.Metric):
 
         self.unmixing = unmixing
         self.state_data = {}
+        self.tensor = None
 
     def update(self, **kwargs):
         for key, value in kwargs.items():
@@ -32,163 +30,18 @@ class Hyperspectral(torchmetrics.Metric):
     def compute(self):
         for key, value in self.state_data.items():
             self.state_data[key] = torch.cat(value, dim=0)
-        # plot_data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
-        if self.unmixing:
-            self.state_data["abundance"], mixing_matrix = self.unmix(self.state_data["abundance"], latent_dim=self.image_dims[0], model=self.unmixing)
 
-            mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
-            self.state_data["noise"] = torch.matmul(mixing_matrix_pinv, self.state_data["noise"].T).T
+        # if self.unmixing:
+        #     self.state_data["abundance"], mixing_matrix = unmix(self.state_data["abundance"], latent_dim=self.image_dims[0], model=self.unmixing)
+        #
+        #     mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
+        #     self.state_data["noise"] = torch.matmul(mixing_matrix_pinv, self.state_data["noise"].T).T
 
-        plot_data = {key: val for key, val in self.state_data.items() if key != 'labels'}
-        self.plot_data(plot_data)
+        data = {key: val for key, val in self.state_data.items() if key != 'labels'}
+        # data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
+        plot_data(data, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
         self.state_data.clear()
-        return {}
-
-    def unmix(self, latent_sample, latent_dim, model=None):
-        import src.model as model_package
-
-        dataset_size = latent_sample.size(0)
-        unmixing_model = getattr(model_package, model).Model
-        unmixing = unmixing_model(
-            latent_dim=latent_dim,
-            dataset_size=dataset_size
-        )
-        latent_sample, mixing_matrix = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
-        # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
-        # unmixing.plot_mse_image(rows=100, cols=10)
-
-        return latent_sample, mixing_matrix
-
-    # def plot_data(self, plot_data):
-    #     channels, height, width = self.image_dims
-    #     for key, data in plot_data.items():
-    #     data = data.view(channels, height, width)
-    #     for i in range(data.shape[0]):
-    #         fig, ax = plt.subplots(figsize=(6, 6), dpi=300)
-    #         ax.imshow(data[i].cpu().numpy(), cmap='viridis')
-    #         ax.set_title(f'{key.replace('_', ' ').capitalize()}, {i} component')
-    #         ax.axis('off')
-    #
-    #         if self.show_plot:
-    #             plt.show()
-    #         if self.save_plot:
-    #             dir = run_dir('predictions')
-    #             plt.savefig(f"{dir}/{key}_component_{i}.png", transparent=True, dpi=300)
-    #             print(f"Saved {key} component {i} image to '{dir}{key}_component_{i}.png'")
-    #
-    #         plt.close()
-
-    def plot_data(self, plot_data):
-        import os
-        plt = init_plot()
-
-        # A4 width in inches (8.27 inches)
-        A4_WIDTH = 8.27
-
-        _, height, width = self.image_dims
-
-        all_data = torch.cat([data.T.view(-1, height, width) for data in plot_data.values()], dim=0)
-        global_min = all_data.min().item()
-        global_max = all_data.max().item()
-        print(f"Global normalization: min={global_min}, max={global_max}")
-
-        for key, data in plot_data.items():
-            data = data.T.view(-1, height, width)
-            num_components = data.shape[0]
-
-            cols = 4
-            rows = (num_components + cols - 1) // cols  # Ensure enough rows
-
-            # Dynamically calculate height to maintain aspect ratio
-            aspect_ratio = height / width
-            fig_width = A4_WIDTH
-            fig_height = fig_width * rows / cols * aspect_ratio  # Scale height by rows and aspect ratio
-
-            fig, axs = plt.subplots(rows, cols, figsize=(fig_width, fig_height), dpi=300)
-            axs = np.atleast_2d(axs)
-
-            for i in range(num_components):
-                row, col = divmod(i, cols)
-                component = data[i].cpu().numpy()
-                axs[row, col].imshow(component, cmap='viridis', vmin=global_min, vmax=global_max)
-                axs[row, col].set_title(f'{key.replace("_", " ").capitalize()} {i + 1}')
-                axs[row, col].axis('off')
-
-            for i in range(num_components, rows * cols):
-                row, col = divmod(i, cols)
-                axs[row, col].axis('off')
-
-            plt.tight_layout()
-
-            if self.save_plot:
-                dir = run_dir('predictions')
-                os.makedirs(dir, exist_ok=True)
-                plt.savefig(f"{dir}/{key}_components.png", transparent=True, dpi=300)
-                print(f"Saved {key} components image to '{dir}/{key}_components.png'")
-
-            if self.show_plot:
-                plt.show()
-
-            plt.close()
-
-    # def plot_data(self, plot_data):
-    #     _, height, width = self.image_dims
-    #
-    #     plt = init_plot()
-    #
-    #     key, data = next(iter(plot_data.items()))
-    #
-    #     data = data.T.view(-1, height, width)
-    #
-    #     num_components = data.shape[0]
-    #
-    #     rows = (num_components + 2) // 3
-    #
-    #     if len(plot_data) == 1:
-    #         fig, axs = plt.subplots(rows, 3, figsize=(9, 4.5 * rows), dpi=300)
-    #         axs = np.atleast_2d(axs)
-    #
-    #         for i in range(num_components):
-    #             row = i // 3
-    #             col = i % 3
-    #             component = data[i].cpu().numpy()
-    #             axs[row, col].imshow(component, cmap='viridis')
-    #             axs[row, col].set_title(f'{key.replace("_", ' ').capitalize()} {i+1}')
-    #             axs[row, col].axis('off')
-    #
-    #         plt.tight_layout()
-    #         if self.show_plot:
-    #             plt.show()
-    #         if self.save_plot:
-    #             dir = run_dir('predictions')
-    #             plt.savefig(f"{dir}/{key}-components.png", transparent=True, dpi=300)
-    #             print(
-    #                 f"Saved {key} components image to '{dir}/{key}_components.png'")
-    #         plt.close()
-    #
-    #     else:
-    #         for comp_idx in range(num_components):
-    #             fig, axs = plt.subplots(1, len(plot_data), figsize=(3 * len(plot_data), 4.5), dpi=300)
-    #             axs = np.atleast_1d(axs)
-    #
-    #             for idx, (key, data) in enumerate(plot_data.items()):
-    #                 data = data.T.view(-1, height, width)
-    #                 component = data[comp_idx].cpu().numpy()
-    #                 axs[idx].imshow(component, cmap='viridis')
-    #                 axs[idx].set_title(f'{key.replace("_", " ").capitalize()} {comp_idx+1}')
-    #                 axs[idx].axis('off')
-    #
-    #             plt.tight_layout()
-    #
-    #             if self.show_plot:
-    #                 plt.show()
-    #             if self.save_plot:
-    #                 dir = run_dir('predictions')
-    #                 plt.savefig(f"{dir}/component_{comp_idx}.png", transparent=True, dpi=300)
-    #                 print(
-    #                     f"Saved {', '.join(list(plot_data.keys()))} component {comp_idx} image to '{dir}/{key}_component_{comp_idx}.png'")
-    #
-    #             plt.close()
+        return None
 
 
 if __name__ == "__main__":

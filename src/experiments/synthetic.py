@@ -1,9 +1,6 @@
-import os
-import json
-import wandb
-
-import torch
 from torchmetrics import MetricCollection
+
+from src.modules.utils import save_metrics
 
 import src.modules.metric as metric
 import src.model as model_package
@@ -113,43 +110,46 @@ class ModelMetrics(MetricCollection):
                 if self.metrics_list is None or metric_name in self.metrics_list:
                     self[metric_name].update(**kwargs)
 
-    def save_metrics(self, metrics, save_dir=None):
-        if wandb.run is not None and save_dir is None:
-            base_dir = os.path.join(wandb.run.dir.split('wandb')[0], 'results')
-            sweep_id = wandb.run.dir.split('/')[-4].split('-')[-1]
-            output_path = os.path.join(base_dir, f'sweep-{sweep_id}', "sweep_data.json")
-        else:
-            if save_dir is None:
-                save_dir = './results'
+    def save(self, metrics, save_dir):
+        save_metrics(metrics, save_dir)
 
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            output_path = os.path.join(
-                project_root, 'experiments', os.environ["EXPERIMENT"], save_dir, os.environ["RUN_ID"],"sweep_data.json"
-            )
-        run_id = os.environ.get("RUN_ID", "default")
-
-        if os.path.exists(output_path):
-            with open(output_path, 'r') as f:
-                existing_data = json.load(f)
-        else:
-            existing_data = {}
-
-        metrics = {k: v.item() if isinstance(v, torch.Tensor) else v for k, v in metrics.items()}
-
-        if run_id not in existing_data:
-            existing_data[run_id] = {"metrics": {}}
-        existing_data[run_id]["metrics"].update(metrics)
-
-        output_dir = os.path.dirname(output_path)
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
-
-        with open(output_path, 'w') as f:
-            json.dump(existing_data, f, indent=2)
-
-        print("Final metrics saved:")
-        for key, value in metrics.items():
-            print(f"\t{key} = {value}")
+    # def save_metrics(self, metrics, save_dir=None):
+    #     if wandb.run is not None and save_dir is None:
+    #         base_dir = os.path.join(wandb.run.dir.split('wandb')[0], 'results')
+    #         sweep_id = wandb.run.dir.split('/')[-4].split('-')[-1]
+    #         output_path = os.path.join(base_dir, f'sweep-{sweep_id}', "sweep_data.json")
+    #     else:
+    #         if save_dir is None:
+    #             save_dir = './results'
+    #
+    #         project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    #         output_path = os.path.join(
+    #             project_root, 'experiments', os.environ["EXPERIMENT"], save_dir, os.environ["RUN_ID"],"sweep_data.json"
+    #         )
+    #     run_id = os.environ.get("RUN_ID", "default")
+    #
+    #     if os.path.exists(output_path):
+    #         with open(output_path, 'r') as f:
+    #             existing_data = json.load(f)
+    #     else:
+    #         existing_data = {}
+    #
+    #     metrics = {k: v.item() if isinstance(v, torch.Tensor) else v for k, v in metrics.items()}
+    #
+    #     if run_id not in existing_data:
+    #         existing_data[run_id] = {"metrics": {}}
+    #     existing_data[run_id]["metrics"].update(metrics)
+    #
+    #     output_dir = os.path.dirname(output_path)
+    #     if not os.path.exists(output_dir):
+    #         os.makedirs(output_dir)
+    #
+    #     with open(output_path, 'w') as f:
+    #         json.dump(existing_data, f, indent=2)
+    #
+    #     print("Final metrics saved:")
+    #     for key, value in metrics.items():
+    #         print(f"\t{key} = {value}")
 
     def unmix(self, latent_sample, latent_dim, model):
         if model.unmixing:
@@ -165,3 +165,4 @@ class ModelMetrics(MetricCollection):
 
             return latent_sample, mixing_matrix
         return latent_sample, model.decoder.linear_mixture.matrix
+    # fixme: move to utils
