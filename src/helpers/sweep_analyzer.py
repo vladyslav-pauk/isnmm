@@ -74,12 +74,13 @@ class SweepAnalyzer:
 
     def plot_metric(self, averaged_data, save=True, show=False, save_dir=None):
         init_plot()
+        A4_WIDTH = 8.27
 
         comparison_name = list(averaged_data[0].keys())[0]
         covariate_name = list(averaged_data[0].keys())[1]
         metric_name = list(averaged_data[0].keys())[2].replace('_avg', '')
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(A4_WIDTH/2, 3))
         for data in averaged_data:
             plt.fill_between(
                 data[covariate_name],
@@ -87,12 +88,21 @@ class SweepAnalyzer:
                 data[f'{metric_name}_avg'] + data[f'{metric_name}_std'],
                 alpha=0.2
             )
-            plt.plot(data[covariate_name], data[f'{metric_name}_avg'], label=f'{format_string(comparison_name)}: {format_string(data["model_name"])}')
+            plt.plot(
+                data[covariate_name],
+                data[f'{metric_name}_avg'],
+                marker='o',
+                linestyle='-',
+                markersize=4,
+                label=f'{format_string(comparison_name)}: {format_string(data["model_name"])}'
+            )
 
         plt.xlabel(format_string(covariate_name))
         plt.ylabel(format_string(metric_name))
         plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
         plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
 
         if save:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]

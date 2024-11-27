@@ -74,7 +74,7 @@ def plot_training_history(model, metrics=None):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "synthetic", "loq1df56")
+        "synthetic", "cnozljpf")
 
     # metrics_to_analyze = [
     #     ("subspace_distance", "snr"),

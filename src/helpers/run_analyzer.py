@@ -1,8 +1,10 @@
 import json
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 import glob
+
+
+from src.utils.utils import init_plot
 
 
 class RunAnalyzer:
@@ -29,6 +31,9 @@ class RunAnalyzer:
         return extracted_data
 
     def plot_metric(self, metric="latent_mse", save=True, save_dir=None):
+        plt = init_plot()
+        A4_WIDTH = 8.27
+
         if not self.run_data:
             print("No data available for plotting.")
             return
@@ -37,7 +42,7 @@ class RunAnalyzer:
         valid_indices = ~np.isnan(metric_values)
         metric_values, steps = metric_values[valid_indices], steps[valid_indices]
 
-        plt.figure(figsize=(10, 6))
+        plt.figure(figsize=(A4_WIDTH/2, 3))
         plt.plot(steps, metric_values, marker='o', linestyle='-', label=f'Run {self.run_id}')
         plt.xlabel('Steps' if "_step" in self.run_data["data"] else 'Index')
         plt.ylabel(metric.replace("_", " ").capitalize())
@@ -78,19 +83,30 @@ class RunAnalyzer:
         print(f"Saved run summary to {os.path.join(save_dir, summary_file_name)}")
 
     def plot_training_history(self, metric_key="validation_loss"):
+        plt = init_plot()
+        A4_WIDTH = 8.27
+
         if self.run_data and "data" in self.run_data and metric_key in self.run_data["data"]:
             metric_values = np.array(self.run_data["data"][metric_key])
             steps = np.array(self.run_data["data"].get("_step", range(len(metric_values))))
             valid_indices = ~np.isnan(metric_values)
             metric_values, steps = metric_values[valid_indices], steps[valid_indices]
 
-            plt.figure(figsize=(10, 6))
-            plt.plot(steps, metric_values, marker='o', linestyle='-', label=f'Run {self.run_id}')
+            plt.figure(figsize=(A4_WIDTH/2, 3))
+            plt.plot(
+                steps,
+                metric_values,
+                marker='o',
+                markersize=4,
+                linestyle='-',
+                label=f'Run {self.run_id}'
+            )
             plt.xlabel('Steps' if "_step" in self.run_data["data"] else 'Index')
             plt.ylabel(metric_key.replace("_", " ").capitalize())
-            plt.title(f'Training History for {metric_key} (Run {self.run_id})')
+            plt.title(f'Training History for {metric_key}')
             plt.legend()
             plt.grid(True)
+            plt.tight_layout()
 
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             save_dir = f'experiments/{self.experiment}/predictions/{self.run_id}'

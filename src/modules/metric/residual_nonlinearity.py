@@ -1,3 +1,6 @@
+import numpy as np
+import os
+
 import torch
 import torch.nn as nn
 import torchmetrics
@@ -160,24 +163,37 @@ class LineFitter(nn.Module):
 
 
 def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, name=None, max_points=10e8, **kwargs):
+    import os
     plt = init_plot()
+    A4_WIDTH = 8.27  # Fixed A4 width in inches
 
+    # Determine the number of components and grid size
     num_components = kwargs[list(kwargs.keys())[0]][0].shape[-1]
-    n_cols = 3 + 1e-5
-    n_rows = int(num_components // n_cols) + 1
-    fig, axes = plt.subplots(n_rows, int(n_cols), figsize=(5 * n_cols, 5 * n_rows))
-    axes = axes.flatten()
-    markers = ['o', 'o']
+    # next line define dynamically n_cols = 3, 4, or 5 whichever is divider of num_components:
+    n_cols = next(i for i in range(3, 6) if num_components % i == 0)
+    n_rows = (num_components + n_cols - 1) // n_cols  # Calculate rows needed
 
+    # Dynamically calculate figure dimensions
+    aspect_ratio = 1.0  # Assume square aspect ratio for scatter plots
+    fig_width = A4_WIDTH
+    fig_height = fig_width * n_rows / n_cols * aspect_ratio  # Scale height dynamically
+
+    # Create subplots with calculated dimensions
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(fig_width, fig_height), dpi=300)
+    axes = np.atleast_1d(axes.flatten())  # Flatten axes to easily iterate
+
+    # Markers for different data series
+    markers = ['o', 'x', '^', 's', 'd']
+    marker_size = 9  # Set smaller marker size
+
+    # Plot each component
     for i in range(num_components):
         for j, (k, (x, v)) in enumerate(kwargs.items()):
             x_component = x[..., i].clone().detach().cpu().numpy()
-            if callable(v):
-                y_component = v(x)[..., i].clone().detach().cpu()
-            else:
-                y_component = v[..., i].clone().detach().cpu()
-                if (torch.max(y_component) - torch.min(y_component)).any() < 1e-6:
-                    continue
+            y_component = v(x)[..., i].clone().detach().cpu().numpy() if callable(v) else v[..., i].clone().detach().cpu().numpy()
+
+            if (torch.max(torch.tensor(y_component)) - torch.min(torch.tensor(y_component))).item() < 1e-6:
+                continue  # Skip components with no variance
 
             if len(x_component) > max_points:
                 indices = torch.randperm(len(x_component))[:int(max_points)]
@@ -187,32 +203,35 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
             marker = markers[j % len(markers)]
             axes[i].scatter(
                 visual_normalization(torch.tensor(x_component)) if scale else x_component,
-                visual_normalization(y_component) if scale else y_component,
+                visual_normalization(torch.tensor(y_component)) if scale else y_component,
                 label=k.replace('_', ' ').capitalize(),
-                marker=marker
+                marker=marker,
+                s=marker_size  # Adjust marker size
             )
-        if labels is not None:
-            if show_plot:
-                print(f"R-squared for component {i}: {labels[i]:.4f}")
+
+        axes[i].set_title(f"Component {i + 1}")
+        axes[i].legend()
+        axes[i].grid(True)
+
+        # Set xlabel and ylabel for each subplot
+        axes[i].set_xlabel(r"$A z$", fontsize=10)
+        axes[i].set_ylabel(r"$f(A z)$", fontsize=10)
+
+    # Turn off unused axes
+    for i in range(num_components, len(axes)):
+        axes[i].axis('off')
 
     plt.tight_layout()
 
-    plt.xlabel(r"$A z$")
-    plt.ylabel(r"$f(A z)$")
-
     if save_plot:
         dir = run_dir('predictions')
+        os.makedirs(dir, exist_ok=True)  # Ensure directory exists
         path = f"{dir}/{name}.png"
-
         fig.savefig(path, transparent=True)
         print(f"Saved {name} plot to '{path}'")
 
     if show_plot:
         plt.show()
-    # else:
-    #     wandb.log({
-    #         name: plt
-    #     })
 
     plt.close()
     return plt

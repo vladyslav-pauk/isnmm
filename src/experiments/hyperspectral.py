@@ -100,9 +100,6 @@ class ModelMetrics(MetricCollection):
                 latent_sample_true = labels["latent_sample"]
                 latent_sample_qr = labels["latent_sample_qr"]
 
-                # fixme: make comparison plots abundances for model*component
-                # fixme: training history and comparison match sizes
-
                 metric_updates.update({
                     'abundance': {
                         "latent_sample": latent_sample,
