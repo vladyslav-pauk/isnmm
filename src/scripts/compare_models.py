@@ -7,7 +7,8 @@ from torch.utils.data import DataLoader
 import src.model as model_package
 import src.modules.data as data_package
 from src.utils.utils import init_plot
-from src.modules.utils import run_dir
+from src.modules.utils import run_dir, unmix
+import src.experiments as exp_module
 
 
 def load_model(run_id, experiment_name):
@@ -27,13 +28,17 @@ def load_model(run_id, experiment_name):
     encoder.construct(latent_dim=config['model']['latent_dim'], observed_dim=config['data_config']['observed_dim'])
     decoder.construct(latent_dim=config['model']['latent_dim'], observed_dim=config['data_config']['observed_dim'])
 
+    metrics_module = getattr(exp_module, experiment_name)
+    metrics = metrics_module.ModelMetrics(monitor=config['metric']['name']).eval()
+
     model = module.Model.load_from_checkpoint(
         checkpoint_path=best_model_path,
         encoder=encoder,
         decoder=decoder,
         optimizer_config=config['optimizer'],
         model_config=config['model'],
-        strict=False
+        strict=False,
+        metrics=metrics
     )
     model.eval()
     return model, config
@@ -60,28 +65,33 @@ def generate_predictions(model, datamodule):
                 all_predictions[key] = []
 
             if isinstance(value, tuple):
-                # Handle tuples by processing each element and reassembling
                 reduced_tuple = tuple(
                     elem.mean(dim=0).cpu() if elem.ndim == 3 else elem.cpu()
                     for elem in value
                 )
                 all_predictions[key].append(reduced_tuple)
             else:
-                # Handle non-tuple tensors
                 reduced_value = value.mean(dim=0).cpu() if value.ndim == 3 else value.cpu()
                 all_predictions[key].append(reduced_value)
 
-    # Concatenate predictions across batches
     for key in all_predictions:
         if isinstance(all_predictions[key][0], tuple):
-            # Handle concatenation for tuples
             all_predictions[key] = tuple(
                 torch.cat([batch[i] for batch in all_predictions[key]], dim=0)
                 for i in range(len(all_predictions[key][0]))
             )
         else:
-            # Handle concatenation for non-tuples
             all_predictions[key] = torch.cat(all_predictions[key], dim=0)
+
+        if config['model']['unmixing'] is not None and key == "latent_sample":
+            all_predictions[key] = unmix(
+                {
+                    'latent_sample': all_predictions[key],
+                    'true': datamodule.dataset.labels['latent_sample']
+                },
+                config['model']['unmixing'],
+                config['model']['latent_dim']
+            )['latent_sample']
 
     return all_predictions
 
@@ -96,7 +106,9 @@ def plot_predictions(models, predictions, image_dims, save_dir="comparison", vis
     num_models = len(predictions)
     _, height, width = image_dims
 
-    # Extract predictions for visualization_key
+    # for run_id, preds in predictions.items():
+    #     print(preds)
+
     visualization_data = {
         run_id: preds[visualization_key].cpu().numpy()
         for run_id, preds in predictions.items()
@@ -109,27 +121,27 @@ def plot_predictions(models, predictions, image_dims, save_dir="comparison", vis
         figsize=(A4_WIDTH, 1.2 * A4_WIDTH * height / width * num_components / num_models),
         dpi=300
     )
-    axs = np.atleast_2d(axs)  # Ensure axs is always 2D for compatibility
+    axs = np.atleast_2d(axs)
 
     global_min = min(data.min() for data in visualization_data.values())
     global_max = max(data.max() for data in visualization_data.values())
 
     for col_idx, (run_id, model_preds) in enumerate(visualization_data.items()):
-        model_name = next(name for (name, id_), model in models.items() if id_ == run_id)
+        if run_id != 'true':
+            model_name = next(name for (name, id_), model in models.items() if id_ == run_id)
+        else:
+            model_name = "True"
         for row_idx in range(num_components):
             ax = axs[row_idx, col_idx]
             component = model_preds[..., row_idx].reshape(height, width)
             ax.imshow(component, cmap='viridis', vmin=global_min, vmax=global_max)
 
-            # Add model name below each column
             if row_idx == 0:
-                ax.set_title(f"{model_name.upper()}\nRun ID: {run_id}")
+                ax.set_title(f"{model_name.upper()}") #\nRun ID: {run_id}")
 
-            # Add component label for each row
             if col_idx == 0:
                 ax.set_ylabel(f"Component {row_idx + 1}")
 
-            # Remove ticks and spines
             ax.set_xticks([])
             ax.set_yticks([])
             ax.spines['top'].set_visible(False)
@@ -146,7 +158,7 @@ def plot_predictions(models, predictions, image_dims, save_dir="comparison", vis
 
 if __name__ == "__main__":
     experiment = "hyperspectral"
-    run_ids = ["9trmnn96", "8ge1s35j", "mzn0rge0"]
+    run_ids = ["6pgfe98u", "omrvinp0", "m3zrts6d"]
 
     models = {}
     predictions = {}
@@ -161,10 +173,24 @@ if __name__ == "__main__":
         model_preds = generate_predictions(model, datamodule)
         predictions[run_id] = model_preds
 
+    predictions['true'] = {}
+    predictions['true']["latent_sample"] = datamodule.dataset.labels["latent_sample"]
+
     if models and predictions:
         image_dims = (config['model']['latent_dim'], datamodule.transform.height, datamodule.transform.width)
-        plot_predictions(models, predictions, image_dims, save_dir=f"../../experiments/{experiment}/comparison", visualization_key="reconstructed_sample")
-        plot_predictions(models, predictions, image_dims, save_dir=f"../../experiments/{experiment}/comparison",
-                         visualization_key="latent_sample")
+        # plot_predictions(
+        #     models,
+        #     predictions,
+        #     image_dims,
+        #     save_dir=f"../../experiments/{experiment}/comparison",
+        #     visualization_key="reconstructed_sample"
+        # )
+        plot_predictions(
+            models,
+            predictions,
+            image_dims,
+            save_dir=f"../../experiments/{experiment}/comparison",
+            visualization_key="latent_sample"
+        )
 
 # fixme: run model comparison on a sweep with fixed covariate and best seed

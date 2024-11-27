@@ -81,6 +81,7 @@ class Module(LightningModule):
                 self.latent_dim = self.trainer.model.model_config["latent_dim"]
             self.metrics.true_model = self.trainer.datamodule
             self.metrics.latent_dim = self.trainer.model.latent_dim
+            self.metrics.unmixing = self.model_config["unmixing"]
 
     def on_train_start(self) -> None:
         if self.metrics.log_wandb:

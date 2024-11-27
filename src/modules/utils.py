@@ -68,8 +68,8 @@ def plot_data(data, image_dims, show_plot=False, save_plot=False):
     all_data = torch.cat(all_data, dim=0)
     # all_data = torch.cat([data.T.view(-1, height, width) for data in data.values()], dim=0)
 
-    global_min = all_data.min().item()
-    global_max = all_data.max().item()
+    global_min = 0 #all_data.min().item()
+    global_max = 1 #all_data.max().item()
     # print(f"Global normalization: min={global_min}, max={global_max}")
 
     for key, data in data.items():
@@ -92,7 +92,7 @@ def plot_data(data, image_dims, show_plot=False, save_plot=False):
             component = data[i].cpu().numpy()
             axs[row, col].imshow(component, cmap='viridis', vmin=global_min, vmax=global_max)
             axs[row, col].set_title(f'{key.replace("_", " ").capitalize()} {i + 1}')
-            axs[row, col].axis('off')
+            # axs[row, col].axis('off')
 
         for i in range(num_components, rows * cols):
             row, col = divmod(i, cols)

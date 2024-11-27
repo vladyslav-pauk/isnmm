@@ -19,6 +19,7 @@ class Model(LightningModule, Autoencoder):
 
         self.mc_samples = 1
         self.sigma = 0
+
         self.metrics.unmixing = model_config["unmixing"]
         self.unmixing = model_config["unmixing"]
 
