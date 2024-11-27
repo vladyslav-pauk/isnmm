@@ -106,9 +106,6 @@ def plot_predictions(models, predictions, image_dims, save_dir="comparison", vis
     num_models = len(predictions)
     _, height, width = image_dims
 
-    # for run_id, preds in predictions.items():
-    #     print(preds)
-
     visualization_data = {
         run_id: preds[visualization_key].cpu().numpy()
         for run_id, preds in predictions.items()
@@ -175,16 +172,17 @@ if __name__ == "__main__":
 
     predictions['true'] = {}
     predictions['true']["latent_sample"] = datamodule.dataset.labels["latent_sample"]
+    predictions['true']["reconstructed_sample"] = datamodule.dataset.data
 
     if models and predictions:
         image_dims = (config['model']['latent_dim'], datamodule.transform.height, datamodule.transform.width)
-        # plot_predictions(
-        #     models,
-        #     predictions,
-        #     image_dims,
-        #     save_dir=f"../../experiments/{experiment}/comparison",
-        #     visualization_key="reconstructed_sample"
-        # )
+        plot_predictions(
+            models,
+            predictions,
+            image_dims,
+            save_dir=f"../../experiments/{experiment}/comparison",
+            visualization_key="reconstructed_sample"
+        )
         plot_predictions(
             models,
             predictions,
