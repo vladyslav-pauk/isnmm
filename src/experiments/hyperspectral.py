@@ -53,8 +53,12 @@ class ModelMetrics(MetricCollection):
             'latent_mse': metric.data_mse.DataMse(
                 unmixing=self.unmixing
             ),
-            # 'latent_sam': metric.SpectralAngle(unmixing=self.unmixing),
-            # 'subspace_distance': metric.SubspaceDistance(unmixing=self.unmixing)
+            'latent_sam': metric.SpectralAngle(
+                unmixing=self.unmixing
+            ),
+            'subspace_distance': metric.SubspaceDistance(
+                unmixing=self.unmixing
+            )
         }
 
         if not self.metrics_list:

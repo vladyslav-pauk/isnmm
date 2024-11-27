@@ -166,3 +166,5 @@ if __name__ == "__main__":
         plot_predictions(models, predictions, image_dims, save_dir=f"../../experiments/{experiment}/comparison", visualization_key="reconstructed_sample")
         plot_predictions(models, predictions, image_dims, save_dir=f"../../experiments/{experiment}/comparison",
                          visualization_key="latent_sample")
+
+# fixme: run model comparison on a sweep with fixed covariate and best seed

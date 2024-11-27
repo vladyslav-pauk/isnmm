@@ -117,3 +117,5 @@ if __name__ == "__main__":
     psnr_value = psnr_metric.compute()
 
     print(f"PSNR: {psnr_value}")
+
+# fixme: refactor psnr as data_mse and others and add to synthetic

@@ -74,21 +74,21 @@ def plot_training_history(model, metrics=None):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "synthetic", "cnozljpf")
+        "hyperspectral", "omrvinp0")
 
-    # metrics_to_analyze = [
-    #     ("subspace_distance", "snr"),
-    #     ("validation_loss", "dataset_size"),
-    #     ("latent_mse", "latent_dim"),
-    #     ("_runtime", "dataset_size")
-    # ]
     metrics_to_analyze = [
-        ("psnr", "snr")
+        ("subspace_distance", "snr"),
+        ("validation_loss", "dataset_size"),
+        ("latent_mse", "latent_dim"),
+        ("_runtime", "dataset_size")
     ]
+    # metrics_to_analyze = [
+    #     ("psnr", "snr")
+    # ]
 
     plot_training_history(model, metrics=metrics_to_analyze)
 
-
+# fixme: latent_dims are not saved to the model, save them when training model, when we get them from data
 # todo: automatically adjust layer dims from config, so it's compatible with CNN
 # todo: pass transform to the metric
 # todo: automatic metrics list and arg parsing
