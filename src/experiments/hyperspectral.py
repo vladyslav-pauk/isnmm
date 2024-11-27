@@ -99,7 +99,6 @@ class ModelMetrics(MetricCollection):
                 latent_sample = model_output['latent_sample'].mean(dim=0)
                 latent_sample_true = labels["latent_sample"]
                 latent_sample_qr = labels["latent_sample_qr"]
-                # fixme: clean unmixing for latent_metrics
 
                 # fixme: make comparison plots abundances for model*component
                 # fixme: training history and comparison match sizes

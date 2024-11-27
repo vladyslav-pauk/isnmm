@@ -4,11 +4,12 @@ import torchmetrics
 
 from src.utils.wandb_tools import run_dir
 from src.utils.utils import init_plot
-import matplotlib.pyplot as plt
+
+from src.modules.utils import unmix
 
 
 class ResidualNonlinearity(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False, show_plot=False, log_plot=False, save_plot=False):
+    def __init__(self, dist_sync_on_step=False, unmixing=None, show_plot=False, log_plot=False, save_plot=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.add_state("sum_r_squared", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("count", default=torch.tensor(0), dist_reduce_fx="sum")
@@ -17,6 +18,7 @@ class ResidualNonlinearity(torchmetrics.Metric):
         self.show_plot = show_plot
         self.save_plot = save_plot
         self.log_plot = log_plot
+        self.unmixing = unmixing
 
     def update(self, model_output=None, labels=None, linearly_mixed_sample=None, observed_sample=None, latent_sample_unmixed=None):
 
@@ -36,10 +38,14 @@ class ResidualNonlinearity(torchmetrics.Metric):
         self.count += r_squared_values.shape[0]
 
     def compute(self):
+        self.latent_sample = unmix({"latent_sample": self.latent_sample}, self.unmixing, self.latent_sample_true.shape[-1])["latent_sample"]
+
         self.plot(show_plot=self.show_plot, save_plot=self.save_plot)
+
         r_squared_average = self.sum_r_squared / self.count
         self.sum_r_squared = torch.tensor(0.0)
         self.count = torch.tensor(0.0)
+
         return r_squared_average
 
     def _match_components(self, matrix_model, matrix_true):

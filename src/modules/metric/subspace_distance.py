@@ -3,14 +3,18 @@ import torchmetrics
 from scipy.linalg import subspace_angles
 import itertools
 
+from src.modules.utils import unmix
+
 
 class SubspaceDistance(torchmetrics.Metric):
-    def __init__(self, dist_sync_on_step=False):
+    def __init__(self, unmixing=None, dist_sync_on_step=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.add_state("latent_sample_qr", default=[], dist_reduce_fx='cat')
         self.add_state("latent_sample", default=[], dist_reduce_fx='cat')
+
         self.tensor = None
+        self.unmixing = unmixing
 
     def update(self, sample=None, sample_qr=None):
 
@@ -21,11 +25,19 @@ class SubspaceDistance(torchmetrics.Metric):
         self.latent_sample.append(latent_sample)
 
     def compute(self):
-        latent_sample_qr = torch.cat(self.latent_sample_qr)
-        latent_sample = torch.cat(self.latent_sample)
-        qf, _ = torch.linalg.qr(latent_sample)
 
-        angles = torch.tensor(subspace_angles(latent_sample_qr, qf))
+        state_data = {
+            "latent_sample": self.latent_sample,
+            "true": self.latent_sample_qr
+        }
+        for key, value in state_data.items():
+            state_data[key] = torch.cat(value, dim=0)
+
+        qf, _ = torch.linalg.qr(state_data["latent_sample"])
+
+        state_data = unmix(state_data, self.unmixing, state_data["true"].shape[-1])
+
+        angles = torch.tensor(subspace_angles(state_data["true"], qf))
         subspace_dist = torch.sin(angles)
 
         return torch.sum(subspace_dist.pow(2))

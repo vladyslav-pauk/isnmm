@@ -17,15 +17,26 @@ class ModelMetrics(MetricCollection):
         self.log_wandb = True
         self.true_model = None
 
+        self.unmixing = False
+
     def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
         all_metrics = {
-            'subspace_distance': metric.SubspaceDistance(),
-            'r_square': metric.ResidualNonlinearity(
-                show_plot=self.show_plot, log_plot=self.log_plot, save_plot=self.save_plot
+            'subspace_distance': metric.SubspaceDistance(
+                unmixing=self.unmixing
             ),
-            'latent_mse': metric.data_mse.DataMse(),
-            'latent_sam': metric.SpectralAngle(),
+            'r_square': metric.ResidualNonlinearity(
+                show_plot=self.show_plot,
+                log_plot=self.log_plot,
+                save_plot=self.save_plot,
+                unmixing=self.unmixing
+            ),
+            'latent_mse': metric.data_mse.DataMse(
+                unmixing=self.unmixing
+            ),
+            'latent_sam': metric.SpectralAngle(
+                unmixing=self.unmixing
+            ),
             # 'mixture_mse_db': metric.MatrixMse(db=True),
             # 'mixture_sam': metric.SpectralAngle(),
             # 'mixture_matrix_change': metric.MatrixChange(),
@@ -66,8 +77,8 @@ class ModelMetrics(MetricCollection):
             # latent_sample_averaged = model_output["latent_sample_mean"].mean(0)
             latent_sample_mean = model_output["latent_sample"].mean(0)
             # model.unmixing = None
-            latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, latent_sample_true.shape[-1], model)
-
+            # latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, latent_sample_true.shape[-1], model)
+            latent_sample_unmixed = latent_sample_mean
             linearly_mixed_sample = model.decoder.linear_mixture(latent_sample_mean)
 
             metric_updates = {
@@ -110,7 +121,7 @@ class ModelMetrics(MetricCollection):
                 if self.metrics_list is None or metric_name in self.metrics_list:
                     self[metric_name].update(**kwargs)
 
-    def save(self, metrics, save_dir):
+    def save(self, metrics, save_dir=None):
         save_metrics(metrics, save_dir)
 
     # def save_metrics(self, metrics, save_dir=None):
@@ -151,19 +162,3 @@ class ModelMetrics(MetricCollection):
     #     for key, value in metrics.items():
     #         print(f"\t{key} = {value}")
 
-    def unmix(self, latent_sample, latent_dim, model):
-        if model.unmixing:
-            unmixing_model = getattr(model_package, model.unmixing.upper()).Model
-            unmixing = unmixing_model(
-                latent_dim=latent_dim,
-                dataset_size=model.trainer.datamodule.dataset_size,
-            )
-            latent_sample, mixing_matrix = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
-
-            # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
-            # unmixing.plot_mse_image(rows=100, cols=10)
-
-            return latent_sample, mixing_matrix
-        return latent_sample, model.decoder.linear_mixture.matrix
-    # fixme: move to utils
-    # fixme: check synthetic after refactor

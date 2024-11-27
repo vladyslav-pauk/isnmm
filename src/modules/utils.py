@@ -11,7 +11,7 @@ def dict_to_str(d):
     return '_'.join([f'{value}' for key, value in d.items() if value is not None])
 
 
-def unmix(latent_sample, latent_dim, model=None):
+def unmix_components(latent_sample, latent_dim, model=None):
     import src.model as model_package
 
     dataset_size = latent_sample.size(0)
@@ -26,6 +26,31 @@ def unmix(latent_sample, latent_dim, model=None):
     # unmixing.plot_mse_image(rows=100, cols=10)
 
     return latent_sample, mixing_matrix
+
+
+def unmix(state_data, unmixing, latent_dim):
+    if unmixing and "latent_sample" in state_data:
+        state_data["latent_sample"], mixing_matrix = unmix_components(
+            state_data["latent_sample"],
+            latent_dim=latent_dim,
+            model=unmixing
+        )
+        mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
+
+        for key, value in state_data.items():
+            if key != "latent_sample" and key != "true":
+                state_data[key] = torch.matmul(mixing_matrix_pinv, value.T).T
+
+    return state_data
+
+
+def permute(state_data):
+    if "latent_sample" in state_data:
+        permutation, _ = best_permutation_mse(state_data["latent_sample"], state_data["true"])
+        for key in state_data:
+            if key != "true":
+                state_data[key] = state_data[key][:, permutation]
+    return state_data
 
 
 def plot_data(data, image_dims, show_plot=False, save_plot=False):
@@ -196,9 +221,29 @@ def save_metrics(metrics, save_dir=None):
 
     existing_data[run_id]["metrics"].update(metrics)
 
-    with open(output_path, 'w') as f:
-        json.dump(existing_data, f, indent=2)
-
-    print("Final metrics saved:")
+    print('Final metrics:')
     for key, value in metrics.items():
         print(f"\t{key} = {value}")
+
+    with open(output_path, 'w') as f:
+        json.dump(existing_data, f, indent=2)
+    print(f"Saved final metrics to {output_path}:")
+
+
+def best_permutation_mse(model_A, true_A):
+    import itertools
+    col_permutations = itertools.permutations(range(model_A.size(1)))
+    best_mse = float('inf')
+
+    for perm in col_permutations:
+
+
+        permuted_model_A = model_A[:, list(perm)]
+        mean_mse = torch.mean((true_A - permuted_model_A).pow(2))
+        mse = (true_A - permuted_model_A).pow(2)
+
+        if mean_mse < best_mse:
+            permutation = list(perm)
+            best_mse = mean_mse
+
+    return permutation, best_mse
