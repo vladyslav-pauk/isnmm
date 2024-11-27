@@ -61,7 +61,7 @@ def predict(experiment, run_id):
     return model, datamodule
 
 
-def plot_training_history(model, metrics=None):
+def plot_training_history(model):
     try:
         analyzer = RunAnalyzer(os.environ["EXPERIMENT"], os.environ["RUN_ID"])
     except FileNotFoundError as e:
@@ -76,17 +76,7 @@ if __name__ == "__main__":
     model, datamodule = predict(
         "hyperspectral", "omrvinp0")
 
-    metrics_to_analyze = [
-        ("subspace_distance", "snr"),
-        ("validation_loss", "dataset_size"),
-        ("latent_mse", "latent_dim"),
-        ("_runtime", "dataset_size")
-    ]
-    # metrics_to_analyze = [
-    #     ("psnr", "snr")
-    # ]
-
-    plot_training_history(model, metrics=metrics_to_analyze)
+    plot_training_history(model)
 
 # fixme: latent_dims are not saved to the model, save them when training model, when we get them from data
 # todo: automatically adjust layer dims from config, so it's compatible with CNN
