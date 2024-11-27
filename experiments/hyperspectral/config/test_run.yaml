@@ -6,17 +6,15 @@ parameters:
   experiment_name: hyperspectral
   data_model: Urban_R162
   model_name:
-    - vasca
-    - nisca
     - cnae
   trainer.max_epochs:
-    - 200
+    - 10
   early_stopping.min_delta:
     - 1e-3
   data_loader.batch_size:
     - 100
   dataset_size:
-    - 10000
+    - 1000
   observed_dim:
     - 12
   snr:
@@ -26,11 +24,9 @@ parameters:
   model.sigma:
     -
   decoder.hidden_layers:
-    - h1: 256
-      h2: 256
+    - h1: 128
   encoder.hidden_layers:
     - h1: 128
-      h2: 128
   model.mc_samples:
       - 1
   torch_seed:

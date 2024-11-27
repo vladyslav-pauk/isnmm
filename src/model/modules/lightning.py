@@ -15,7 +15,6 @@ class Module(LightningModule):
         self.encoder = encoder
         self.decoder = decoder
 
-
     def forward(self, observed_batch):
         posterior_parameterization = self.encoder(observed_batch)
         latent_sample, latent_sample_mean = self._reparameterization(posterior_parameterization)
@@ -134,8 +133,8 @@ class Module(LightningModule):
             labels = batch["labels"]
         else:
             labels = None
-        model_outputs = self(data)
-        self.metrics.update(data, model_outputs, labels, idxes, self)
+
+        self.metrics.update(data, self(data), labels, idxes, self)
 
     def on_test_end(self) -> None:
         final_metrics = self.metrics.compute()
@@ -154,8 +153,8 @@ class Module(LightningModule):
             labels = batch["labels"]
         else:
             labels = None
-        model_outputs = self(data)
-        self.metrics.update(data, model_outputs, labels, idxes, self)
+
+        self.metrics.update(data, self(data), labels, idxes, self)
 
     def on_predict_end(self) -> None:
         final_metrics = self.metrics.compute()

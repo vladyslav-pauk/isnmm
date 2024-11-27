@@ -247,3 +247,5 @@ def best_permutation_mse(model_A, true_A):
             best_mse = mean_mse
 
     return permutation, best_mse
+
+# todo: separate plot utils

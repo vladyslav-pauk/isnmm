@@ -1,11 +1,6 @@
 {
   "data_model": "PaviaU",
   "scale": 5,
-  "metrics": [
-    "psnr",
-    "abundance",
-    "reconstruction"
-  ],
   "observed_dim": 10,
   "nonlinear_transform_init": null,
   "mixing_matrix_init": null,
