@@ -191,4 +191,4 @@ if __name__ == "__main__":
             visualization_key="latent_sample"
         )
 
-# fixme: run model comparison on a sweep with fixed covariate and best seed
+# todo: run model comparison on a sweep with fixed covariate and best seed

@@ -74,11 +74,11 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
     model, datamodule = predict(
-        "hyperspectral", "x58rl8lr")
+        "hyperspectral", "u9o6hsx4")
 
     plot_training_history(model)
 
-# fixme: latent_dims are not saved to the model, save them when training model, when we get them from data
+# todo: latent_dims are not saved to the model, save them when training model, when we get them from data
 # todo: automatically adjust layer dims from config, so it's compatible with CNN
 # todo: pass transform to the metric
 # todo: automatic metrics list and arg parsing
