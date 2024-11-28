@@ -19,6 +19,7 @@ class Hyperspectral(torchmetrics.Metric):
         self.unmixing = unmixing
         self.state_data = {}
         self.tensor = None
+        self.tensors = {}
 
     def update(self, **kwargs):
         for key, value in kwargs.items():
@@ -34,8 +35,9 @@ class Hyperspectral(torchmetrics.Metric):
         state_data = unmix(state_data, self.unmixing, self.image_dims[0])
         state_data = permute(state_data)
 
-        data = {key: val for key, val in state_data.items() if key != 'labels'}
-        plot_data(data, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
+        self.tensors = state_data
+        # data = {key: val for key, val in state_data.items() if key != 'labels'}
+        # plot_data(data, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
         self.state_data.clear()
         # todo: plot self.tensor like other metrics in experiment module
         return None

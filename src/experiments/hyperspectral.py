@@ -19,7 +19,7 @@ class ModelMetrics(MetricCollection):
 
         self.latent_dim = None
 
-        self.plot_metrics = None
+        self.plot_metrics = None #'latent'
 
     def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
@@ -29,15 +29,15 @@ class ModelMetrics(MetricCollection):
         all_metrics = {
             'reconstruction': metric.Hyperspectral(
                 image_dims=self.image_dims,
-                show_plot=False,#self.show_plot,
+                show_plot=self.show_plot if not self.plot_metrics else False,
                 log_plot=self.log_plot,
-                save_plot=False,#self.save_plot
+                save_plot=self.save_plot
             ),
             'psnr': metric.PSNR(
                 # image_dims=self.image_dims,
                 # show_plot=self.show_plot,
                 # log_plot=self.log_plot,
-                # save_plot=False,#self.save_plot
+                # save_plot=self.save_plot
             ),
             'error': metric.Hyperspectral(
                 image_dims=self.image_dims,
@@ -151,6 +151,15 @@ class ModelMetrics(MetricCollection):
                             show_plot=self.show_plot,
                             save_plot=self.save_plot
                         )
+
+                    if hasattr(self[metric_name], 'tensors'):
+                        for key, value in self[metric_name].tensors.items():
+                            plot_data(
+                                {key: value},
+                                self.image_dims,
+                                show_plot=self.show_plot,
+                                save_plot=self.save_plot
+                            )
 
         return metrics
 

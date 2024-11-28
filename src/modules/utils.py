@@ -93,7 +93,7 @@ def plot_data(data, image_dims, show_plot=False, save_plot=False):
         for i in range(num_components):
             row, col = divmod(i, cols)
             component = data[i].cpu().numpy()
-            axs[row, col].imshow(component, cmap='viridis', vmin=global_min, vmax=global_max)
+            axs[row, col].imshow(component, cmap='viridis')#, vmin=global_min, vmax=global_max)
             axs[row, col].set_title(f'{key.replace("_", " ").capitalize()} {i + 1}')
             # axs[row, col].axis('off')
 

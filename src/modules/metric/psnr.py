@@ -12,7 +12,7 @@ from src.utils.utils import init_plot
 class PSNR(torchmetrics.Metric):
     def __init__(self, max_val=255, dist_sync_on_step=False): #, show_plot=False, log_plot=False, save_plot=False, image_dims=None):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
-        self.max_val = max_val
+        # self.max_val = max_val
         # self.show_plot = show_plot
         # self.save_plot = save_plot
         # self.image_dims = image_dims

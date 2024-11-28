@@ -16,7 +16,7 @@ parameters:
   dataset_size:
     - 40000
   observed_dim:
-    - 50
+    - 16
   model.latent_dim:
     - 4
   snr:
