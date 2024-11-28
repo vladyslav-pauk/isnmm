@@ -28,28 +28,26 @@ class ModelMetrics(MetricCollection):
 
         all_metrics = {
             'reconstruction': metric.Hyperspectral(
-                image_dims=self.image_dims,
-                show_plot=self.show_plot if not self.plot_metrics else False,
-                log_plot=self.log_plot,
-                save_plot=self.save_plot
-            ),
-            'psnr': metric.PSNR(
+                latent_dim=self.latent_dim
                 # image_dims=self.image_dims,
-                # show_plot=self.show_plot,
+                # show_plot=self.show_plot if not self.plot_metrics else False,
                 # log_plot=self.log_plot,
                 # save_plot=self.save_plot
             ),
+            'psnr': metric.PSNR(),
             'error': metric.Hyperspectral(
-                image_dims=self.image_dims,
-                show_plot=False,#self.show_plot,
-                log_plot=self.log_plot,
-                save_plot=False,#self.save_plot
+                latent_dim=self.latent_dim
+                # image_dims=self.image_dims,
+                # show_plot=False,#self.show_plot,
+                # log_plot=self.log_plot,
+                # save_plot=False,#self.save_plot
             ),
             'latent_components': metric.Hyperspectral(
-                image_dims=self.image_dims,
-                show_plot=self.show_plot,
-                log_plot=self.log_plot,
-                save_plot=self.save_plot,
+                latent_dim=self.latent_dim,
+                # image_dims=self.image_dims,
+                # show_plot=self.show_plot,
+                # log_plot=self.log_plot,
+                # save_plot=self.save_plot,
                 unmixing=self.unmixing
             ),
             'latent_mse': metric.data_mse.DataMse(
