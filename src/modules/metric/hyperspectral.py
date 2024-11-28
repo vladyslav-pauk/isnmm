@@ -3,17 +3,12 @@ import torchmetrics
 
 from src.modules.data.hyperspectral import DataModule
 from src.modules.transform.convolution import HyperspectralTransform
-from src.modules.utils import plot_data, unmix, permute
+from src.modules.utils import unmix, permute
 
 
 class Hyperspectral(torchmetrics.Metric):
     def __init__(self, dist_sync_on_step=False, latent_dim=None, unmixing=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
-
-        # self.show_plot = show_plot
-        # self.log_plot = log_plot
-        # self.save_plot = save_plot
-        # self.image_dims = image_dims
 
         self.unmixing = unmixing
         self.latent_dim = latent_dim
@@ -36,10 +31,7 @@ class Hyperspectral(torchmetrics.Metric):
         state_data = permute(state_data)
 
         self.tensors = state_data
-        # data = {key: val for key, val in state_data.items() if key != 'labels'}
-        # plot_data(data, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
         self.state_data.clear()
-        # todo: plot self.tensor like other metrics in experiment module
         return None
 
 
@@ -75,7 +67,7 @@ if __name__ == "__main__":
 
     img_dims = (data_config["observed_dim"], data_module.transform.height, data_module.transform.width)
 
-    hyperspectral_metric = Hyperspectral(show_plot=True, save_plot=False, image_dims=img_dims)
+    hyperspectral_metric = Hyperspectral()
     hyperspectral_metric.update(recovered_abundances=reconstructed_images, transformed_images=transformed_images)
     hyperspectral_metric.compute()
 
