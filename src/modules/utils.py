@@ -191,6 +191,84 @@ def plot_data(data, image_dims, show_plot=False, save_plot=False):
     #
     #             plt.close()
 
+# def plot_data(self, plot_data):
+#     channels, height, width = self.image_dims
+#     for key, data in plot_data.items():
+#     data = data.view(channels, height, width)
+#     for i in range(data.shape[0]):
+#         fig, ax = plt.subplots(figsize=(6, 6), dpi=300)
+#         ax.imshow(data[i].cpu().numpy(), cmap='viridis')
+#         ax.set_title(f'{key.replace('_', ' ').capitalize()}, {i} component')
+#         ax.axis('off')
+#
+#         if self.show_plot:
+#             plt.show()
+#         if self.save_plot:
+#             dir = run_dir('predictions')
+#             plt.savefig(f"{dir}/{key}_component_{i}.png", transparent=True, dpi=300)
+#             print(f"Saved {key} component {i} image to '{dir}{key}_component_{i}.png'")
+#
+#         plt.close()
+
+# def plot_data(self, plot_data):
+#     _, height, width = self.image_dims
+#
+#     plt = init_plot()
+#
+#     key, data = next(iter(plot_data.items()))
+#
+#     data = data.T.view(-1, height, width)
+#
+#     num_components = data.shape[0]
+#
+#     rows = (num_components + 2) // 3
+#
+#     if len(plot_data) == 1:
+#         fig, axs = plt.subplots(rows, 3, figsize=(9, 4.5 * rows), dpi=300)
+#         axs = np.atleast_2d(axs)
+#
+#         for i in range(num_components):
+#             row = i // 3
+#             col = i % 3
+#             component = data[i].cpu().numpy()
+#             axs[row, col].imshow(component, cmap='viridis')
+#             axs[row, col].set_title(f'{key.replace("_", ' ').capitalize()} {i+1}')
+#             axs[row, col].axis('off')
+#
+#         plt.tight_layout()
+#         if self.show_plot:
+#             plt.show()
+#         if self.save_plot:
+#             dir = run_dir('predictions')
+#             plt.savefig(f"{dir}/{key}-components.png", transparent=True, dpi=300)
+#             print(
+#                 f"Saved {key} components image to '{dir}/{key}_components.png'")
+#         plt.close()
+#
+#     else:
+#         for comp_idx in range(num_components):
+#             fig, axs = plt.subplots(1, len(plot_data), figsize=(3 * len(plot_data), 4.5), dpi=300)
+#             axs = np.atleast_1d(axs)
+#
+#             for idx, (key, data) in enumerate(plot_data.items()):
+#                 data = data.T.view(-1, height, width)
+#                 component = data[comp_idx].cpu().numpy()
+#                 axs[idx].imshow(component, cmap='viridis')
+#                 axs[idx].set_title(f'{key.replace("_", " ").capitalize()} {comp_idx+1}')
+#                 axs[idx].axis('off')
+#
+#             plt.tight_layout()
+#
+#             if self.show_plot:
+#                 plt.show()
+#             if self.save_plot:
+#                 dir = run_dir('predictions')
+#                 plt.savefig(f"{dir}/component_{comp_idx}.png", transparent=True, dpi=300)
+#                 print(
+#                     f"Saved {', '.join(list(plot_data.keys()))} component {comp_idx} image to '{dir}/{key}_component_{comp_idx}.png'")
+#
+#             plt.close()
+
 
 def save_metrics(metrics, save_dir=None):
     import wandb
