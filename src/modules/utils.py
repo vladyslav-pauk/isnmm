@@ -20,8 +20,10 @@ def unmix_components(latent_sample, latent_dim, model=None):
         latent_dim=latent_dim,
         dataset_size=dataset_size
     )
+
     latent_sample, mixing_matrix = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
     latent_sample = latent_sample / latent_sample.sum(dim=-1, keepdim=True)
+
     # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
     # unmixing.plot_mse_image(rows=100, cols=10)
 
@@ -236,7 +238,6 @@ def best_permutation_mse(model_A, true_A):
     best_mse = float('inf')
 
     for perm in col_permutations:
-
 
         permuted_model_A = model_A[:, list(perm)]
         mean_mse = torch.mean((true_A - permuted_model_A).pow(2))

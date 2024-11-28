@@ -115,7 +115,7 @@ def plot_predictions(models, predictions, image_dims, save_dir="comparison", vis
 
     fig, axs = plt.subplots(
         num_components, num_models,
-        figsize=(A4_WIDTH, 1.2 * A4_WIDTH * height / width * num_components / num_models),
+        figsize=(A4_WIDTH, A4_WIDTH * height / width * num_components / num_models),
         dpi=300
     )
     axs = np.atleast_2d(axs)

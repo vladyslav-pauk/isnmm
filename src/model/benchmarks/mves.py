@@ -27,7 +27,7 @@ class Model:
     def _center_and_decompose(self, x):
         x_mean = x.mean(dim=1, keepdim=True)
         x_centered = x - x_mean
-        covariance_matrix = x_centered @ x_centered.T / (self.dataset_size - 1)
+        covariance_matrix = x_centered @ x_centered.T / (self.dataset_size - 1) + 1e-8 * torch.eye(x_centered.size(0), device=x.device)
         eigenvalues, eigenvectors = torch.linalg.eigh(covariance_matrix)
         sorted_indices = torch.argsort(eigenvalues, descending=True)
         x_eigenvectors = eigenvectors[:, sorted_indices[:self.latent_dim - 1]]
@@ -39,12 +39,13 @@ class Model:
         return x_tilde.T
 
     def _construct_convex_hull(self, x_tilde):
+        # x_tilde = x_tilde[torch.argsort(x_tilde[:, 0])]
         hull = ConvexHull(x_tilde.cpu().numpy())
         return x_tilde[hull.vertices]
 
     def _estimate_alpha(self, vertices):
         if vertices.shape[0] > self.latent_dim:
-            return kmeans_torch(vertices, self.latent_dim, num_iters=10).T
+            return kmeans_torch(vertices, self.latent_dim).T
         else:
             return vertices[:self.latent_dim].T
 

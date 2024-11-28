@@ -77,6 +77,5 @@ if __name__ == "__main__":
     hyperspectral_metric.update(recovered_abundances=reconstructed_images, transformed_images=transformed_images)
     hyperspectral_metric.compute()
 
-# fixme: cnae permute not working
 # todo: rewrite using torch add_state interface
 # todo: use common interface for tensor & state_data for all metrics, refactor compute, update, etc

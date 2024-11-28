@@ -16,31 +16,26 @@ def spectral_angle_mapper(a_est, a_true):
     return angle
 
 
-def kmeans_torch(data, num_clusters, num_iters=10):
+from sklearn.cluster import KMeans
+import torch
+
+def kmeans_torch(data, num_clusters, random_state=42):
     """
-    Performs KMeans clustering using PyTorch.
+    Performs KMeans clustering using scikit-learn.
 
     Parameters:
     data (torch.Tensor): Data tensor of shape (num_samples, num_features).
     num_clusters (int): Number of clusters.
-    num_iters (int): Number of iterations.
+    random_state (int): Random seed for reproducibility.
 
     Returns:
     torch.Tensor: Cluster centers of shape (num_clusters, num_features).
     """
-    num_samples, dim = data.shape
-    indices = torch.randperm(num_samples)[:num_clusters]
-    centers = data[indices].clone()
+    data_np = data.cpu().numpy()
+    kmeans = KMeans(n_clusters=num_clusters, max_iter=1000)
+    kmeans.fit(data_np)
+    return torch.tensor(kmeans.cluster_centers_, device=data.device)
 
-    for _ in range(num_iters):
-        distances = torch.cdist(data, centers)
-        labels = torch.argmin(distances, dim=1)
-        for k in range(num_clusters):
-            if torch.sum(labels == k) == 0:
-                centers[k] = data[torch.randint(0, num_samples, (1,))]
-            else:
-                centers[k] = data[labels == k].mean(dim=0)
-    return centers
 
 
 def match_components(matrix_true, matrix_est, vector_est=None):
