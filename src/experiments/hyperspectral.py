@@ -19,7 +19,7 @@ class ModelMetrics(MetricCollection):
 
         self.latent_dim = None
 
-        self.log_metrics = 'latent'
+        self.plot_metrics = None
 
     def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
@@ -143,8 +143,8 @@ class ModelMetrics(MetricCollection):
                 if metric_value is not None:
                     metrics[metric_name] = metric_value
 
-                if self.log_metrics:
-                    if self[metric_name].tensor is not None and self.log_metrics in metric_name:
+                if self.plot_metrics is None or self.plot_metrics in metric_name:
+                    if self[metric_name].tensor is not None:
                         plot_data(
                             {metric_name: self[metric_name].tensor},
                             self.image_dims,
