@@ -10,12 +10,12 @@ from src.utils.utils import init_plot
 
 
 class PSNR(torchmetrics.Metric):
-    def __init__(self, max_val=255, dist_sync_on_step=False, show_plot=False, log_plot=False, save_plot=False, image_dims=None):
+    def __init__(self, max_val=255, dist_sync_on_step=False): #, show_plot=False, log_plot=False, save_plot=False, image_dims=None):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.max_val = max_val
-        self.show_plot = show_plot
-        self.save_plot = save_plot
-        self.image_dims = image_dims
+        # self.show_plot = show_plot
+        # self.save_plot = save_plot
+        # self.image_dims = image_dims
 
         self.add_state("psnr_values", default=[], dist_reduce_fx="cat")
         self.tensor = None
@@ -26,60 +26,62 @@ class PSNR(torchmetrics.Metric):
         self.psnr_values.append(psnr)
 
     def compute(self):
-        psnr_avg = torch.cat(self.psnr_values, dim=0).mean()
-        self.plot({"psnr": torch.cat(self.psnr_values, dim=0)})
+        psnr_values = torch.cat(self.psnr_values, dim=0)
+        psnr_avg = psnr_values.mean()
+        # self.plot({"psnr": torch.cat(self.psnr_values, dim=0)})
         self.psnr_values.clear()
+        self.tensor = psnr_values
         return psnr_avg
 
-    def plot(self, plot_data):
-        plt = init_plot()
-        import os
-
-        # A4 width in inches
-        A4_WIDTH = 8.27
-
-        channels, height, width = self.image_dims
-        num_components = next(iter(plot_data.values())).shape[-1]
-        cols = 4
-        rows = (num_components + cols - 1) // cols  # Ensure enough rows
-
-        # Calculate aspect ratio and dynamic figure height
-        aspect_ratio = height / width
-        fig_width = A4_WIDTH
-        fig_height = fig_width * rows / cols * aspect_ratio
-
-        fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(fig_width, fig_height), dpi=300)
-        axs = np.atleast_2d(axs)  # Ensure axes are in 2D array form
-
-        for comp_idx in range(num_components):
-            for idx, (key, data) in enumerate(plot_data.items()):
-                data = data.T.view(-1, height, width)
-                component = data[comp_idx].cpu().numpy()
-
-                row = comp_idx // cols
-                col = comp_idx % cols
-
-                axs[row, col].imshow(component, cmap='viridis')
-                axs[row, col].set_title(f'{key.replace("_", " ").capitalize()}, {comp_idx}')
-                axs[row, col].axis('off')
-
-        # Turn off unused axes
-        for i in range(num_components, rows * cols):
-            row, col = divmod(i, cols)
-            axs[row, col].axis('off')
-
-        plt.tight_layout()
-
-        if self.save_plot:
-            dir = run_dir('predictions')
-            os.makedirs(dir, exist_ok=True)  # Ensure the directory exists
-            plt.savefig(f"{dir}/psnr.png", transparent=True, dpi=300)
-            print(f"Saved PSNR images to '{dir}/psnr.png'")
-
-        if self.show_plot:
-            plt.show()
-
-        plt.close()
+    # def plot(self, plot_data):
+    #     plt = init_plot()
+    #     import os
+    #
+    #     # A4 width in inches
+    #     A4_WIDTH = 8.27
+    #
+    #     channels, height, width = self.image_dims
+    #     num_components = next(iter(plot_data.values())).shape[-1]
+    #     cols = 4
+    #     rows = (num_components + cols - 1) // cols  # Ensure enough rows
+    #
+    #     # Calculate aspect ratio and dynamic figure height
+    #     aspect_ratio = height / width
+    #     fig_width = A4_WIDTH
+    #     fig_height = fig_width * rows / cols * aspect_ratio
+    #
+    #     fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(fig_width, fig_height), dpi=300)
+    #     axs = np.atleast_2d(axs)  # Ensure axes are in 2D array form
+    #
+    #     for comp_idx in range(num_components):
+    #         for idx, (key, data) in enumerate(plot_data.items()):
+    #             data = data.T.view(-1, height, width)
+    #             component = data[comp_idx].cpu().numpy()
+    #
+    #             row = comp_idx // cols
+    #             col = comp_idx % cols
+    #
+    #             axs[row, col].imshow(component, cmap='viridis')
+    #             axs[row, col].set_title(f'{key.replace("_", " ").capitalize()}, {comp_idx}')
+    #             axs[row, col].axis('off')
+    #
+    #     # Turn off unused axes
+    #     for i in range(num_components, rows * cols):
+    #         row, col = divmod(i, cols)
+    #         axs[row, col].axis('off')
+    #
+    #     plt.tight_layout()
+    #
+    #     if self.save_plot:
+    #         dir = run_dir('predictions')
+    #         os.makedirs(dir, exist_ok=True)  # Ensure the directory exists
+    #         plt.savefig(f"{dir}/psnr.png", transparent=True, dpi=300)
+    #         print(f"Saved PSNR images to '{dir}/psnr.png'")
+    #
+    #     if self.show_plot:
+    #         plt.show()
+    #
+    #     plt.close()
 
 
 if __name__ == "__main__":
@@ -117,5 +119,3 @@ if __name__ == "__main__":
     psnr_value = psnr_metric.compute()
 
     print(f"PSNR: {psnr_value}")
-
-# fixme: refactor psnr as data_mse and others and add to synthetic

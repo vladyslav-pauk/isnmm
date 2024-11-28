@@ -19,6 +19,8 @@ class ModelMetrics(MetricCollection):
 
         self.latent_dim = None
 
+        self.log_metrics = 'latent'
+
     def setup_metrics(self, metrics_list=None):
         self.metrics_list = metrics_list
         self.image_dims = list(self.true_model.transform.unflatten(self.true_model.dataset.data).shape)
@@ -32,10 +34,10 @@ class ModelMetrics(MetricCollection):
                 save_plot=False,#self.save_plot
             ),
             'psnr': metric.PSNR(
-                image_dims=self.image_dims,
-                show_plot=False,#self.show_plot,
-                log_plot=self.log_plot,
-                save_plot=False,#self.save_plot
+                # image_dims=self.image_dims,
+                # show_plot=self.show_plot,
+                # log_plot=self.log_plot,
+                # save_plot=False,#self.save_plot
             ),
             'error': metric.Hyperspectral(
                 image_dims=self.image_dims,
@@ -43,7 +45,7 @@ class ModelMetrics(MetricCollection):
                 log_plot=self.log_plot,
                 save_plot=False,#self.save_plot
             ),
-            'abundance': metric.Hyperspectral(
+            'latent_components': metric.Hyperspectral(
                 image_dims=self.image_dims,
                 show_plot=self.show_plot,
                 log_plot=self.log_plot,
@@ -76,7 +78,7 @@ class ModelMetrics(MetricCollection):
                 "noisy": observed_sample,
                 "reconstructed": model_output['reconstructed_sample'].mean(dim=0),
             },
-            'abundance': {
+            'latent_components': {
                 "latent_sample": model_output['latent_sample'].mean(dim=0),
                 "noise": model.transform(model_output['posterior_parameterization'][1])
                 # if model_output['latent_sample'].shape[0] == 1
@@ -105,7 +107,7 @@ class ModelMetrics(MetricCollection):
                 latent_sample_qr = labels["latent_sample_qr"]
 
                 metric_updates.update({
-                    'abundance': {
+                    'latent_components': {
                         "latent_sample": latent_sample,
                         "true": latent_sample_true,
                         "noise": model.transform(model_output['posterior_parameterization'][1])
@@ -141,13 +143,14 @@ class ModelMetrics(MetricCollection):
                 if metric_value is not None:
                     metrics[metric_name] = metric_value
 
-                if self[metric_name].tensor is not None:
-                    plot_data(
-                        {metric_name: self[metric_name].tensor},
-                        self.image_dims,
-                        show_plot=self.show_plot,
-                        save_plot=self.save_plot
-                    )
+                if self.log_metrics:
+                    if self[metric_name].tensor is not None and self.log_metrics in metric_name:
+                        plot_data(
+                            {metric_name: self[metric_name].tensor},
+                            self.image_dims,
+                            show_plot=self.show_plot,
+                            save_plot=self.save_plot
+                        )
 
         return metrics
 
