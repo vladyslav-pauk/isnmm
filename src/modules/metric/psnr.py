@@ -1,87 +1,30 @@
 import torch
 import torchmetrics
-import numpy as np
-import matplotlib.pyplot as plt
 
 from src.modules.data.hyperspectral import DataModule
 from src.modules.transform.convolution import HyperspectralTransform
-from src.utils.wandb_tools import run_dir
-from src.utils.utils import init_plot
 
 
 class PSNR(torchmetrics.Metric):
-    def __init__(self, max_val=255, dist_sync_on_step=False): #, show_plot=False, log_plot=False, save_plot=False, image_dims=None):
+    def __init__(self, max_val=255, dist_sync_on_step=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
         self.max_val = max_val
-        # self.show_plot = show_plot
-        # self.save_plot = save_plot
-        # self.image_dims = image_dims
 
         self.add_state("psnr_values", default=[], dist_reduce_fx="cat")
         self.tensor = None
 
     def update(self, reconstructed, target):
-        mse = ((reconstructed - target) ** 2)
+        mse = ((reconstructed - target) ** 2) + 1e-12
         psnr = 10 * torch.log10(self.max_val ** 2 / mse)
         self.psnr_values.append(psnr)
 
     def compute(self):
         psnr_values = torch.cat(self.psnr_values, dim=0)
         psnr_avg = psnr_values.mean()
-        # self.plot({"psnr": torch.cat(self.psnr_values, dim=0)})
+
         self.psnr_values.clear()
         self.tensor = psnr_values
         return psnr_avg
-
-    # def plot(self, plot_data):
-    #     plt = init_plot()
-    #     import os
-    #
-    #     # A4 width in inches
-    #     A4_WIDTH = 8.27
-    #
-    #     channels, height, width = self.image_dims
-    #     num_components = next(iter(plot_data.values())).shape[-1]
-    #     cols = 4
-    #     rows = (num_components + cols - 1) // cols  # Ensure enough rows
-    #
-    #     # Calculate aspect ratio and dynamic figure height
-    #     aspect_ratio = height / width
-    #     fig_width = A4_WIDTH
-    #     fig_height = fig_width * rows / cols * aspect_ratio
-    #
-    #     fig, axs = plt.subplots(nrows=rows, ncols=cols, figsize=(fig_width, fig_height), dpi=300)
-    #     axs = np.atleast_2d(axs)  # Ensure axes are in 2D array form
-    #
-    #     for comp_idx in range(num_components):
-    #         for idx, (key, data) in enumerate(plot_data.items()):
-    #             data = data.T.view(-1, height, width)
-    #             component = data[comp_idx].cpu().numpy()
-    #
-    #             row = comp_idx // cols
-    #             col = comp_idx % cols
-    #
-    #             axs[row, col].imshow(component, cmap='viridis')
-    #             axs[row, col].set_title(f'{key.replace("_", " ").capitalize()}, {comp_idx}')
-    #             axs[row, col].axis('off')
-    #
-    #     # Turn off unused axes
-    #     for i in range(num_components, rows * cols):
-    #         row, col = divmod(i, cols)
-    #         axs[row, col].axis('off')
-    #
-    #     plt.tight_layout()
-    #
-    #     if self.save_plot:
-    #         dir = run_dir('predictions')
-    #         os.makedirs(dir, exist_ok=True)  # Ensure the directory exists
-    #         plt.savefig(f"{dir}/psnr.png", transparent=True, dpi=300)
-    #         print(f"Saved PSNR images to '{dir}/psnr.png'")
-    #
-    #     if self.show_plot:
-    #         plt.show()
-    #
-    #     plt.close()
 
 
 if __name__ == "__main__":
@@ -98,7 +41,6 @@ if __name__ == "__main__":
         "latent_dim": 2
     }
 
-    # Initialize the data module and transform
     data_module = DataModule(data_config, transform=HyperspectralTransform(
         normalize=True,
         output_channels=data_config['observed_dim'],
@@ -113,7 +55,6 @@ if __name__ == "__main__":
     transformed_images = data_module.transform.unflatten(transformed_data)
     reconstructed_images = data_module.transform.inverse(transformed_data)
 
-    # Initialize the PSNR metric and compute
     psnr_metric = PSNR(show_plot=True, save_plot=False)
     psnr_metric.update(reconstructed_images, observed_images)
     psnr_value = psnr_metric.compute()
