@@ -38,7 +38,7 @@
     "hidden_activation": "ReLU",
     "output_activation": null,
     "weight_initialization": null,
-    "bn_eps": 1e-5,
+    "bn_eps": null,
     "bn_momentum": 0.1,
     "dropout_rate": null
   },

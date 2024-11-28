@@ -46,7 +46,7 @@ class Encoder(nn.Module):
     def forward(self, x):
         loc = self.loc_network(x)
         scale = self.scale_network(x)
-        return loc, scale.exp() # clamp(min=1e-12)
+        return loc, scale.abs() # clamp(min=1e-12)
 
 
 class Decoder(nn.Module):

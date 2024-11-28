@@ -27,21 +27,21 @@ class ModelMetrics(MetricCollection):
         all_metrics = {
             'reconstruction': metric.Hyperspectral(
                 image_dims=self.image_dims,
-                show_plot=self.show_plot,
+                show_plot=False,#self.show_plot,
                 log_plot=self.log_plot,
-                save_plot=self.save_plot
+                save_plot=False,#self.save_plot
             ),
             'psnr': metric.PSNR(
                 image_dims=self.image_dims,
-                show_plot=self.show_plot,
+                show_plot=False,#self.show_plot,
                 log_plot=self.log_plot,
-                save_plot=self.save_plot
+                save_plot=False,#self.save_plot
             ),
             'error': metric.Hyperspectral(
                 image_dims=self.image_dims,
-                show_plot=self.show_plot,
+                show_plot=False,#self.show_plot,
                 log_plot=self.log_plot,
-                save_plot=self.save_plot
+                save_plot=False,#self.save_plot
             ),
             'abundance': metric.Hyperspectral(
                 image_dims=self.image_dims,

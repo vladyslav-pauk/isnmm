@@ -57,17 +57,19 @@ def permute(state_data):
 
 def plot_data(data, image_dims, show_plot=False, save_plot=False):
 
+    if not show_plot and not save_plot:
+        return
+
     plt = init_plot()
 
-    # A4 width in inches (8.27 inches)
     A4_WIDTH = 8.27
 
     _, height, width = image_dims
 
-    all_data = []
-    for key, tensor in data.items():
-        all_data.append(tensor.T.view(-1, height, width))
-    all_data = torch.cat(all_data, dim=0)
+    # all_data = []
+    # for key, tensor in data.items():
+    #     all_data.append(tensor.T.view(-1, height, width))
+    # all_data = torch.cat(all_data, dim=0)
     # all_data = torch.cat([data.T.view(-1, height, width) for data in data.values()], dim=0)
 
     global_min = 0 #all_data.min().item()
@@ -79,12 +81,11 @@ def plot_data(data, image_dims, show_plot=False, save_plot=False):
         num_components = data.shape[0]
 
         cols = 4
-        rows = (num_components + cols - 1) // cols  # Ensure enough rows
+        rows = (num_components + cols - 1) // cols
 
-        # Dynamically calculate height to maintain aspect ratio
         aspect_ratio = height / width
         fig_width = A4_WIDTH
-        fig_height = fig_width * rows / cols * aspect_ratio  # Scale height by rows and aspect ratio
+        fig_height = fig_width * rows / cols * aspect_ratio
 
         fig, axs = plt.subplots(rows, cols, figsize=(fig_width, fig_height), dpi=300)
         axs = np.atleast_2d(axs)
