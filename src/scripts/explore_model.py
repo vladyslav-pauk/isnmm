@@ -24,10 +24,11 @@ def load_model(run_id, experiment_name):
     module = getattr(model_package, config['model_name'].upper())
     encoder = module.Encoder(config=config['encoder'])
     decoder = module.Decoder(config=config['decoder'])
+
     encoder.construct(latent_dim=config['model']['latent_dim'],
-                      observed_dim=config['data_config']['observed_dim'])
+                      observed_dim=config['model']['observed_dim'])
     decoder.construct(latent_dim=config['model']['latent_dim'],
-                      observed_dim=config['data_config']['observed_dim'])
+                      observed_dim=config['model']['observed_dim'])
 
     metrics_module = getattr(exp_module, experiment_name)
     metrics = metrics_module.ModelMetrics(monitor=config['metric']['name']).eval()
@@ -73,11 +74,12 @@ def plot_training_history(model):
 
 
 if __name__ == "__main__":
-    model, datamodule = predict(
-        "hyperspectral", "u9o6hsx4")
+    model, _ = predict(
+        "hyperspectral", "u1wxkz3r")
 
     plot_training_history(model)
 
+# todo: use number of parameters and number of layers as parameters, every architecture can be different
 # todo: latent_dims are not saved to the model, save them when training model, when we get them from data
 # todo: automatically adjust layer dims from config, so it's compatible with CNN
 # todo: pass transform to the metric

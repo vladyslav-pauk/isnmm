@@ -1,9 +1,11 @@
 from torchmetrics import MetricCollection
+import torch
 
 from src.modules.utils import save_metrics
 
 import src.modules.metric as metric
 import src.model as model_package
+from src.modules.utils import unmix, permute
 
 
 class ModelMetrics(MetricCollection):
@@ -16,10 +18,12 @@ class ModelMetrics(MetricCollection):
         self.log_plot = log_plot
         self.log_wandb = True
         self.true_model = None
-
-        self.unmixing = False
+        self.model = None
 
     def setup_metrics(self, metrics_list=None):
+        self.latent_dim = self.model.latent_dim
+        self.unmixing = self.model.unmixing
+
         self.metrics_list = metrics_list
         all_metrics = {
             'subspace_distance': metric.SubspaceDistance(
@@ -78,7 +82,16 @@ class ModelMetrics(MetricCollection):
             latent_sample_mean = model_output["latent_sample"].mean(0)
             # model.unmixing = None
             # latent_sample_unmixed, linear_mixture = self.unmix(latent_sample_mean, latent_sample_true.shape[-1], model)
+
             latent_sample_unmixed = latent_sample_mean
+            if self.unmixing:
+                latent_sample_unmixed, mixing_matrix = unmix(
+                    latent_sample_mean, self.latent_dim, self.unmixing
+                )
+                mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
+
+            latent_sample_unmixed, _ = permute(latent_sample_unmixed, latent_sample_true)
+
             linearly_mixed_sample = model.decoder.linear_mixture(latent_sample_mean)
 
             metric_updates = {

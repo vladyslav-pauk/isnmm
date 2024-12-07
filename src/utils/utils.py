@@ -123,28 +123,6 @@ def clean_up(experiment):
         shutil.rmtree(path_to_remove, ignore_errors=False)
 
 
-def init_plot():
-    import warnings
-    warnings.filterwarnings("ignore", message=".*path .*")
-
-    import matplotlib.pyplot as plt
-    plt.rcParams.update({
-        "text.usetex": True,
-        "font.family": ["Computer Modern Roman"],
-        "font.serif": ["Computer Modern Roman"],
-        "axes.labelsize": 11,
-        "font.size": 11,
-        "legend.fontsize": 10,
-        "xtick.labelsize": 11,
-        "ytick.labelsize": 11,
-        "figure.dpi": 300,
-        "savefig.dpi": 300,
-        "text.latex.preamble": r"\usepackage{amsmath}"
-    })
-    # todo: my color palette
-
-    return plt
-
 # log_format = "%(asctime)s - %(levelname)s - %(message)s"
 # logging.basicConfig(
 #     level=logging.INFO,

@@ -1,5 +1,3 @@
-import argparse
-import ast
 import os
 
 from pytorch_lightning import Trainer, seed_everything
@@ -9,7 +7,7 @@ import src.modules.data as data_package
 import src.model as model_package
 from src.modules.callback import EarlyStoppingCallback
 from src.utils.config_tools import load_model_config, load_data_config, update_hyperparameters
-from src.utils.wandb_tools import init_logger#, login_wandb
+from src.utils.wandb_tools import init_logger
 import src.experiments as exp_module
 
 
@@ -105,26 +103,3 @@ def _setup_logger(experiment_name, config, data_config, kwargs):
         'data_config': data_config,
     })
     return logger
-
-
-# if __name__ == "__main__":
-#
-#     parser = argparse.ArgumentParser(description='Train a model with specified hyperparameters')
-#     parser.add_argument('experiment_name', type=str, help='Name of the experiment (e.g., simplex_recovery)')
-#     parser.add_argument('data_name', type=str, help='Name of the dataset (e.g., lmm)')
-#     parser.add_argument('model_name', type=str, help='Name of the model (e.g., vasca)')
-#     parser.add_argument('--hyperparameters', type=str, default=None, help='Hyperparameter dictionary')
-#     args = parser.parse_args()
-#
-#     if args.hyperparameters:
-#         hyperparameters = ast.literal_eval(args.hyperparameters)
-#     else:
-#         hyperparameters = {}
-#
-#     login_wandb(args.experiment_name)
-#
-#     train_model(
-#         experiment_name=args.experiment_name,
-#         model_name=args.model_name,
-#         **hyperparameters
-#     )

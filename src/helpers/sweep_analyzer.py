@@ -4,7 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from src.utils.wandb_tools import fetch_wandb_sweep
-from src.utils.utils import font_style, format_string, init_plot
+from src.utils.utils import font_style, format_string
+from src.utils.plot_tools import init_plot
 
 
 class SweepAnalyzer:

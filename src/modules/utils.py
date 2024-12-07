@@ -2,19 +2,21 @@ import os
 import json
 import numpy as np
 import torch
+import itertools
 
-from src.utils.utils import init_plot
+from src.utils.plot_tools import init_plot
 from src.utils.wandb_tools import run_dir
+import src.model as model_package
 
 
 def dict_to_str(d):
     return '_'.join([f'{value}' for key, value in d.items() if value is not None])
 
 
-def unmix_components(latent_sample, latent_dim, model=None):
-    import src.model as model_package
+def unmix(latent_sample, latent_dim, model=None):
 
     dataset_size = latent_sample.size(0)
+
     unmixing_model = getattr(model_package, model).Model
     unmixing = unmixing_model(
         latent_dim=latent_dim,
@@ -22,7 +24,7 @@ def unmix_components(latent_sample, latent_dim, model=None):
     )
 
     latent_sample, mixing_matrix = unmixing.estimate_abundances(latent_sample.squeeze().cpu().detach())
-    latent_sample = latent_sample / latent_sample.sum(dim=-1, keepdim=True)
+    # latent_sample = latent_sample / latent_sample.sum(dim=-1, keepdim=True)
 
     # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
     # unmixing.plot_mse_image(rows=100, cols=10)
@@ -30,89 +32,30 @@ def unmix_components(latent_sample, latent_dim, model=None):
     return latent_sample, mixing_matrix
 
 
-def unmix(state_data, unmixing, latent_dim):
-    if unmixing and "latent_sample" in state_data:
-        state_data["latent_sample"], mixing_matrix = unmix_components(
-            state_data["latent_sample"],
-            latent_dim=latent_dim,
-            model=unmixing
-        )
-        mixing_matrix_pinv = torch.linalg.pinv(mixing_matrix)
-
-        for key, value in state_data.items():
-            if key != "latent_sample" and key != "true":
-                state_data[key] = torch.matmul(mixing_matrix_pinv, value.T).T
-
-    return state_data
+def permute(sample, true_sample):
+    permutation, _ = best_permutation_mse(sample, true_sample)
+    sample = sample[:, permutation]
+    return sample, permutation
 
 
-def permute(state_data):
-    if "latent_sample" in state_data:
-        permutation, _ = best_permutation_mse(state_data["latent_sample"], state_data["true"])
-        for key in state_data:
-            if key != "true":
-                state_data[key] = state_data[key][:, permutation]
-    return state_data
+def best_permutation_mse(model_A, true_A):
+    col_permutations = itertools.permutations(range(model_A.size(1)))
+    best_mse = float('inf')
+
+    for perm in col_permutations:
+
+        permuted_model_A = model_A[:, list(perm)]
+        mse = (true_A - permuted_model_A).pow(2)
+        mean_mse = torch.mean(mse)
+
+        if mean_mse < best_mse:
+            best_permutation = list(perm)
+            best_mse = mean_mse
+
+    return best_permutation, best_mse
 
 
-def plot_data(data, image_dims, show_plot=False, save_plot=False):
 
-    if not show_plot and not save_plot:
-        return
-
-    plt = init_plot()
-
-    A4_WIDTH = 8.27
-
-    _, height, width = image_dims
-
-    # all_data = []
-    # for key, tensor in data.items():
-    #     all_data.append(tensor.T.view(-1, height, width))
-    # all_data = torch.cat(all_data, dim=0)
-    # all_data = torch.cat([data.T.view(-1, height, width) for data in data.values()], dim=0)
-
-    global_min = 0 #all_data.min().item()
-    global_max = 1 #all_data.max().item()
-    # print(f"Global normalization: min={global_min}, max={global_max}")
-
-    for key, data in data.items():
-        data = data.T.view(-1, height, width)
-        num_components = data.shape[0]
-
-        cols = 4
-        rows = (num_components + cols - 1) // cols
-
-        aspect_ratio = height / width
-        fig_width = A4_WIDTH
-        fig_height = fig_width * rows / cols * aspect_ratio
-
-        fig, axs = plt.subplots(rows, cols, figsize=(fig_width, fig_height), dpi=300)
-        axs = np.atleast_2d(axs)
-
-        for i in range(num_components):
-            row, col = divmod(i, cols)
-            component = data[i].cpu().numpy()
-            axs[row, col].imshow(component, cmap='viridis')#, vmin=global_min, vmax=global_max)
-            axs[row, col].set_title(f'{key.replace("_", " ").capitalize()} {i + 1}')
-            # axs[row, col].axis('off')
-
-        for i in range(num_components, rows * cols):
-            row, col = divmod(i, cols)
-            axs[row, col].axis('off')
-
-        plt.tight_layout()
-
-        if save_plot:
-            dir = run_dir('predictions')
-            os.makedirs(dir, exist_ok=True)
-            plt.savefig(f"{dir}/{key}_components.png", transparent=True, dpi=300)
-            print(f"Saved {key} components image to '{dir}/{key}_components.png'")
-
-        if show_plot:
-            plt.show()
-
-        plt.close()
 # def plot_data(self, plot_data):
     #     channels, height, width = self.image_dims
     #     for key, data in plot_data.items():
@@ -303,29 +246,12 @@ def save_metrics(metrics, save_dir=None):
     existing_data[run_id]["metrics"].update(metrics)
 
     print('Final metrics:')
+    # todo: make print('{stage} metrics:')
     for key, value in metrics.items():
-        print(f"\t{key} = {value}")
+        print(f"\t{key} = {"{:.2f}".format(value)}")
 
     with open(output_path, 'w') as f:
         json.dump(existing_data, f, indent=2)
     print(f"Saved final metrics to {output_path}:")
-
-
-def best_permutation_mse(model_A, true_A):
-    import itertools
-    col_permutations = itertools.permutations(range(model_A.size(1)))
-    best_mse = float('inf')
-
-    for perm in col_permutations:
-
-        permuted_model_A = model_A[:, list(perm)]
-        mean_mse = torch.mean((true_A - permuted_model_A).pow(2))
-        mse = (true_A - permuted_model_A).pow(2)
-
-        if mean_mse < best_mse:
-            permutation = list(perm)
-            best_mse = mean_mse
-
-    return permutation, best_mse
 
 # todo: separate plot utils

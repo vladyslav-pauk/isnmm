@@ -15,6 +15,8 @@ class Module(LightningModule):
         self.encoder = encoder
         self.decoder = decoder
 
+        self.save_hyperparameters(ignore=['encoder', 'decoder', 'metrics'])
+
     def forward(self, observed_batch):
         posterior_parameterization = self.encoder(observed_batch)
         latent_sample, latent_sample_mean = self._reparameterization(posterior_parameterization)
@@ -47,40 +49,60 @@ class Module(LightningModule):
             self.zero_grad()
 
     def setup(self, stage=None):
-        if stage == 'fit' or stage is None:
-            datamodule = self.trainer.datamodule
-            data_sample = next(iter(datamodule.train_dataloader()))
-            self.observed_dim = data_sample["data"].shape[1]
+        # print(f"- {stage.split('.')[-1].capitalize()} stage")
+        datamodule = self.trainer.datamodule
+        self.save_hyperparameters({"data_config": datamodule.data_config})
+        data_sample = next(iter(datamodule.train_dataloader()))
+        self.observed_dim = data_sample["data"].shape[1]
 
-            if "labels" in data_sample.keys():
-                print("Labelled data found")
+        if data_sample['labels']:
+            print("Labelled data found")
 
-                if self.latent_dim is None and "latent_sample" in data_sample["labels"].keys():
-                    self.latent_dim = data_sample["labels"]["latent_sample"].shape[-1]
+            if self.latent_dim is None and "latent_sample" in data_sample["labels"].keys():
+                self.latent_dim = data_sample["labels"]["latent_sample"].shape[-1]
 
-                if self.sigma is None:
-                    self.sigma = datamodule.sigma
+            if self.sigma is None:
+                self.sigma = datamodule.sigma
 
-            if self.trainer.model.model_config["latent_dim"]:
-                self.latent_dim = self.trainer.model.model_config["latent_dim"]
+        if self.trainer.model.model_config["latent_dim"]:
+            self.latent_dim = self.trainer.model.model_config["latent_dim"]
+
+        self.metrics.eval()
+        if stage == 'fit':
+            # datamodule = self.trainer.datamodule
+            self.model_config["latent_dim"] = self.latent_dim
+            self.model_config["observed_dim"] = self.observed_dim
+            self.save_hyperparameters({"data_config": datamodule.data_config})
+            # data_sample = next(iter(datamodule.train_dataloader()))
+            # self.observed_dim = data_sample["data"].shape[1]
+            #
+            # if "labels" in data_sample.keys():
+            #     print("Labelled data found")
+            #
+            #     if self.latent_dim is None and "latent_sample" in data_sample["labels"].keys():
+            #         self.latent_dim = data_sample["labels"]["latent_sample"].shape[-1]
+            #
+            #     if self.sigma is None:
+            #         self.sigma = datamodule.sigma
+            #
+            # if self.trainer.model.model_config["latent_dim"]:
+            #     self.latent_dim = self.trainer.model.model_config["latent_dim"]
 
             if self.unmixing:
                 print(f"Unmixing latent sample with {self.unmixing}")
 
-            self.save_hyperparameters({"data_config": datamodule.data_config})
+                # _, A_gt, S_gt, _, _ = loadhsi('urban')
+                # mixing_init = svmax(A_gt @ S_gt, self.latent_dim)
+                # mixing_init, pos_init = reorder_columns_angle(A_gt, mixing_init)
 
             self.encoder.construct(self.latent_dim, self.observed_dim)
-            self.decoder.construct(self.latent_dim, self.observed_dim)
+            self.decoder.construct(self.latent_dim, self.observed_dim)#, mixing_init)
 
-            self.metrics.true_model = self.trainer.datamodule
-            self.metrics.latent_dim = self.latent_dim
-
-        if stage == 'predict':
-            if self.trainer.model.model_config["latent_dim"]:
-                self.latent_dim = self.trainer.model.model_config["latent_dim"]
-            self.metrics.true_model = self.trainer.datamodule
-            self.metrics.latent_dim = self.trainer.model.latent_dim
-            self.metrics.unmixing = self.model_config["unmixing"]
+        # if stage == 'predict':
+        #     self.metrics.true_model = self.trainer.datamodule
+        #     self.metrics.model = self
+        #     # self.metrics.latent_dim = self.trainer.model.latent_dim
+        #     # self.metrics.unmixing = self.model_config["unmixing"]
 
     def on_train_start(self) -> None:
         if self.metrics.log_wandb:
@@ -99,6 +121,9 @@ class Module(LightningModule):
         return self.train_dataloader()
 
     def on_validation_start(self):
+        self.metrics.true_model = self.trainer.datamodule
+        self.metrics.model = self
+
         self.metrics.log_wandb = True
         self.metrics.log_plots = False
         self.metrics.show_plots = False
@@ -121,6 +146,10 @@ class Module(LightningModule):
         self.log_dict({**self.metrics.compute()})
 
     def on_test_start(self):
+        # print("Testing")
+        self.metrics.true_model = self.trainer.datamodule
+        self.metrics.model = self
+
         self.metrics.log_wandb = False
         self.metrics.log_plots = False
         self.metrics.show_plots = False
@@ -133,7 +162,6 @@ class Module(LightningModule):
             labels = batch["labels"]
         else:
             labels = None
-
         self.metrics.update(data, self(data), labels, idxes, self)
 
     def on_test_end(self) -> None:
@@ -141,6 +169,10 @@ class Module(LightningModule):
         self.metrics.save(final_metrics)
 
     def on_predict_start(self) -> None:
+        # print("Predicting")
+        self.metrics.true_model = self.trainer.datamodule
+        self.metrics.model = self
+
         self.metrics.log_wandb = False
         self.metrics.log_plot = False
         self.metrics.show_plot = True
@@ -187,3 +219,121 @@ class Module(LightningModule):
             }
         else:
             return {"optimizer": optimizer}
+
+
+import torch
+def pca(Y, N):
+    d = torch.mean(Y, dim=1).unsqueeze(1)
+    Y_cen = Y - d
+    _, C = torch.linalg.eigh(Y_cen @ Y_cen.T)
+    ls = list(range(Y.shape[0]))[::-1]
+    C = C[:, ls][:, :N-1]
+    Y_red = torch.pinverse(C) @ Y_cen
+    return Y_red, C, d
+
+
+def svmax(Y, N):
+    # pca
+    X, C, d = pca(Y, N)
+    # svmax
+    X_bar = torch.cat((X, torch.ones((1, X.shape[1]), device=X.device)), dim=0)
+    A_est = torch.tensor([], device=X.device)
+    idx = []
+    P = torch.eye(N, device=X.device)
+    for i in range(N):
+        _, idx_i = torch.max(torch.sum((P @ X_bar) ** 2, dim=0), 0)
+        idx.append(idx_i.item())
+        A_est = torch.cat((A_est, X[:, idx_i].unsqueeze(1)), dim=1)
+        F = torch.cat((A_est, torch.ones((1, A_est.shape[1]), device=X.device)), dim=0)
+        P = torch.eye(N, device=X.device) - F @ torch.pinverse(F)
+    A_est = C @ A_est + d
+    return A_est
+
+
+from scipy.optimize import linear_sum_assignment
+def reorder_columns_angle(A1, A2):
+    # match how first can be derived by second, i.e., A1 = A2[:, order]
+    # A1 should be ground truth; A2 should be the estimated matrix to be reordered
+
+    # Normalize the columns of A1and A2
+    A1_norm = A1.float() / torch.linalg.norm(A1, dim=0)
+    A2_norm = A2.float() / torch.linalg.norm(A2, dim=0)
+    # Calculate the cosine of the angle between each column in A1 and A2
+    cos_angle_matrix = torch.mm(A1_norm.T, A2_norm).detach()
+    angle_matrix = torch.acos(torch.clamp(cos_angle_matrix, -1, 1))
+    # Use the Hungarian algorithm to find the optimal assignment of columns
+    _, col_ind = linear_sum_assignment(angle_matrix.cpu().numpy())
+    A_reordered = A2[:, col_ind]
+
+    return A_reordered, col_ind
+
+
+import torch
+import numpy as np
+import scipy.io as scio
+def loadhsi(case):
+    '''
+    :input: case: for different datasets,
+                 'toy' and 'usgs' are synthetic datasets
+    :return: Y : HSI data of size [Bands,N]
+             A_ture : Ground Truth of abundance map of size [P,N]
+             P : nums of endmembers signature
+    '''
+
+    if case == 'ridge':
+        file = 'PGMSU/dataset/JasperRidge2_R198.mat'
+        data = scio.loadmat(file)
+        Y = data['Y']
+        nRow, nCol = data['nRow'][0][0], data['nCol'][0][0]
+        if np.max(Y) > 1:
+            Y = Y / np.max(Y)
+        Y = np.reshape(Y, [198, 100, 100])
+        for i, y in enumerate(Y):
+            Y[i] = y.T
+        Y = np.reshape(Y, [198, 10000])
+
+        GT_file = 'PGMSU/dataset/JasperRidge2_end4.mat'
+        S_gt = scio.loadmat(GT_file)['A']
+        A_gt = scio.loadmat(GT_file)['M']
+        S_gt = np.reshape(S_gt, (4, 100, 100))
+        for i, A in enumerate(S_gt):
+            S_gt[i] = A.T
+        S_gt = np.reshape(S_gt, (4, 10000))
+
+    elif case == 'cuprite':
+        file = 'dataset/Cuprite/CupriteS1_R188.mat'
+        data = scio.loadmat(file)
+        Y = data['Y']
+        SlectBands = data['SlectBands'].squeeze()
+        nRow, nCol = data['nRow'][0][0], data['nCol'][0][0]
+
+        GT_file = 'dataset/Cuprite/groundTruth_Cuprite_nEnd12.mat'
+        A_gt = scio.loadmat(GT_file)['M'][SlectBands, :]
+        # GT_file = 'dataset/Cuprite/AVIRIS_corrected (MoffettField).mat'
+
+        Y = np.delete(Y, [0, 1, 135], axis=0)
+        A_gt = np.delete(A_gt, [0, 1, 135], axis=0)
+        if np.max(Y) > 1:
+            Y = Y / np.max(Y)
+
+
+    elif case == 'urban':
+        file = '../datasets/hyperspectral/Urban_R162/data.mat'
+        data = scio.loadmat(file)
+        Y = data['Y']  # (C,w*h)
+        nRow, nCol = data['nRow'][0][0], data['nCol'][0][0]
+
+        GT_file = '../datasets/hyperspectral/Urban_R162/end4_groundTruth.mat'
+        S_gt = scio.loadmat(GT_file)['A']
+        A_gt = scio.loadmat(GT_file)['M']
+        if np.max(Y) > 1:
+            Y = Y / np.max(Y)
+
+    Y = torch.tensor(Y).float()
+    A_gt = torch.tensor(A_gt).float()
+    if 'S_gt' in locals():
+        S_gt = torch.tensor(S_gt).float()
+    else:
+        S_gt = torch.ones((A_gt.shape[1], Y.shape[1]))
+
+    return Y, A_gt, S_gt, nRow, nCol

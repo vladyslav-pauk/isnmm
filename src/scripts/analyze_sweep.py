@@ -71,6 +71,9 @@ if __name__ == "__main__":
 # todo: unify module structures and make base classes for all modules
 # todo: plot panels arrange and font size
 
+# fixme: fix synthetic and other hyperspectral, semi-real, real urban, moffitt
+# fixme: implement overlap metric
+# fixme: figure out how to deal with dimension constraint in the theorem
 # fixme: test single runs for SNRs and models I want to do, make sure I get results
 # fixme: make pipeline for automatic run with hyperparameter search (special config)
 # fixme: make a container and run on server

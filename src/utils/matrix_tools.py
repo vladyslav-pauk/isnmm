@@ -1,10 +1,11 @@
+import numpy as np
 import torch
 from scipy.optimize import linear_sum_assignment
 
 
 def spectral_angle_mapper(a_est, a_true):
     num = torch.sum(a_true * a_est, dim=0)
-    denom = torch.norm(a_true, dim=0) * torch.norm(a_est, dim=0)
+    denom = torch.norm(a_true, dim=0) * torch.norm(a_est, dim=0) + 1e-12
 
     angle = torch.acos((torch.clamp(num / denom, -1.0, 1.0)))
     angle = angle.mean()
@@ -19,23 +20,13 @@ def spectral_angle_mapper(a_est, a_true):
 from sklearn.cluster import KMeans
 import torch
 
+
 def kmeans_torch(data, num_clusters, random_state=42):
-    """
-    Performs KMeans clustering using scikit-learn.
-
-    Parameters:
-    data (torch.Tensor): Data tensor of shape (num_samples, num_features).
-    num_clusters (int): Number of clusters.
-    random_state (int): Random seed for reproducibility.
-
-    Returns:
-    torch.Tensor: Cluster centers of shape (num_clusters, num_features).
-    """
+    np.random.seed(random_state)
     data_np = data.cpu().numpy()
     kmeans = KMeans(n_clusters=num_clusters, max_iter=1000)
     kmeans.fit(data_np)
     return torch.tensor(kmeans.cluster_centers_, device=data.device)
-
 
 
 def match_components(matrix_true, matrix_est, vector_est=None):
@@ -45,15 +36,15 @@ def match_components(matrix_true, matrix_est, vector_est=None):
     norms = torch.norm(matrix_true, dim=0)
     norms_est = torch.norm(matrix_est, dim=0)
     num = matrix_true.T @ matrix_est
-    denom = norms.unsqueeze(1) * norms_est.unsqueeze(0)
+    denom = norms.unsqueeze(1) * norms_est.unsqueeze(0) + 1e-12
     cosine = num / denom
     angle = torch.acos(torch.clamp(cosine, -1.0, 1.0))
-    row_ind, col_ind = linear_sum_assignment(angle.cpu().numpy())
 
+    row_ind, col_ind = linear_sum_assignment(angle.cpu().numpy())
     matrix_est_matched = matrix_est[:, col_ind]
 
-    vector_est_matched = None
     if vector_est is not None:
         vector_est_matched = vector_est[:, col_ind]
         return matrix_est_matched, vector_est_matched
+
     return matrix_est_matched

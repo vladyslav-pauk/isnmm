@@ -11,10 +11,10 @@ class PSNR(torchmetrics.Metric):
         self.max_val = max_val
 
         self.add_state("psnr_values", default=[], dist_reduce_fx="cat")
-        self.tensor = None
+        self.tensors = {}
 
-    def update(self, reconstructed, target):
-        mse = ((reconstructed - target) ** 2) + 1e-12
+    def update(self, estimated, true):
+        mse = ((estimated - true) ** 2) + 1e-12
         psnr = 10 * torch.log10(self.max_val ** 2 / mse)
         self.psnr_values.append(psnr)
 
@@ -23,8 +23,11 @@ class PSNR(torchmetrics.Metric):
         psnr_avg = psnr_values.mean()
 
         self.psnr_values.clear()
-        self.tensor = psnr_values
+        self.tensors = {"psnr": psnr_values}
         return psnr_avg
+
+    def plot(self, image_dims, show_plot=False, save_plot=False):
+        pass
 
 
 if __name__ == "__main__":

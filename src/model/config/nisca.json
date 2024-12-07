@@ -39,9 +39,9 @@
     "output_activation": null,
     "weight_initialization": null,
     "mixture_initialization": null,
-    "bn_eps": null,
+    "bn_eps": 1e-5,
     "bn_momentum": 0.1,
-    "dropout_rate": null,
+    "dropout_rate": 0.1,
     "groups": null,
     "positive": true,
     "scale": 5
@@ -55,9 +55,9 @@
     "output_activation": null,
     "weight_initialization": null,
     "mixture_initialization": null,
-    "bn_eps": null,
+    "bn_eps": 1e-5,
     "bn_momentum": 0.1,
-    "dropout_rate": null
+    "dropout_rate": 0.1
   },
   "optimizer": {
     "name": "Adam",

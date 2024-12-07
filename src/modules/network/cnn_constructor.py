@@ -14,7 +14,7 @@ class CNNConstructor(nn.Module):
                  **kwargs):
         super().__init__()
 
-        conv_dims = list(hidden_layers.values())
+        conv_dims = list(hidden_layers.values()) if hidden_layers else []
         self.init_weights = getattr(nn.init, weight_initialization) if weight_initialization else lambda x: x
         self.layers = self.build_network(input_dim, output_dim, conv_dims, hidden_activation, output_activation, bn_eps, bn_momentum, dropout_rate)
 
@@ -24,25 +24,31 @@ class CNNConstructor(nn.Module):
         hidden_activation = getattr(nn, hidden_activation) if hidden_activation else nn.Identity
         output_activation = getattr(nn, output_activation) if output_activation else nn.Identity
 
-        layers.append(nn.Conv1d(input_dim, conv_dims[0] * input_dim, kernel_size=1, groups=input_dim))
-        layers.append(hidden_activation())
 
-        for i in range(1, len(conv_dims) - 1):
-            layers.append(
-                self.init_weights(nn.Conv1d(conv_dims[i - 1] * input_dim, conv_dims[i] * input_dim, kernel_size=1, groups=input_dim))
-            )
-            layers.append(
-                nn.BatchNorm1d(conv_dims[i], eps=bn_eps, momentum=bn_momentum) if bn_eps else nn.Identity()
-            )
-            layers.append(
-                hidden_activation()
-            )
-            layers.append(
-                nn.Dropout(dropout_rate if dropout_rate else 0) if dropout_rate else nn.Identity()
-            )
+        if len(conv_dims) > 0:
+            layers.append(nn.Conv1d(input_dim, conv_dims[0] * input_dim, kernel_size=1, groups=input_dim))
+            layers.append(hidden_activation())
 
-        layers.append(nn.Conv1d(conv_dims[-1] * input_dim, output_dim, kernel_size=1, groups=input_dim))
-        layers.append(output_activation())
+            for i in range(1, len(conv_dims) - 1):
+                layers.append(
+                    self.init_weights(nn.Conv1d(conv_dims[i - 1] * input_dim, conv_dims[i] * input_dim, kernel_size=1, groups=input_dim))
+                )
+                layers.append(
+                    nn.BatchNorm1d(conv_dims[i] * input_dim, eps=bn_eps, momentum=bn_momentum) if bn_eps else nn.Identity()
+                )
+                layers.append(
+                    hidden_activation()
+                )
+                layers.append(
+                    nn.Dropout(dropout_rate if dropout_rate else 0) if dropout_rate else nn.Identity()
+                )
+
+            layers.append(nn.Conv1d(conv_dims[-1] * input_dim, output_dim, kernel_size=1, groups=input_dim))
+            layers.append(output_activation())
+
+        else:
+            layers.append(nn.Conv1d(input_dim, output_dim, kernel_size=1, groups=input_dim))
+            layers.append(output_activation())
 
         return nn.Sequential(*layers)
 

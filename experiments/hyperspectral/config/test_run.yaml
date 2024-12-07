@@ -4,35 +4,38 @@ metric:
   name: validation_loss
 parameters:
   experiment_name: hyperspectral
-  data_model: Urban_R162
-  model_name:
-    - vasca
-    - nisca
+  data_model: PaviaU
+  nonlinearity:
     - cnae
+  model_name:
+    - nisca
   trainer.max_epochs:
-    - 200
+    - 2000
   early_stopping.min_delta:
     - 1e-3
   data_loader.batch_size:
-    - 1000
+    - 100
   dataset_size:
-    - 40000
+    - 1000
   observed_dim:
     - 16
   model.latent_dim:
-    - 4
+    -
   snr:
-    - 30
+    - 25
   model.sigma:
     -
   decoder.hidden_layers:
-    - h1: 256
-      h2: 256
-      h3: 256
+    - h1: 128
   encoder.hidden_layers:
-    - h1: 256
-      h2: 256
-      h3: 256
+    - h1: 128
+      h2: 64
+      h3: 32
+      h4: 16
+  optimizer.lr.encoder:
+    - 0.001
+  optimizer.lr.decoder:
+    - 0.01
   model.mc_samples:
       - 1
   torch_seed:

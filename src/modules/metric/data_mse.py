@@ -1,43 +1,42 @@
 import torch
 import torchmetrics
-
-from src.modules.utils import unmix, permute
+from src.utils.plot_tools import plot_image
 
 
 class DataMse(torchmetrics.Metric):
-    def __init__(self, unmixing=None, dist_sync_on_step=False, db=False):
+    def __init__(self, dist_sync_on_step=False, db=False, rmse=False):
         super().__init__(dist_sync_on_step=dist_sync_on_step)
 
         self.db = db
-        self.add_state("matrix_true", default=[], dist_reduce_fx='cat')
-        self.add_state("matrix_est", default=[], dist_reduce_fx='cat')
+        self.rmse = rmse
 
-        self.tensor = None
-        self.unmixing = unmixing
+        self.add_state("error", default=[], dist_reduce_fx='cat')
 
-    def update(self, matrix_true=None, matrix_est=None):
-        self.matrix_true.append(matrix_true)
-        self.matrix_est.append(matrix_est)
+        self.tensors = {}
+
+    def update(self, estimated=None, true=None):
+        mse = (estimated - true).pow(2)
+        self.error.append(mse)
 
     def compute(self):
-        state_data = {
-            "latent_sample": self.matrix_est,
-            "true": self.matrix_true
-        }
-        for key, value in state_data.items():
-            state_data[key] = torch.cat(value, dim=0)
+        error = torch.cat(self.error, dim=0)
+        if self.rmse:
+            error = error.sqrt()
+        self.tensors = {"error": error}
 
-        state_data = unmix(state_data, self.unmixing, state_data["true"].shape[-1])
-        state_data = permute(state_data)
-
-        mse = (state_data["latent_sample"] - state_data["true"]).pow(2)
-        mean_mse = mse.mean()
-
+        mean_error = error.mean()
         if self.db:
-            mean_mse = 10 * torch.log10(mean_mse)
+            mean_error = 10 * torch.log10(mean_error)
 
-        # data = {key: val for key, val in mse if key != 'labels'}
-        # data = {key: torch.cat(val, dim=0) for key, val in self.state_data.items() if key != 'labels'}
-        # plot_data(mse, self.image_dims, show_plot=self.show_plot, save_plot=self.save_plot)
-        self.tensor = mse
-        return mean_mse
+        return mean_error
+
+    def plot(self, image_dims, show_plot=False, save_plot=False):
+        plt, axes = plot_image(
+            tensors=self.tensors,
+            image_dims=image_dims,
+            show_plot=show_plot,
+            save_plot=save_plot
+        )
+        return plt, axes
+
+# fixme: instead of Tensor metric plot_components in mse. tensors for !=2

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lasso Tool for Pixel Selection</title>
+  <style>
+    #canvas {
+      border: 1px solid black;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <h1>Lasso Tool for Pixel Selection</h1>
+  <input type="file" id="imageInput" accept="image/*">
+  <canvas id="canvas"></canvas>
+  <div>
+    <label for="classSelector">Select Class:</label>
+    <select id="classSelector">
+      <option value="1">Class 1</option>
+      <option value="2">Class 2</option>
+      <option value="3">Class 3</option>
+      <option value="4">Class 4</option>
+    </select>
+    <button id="saveButton">Save Marked Pixels</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let image = new Image();
+    let currentClass = 1;
+    let lassoPath = [];
+    let markedPixels = [];
+
+    document.getElementById('imageInput').addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        image.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    image.onload = function () {
+      canvas.width = image.width;
+      canvas.height = image.height;
+      ctx.drawImage(image, 0, 0);
+    };
+
+    canvas.addEventListener('mousedown', startLasso);
+    canvas.addEventListener('mousemove', drawLasso);
+    canvas.addEventListener('mouseup', finishLasso);
+
+    document.getElementById('classSelector').addEventListener('change', function () {
+      currentClass = parseInt(this.value, 10);
+    });
+
+    function startLasso(event) {
+      lassoPath = [];
+      lassoPath.push(getMousePosition(event));
+      canvas.addEventListener('mousemove', drawLasso);
+    }
+
+    function drawLasso(event) {
+      if (!lassoPath.length) return;
+      const pos = getMousePosition(event);
+      lassoPath.push(pos);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function finishLasso() {
+      canvas.removeEventListener('mousemove', drawLasso);
+      ctx.closePath();
+      fillLasso(currentClass);
+    }
+
+    function fillLasso(classId) {
+      const mask = new Path2D();
+      lassoPath.forEach((point, index) => {
+        if (index === 0) mask.moveTo(point.x, point.y);
+        else mask.lineTo(point.x, point.y);
+      });
+      mask.closePath();
+
+      // Fill region with class color
+      ctx.fillStyle = `rgba(${classId * 50}, ${classId * 30}, ${classId * 20}, 0.3)`;
+      ctx.fill(mask);
+
+      // Record marked pixels
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      for (let y = 0; y < imageData.height; y++) {
+        for (let x = 0; x < imageData.width; x++) {
+          const idx = (y * imageData.width + x) * 4; // RGBA channels
+          if (ctx.isPointInPath(mask, x, y)) {
+            markedPixels.push({ x, y, classId });
+          }
+        }
+      }
+    }
+
+    function getMousePosition(event) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    }
+
+    document.getElementById('saveButton').addEventListener('click', function () {
+      fetch('/save_pixels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markedPixels, width: canvas.width, height: canvas.height })
+      }).then(response => {
+        if (response.ok) {
+          alert('Pixels saved successfully!');
+        } else {
+          alert('Error saving pixels.');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

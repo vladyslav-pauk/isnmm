@@ -4,7 +4,7 @@ import numpy as np
 import glob
 
 
-from src.utils.utils import init_plot
+from src.utils.plot_tools import init_plot
 
 
 class RunAnalyzer:

@@ -61,7 +61,7 @@ class Encoder(nn.Module):
         # loc = self.linear_mixture_inv_loc(loc)
         # scale = self.linear_mixture_inv_scale(scale)
 
-        return loc, scale.exp().clamp(1e-12, 1e12)
+        return loc, scale.abs() #.clamp(1e-12, 1e12)
 
 
 class Decoder(nn.Module):
