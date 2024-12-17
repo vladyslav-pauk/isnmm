@@ -40,4 +40,5 @@ class Module(AutoEncoder):
         posterior = LocationScale(
             base_distribution(loc, scale), self.transform
         )
+        # fixme: fit with the nth dimension of the encoder w=0, for simplex b=1
         return prior, posterior

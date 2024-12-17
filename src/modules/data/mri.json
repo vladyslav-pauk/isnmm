@@ -1,0 +1,13 @@
+{
+  "data_model": "Newcastle_Renal",
+  "nonlinearity": null,
+  "scale": 5,
+  "observed_dim": 10,
+  "nonlinear_transform_init": null,
+  "mixing_matrix_init": null,
+  "normalize": true,
+  "degree": null,
+  "snr": 25,
+  "dataset_size": 100000,
+  "data_seed": 21
+}

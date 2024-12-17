@@ -4,6 +4,7 @@ import src.model.benchmarks.mves as MVES
 
 import src.model.architectures.vasca as VASCA
 import src.model.architectures.nisca as NISCA
+import src.model.architectures.nica as NICA
 # import src.model.architectures.vae.inisca as INISCA
 
 import src.model.architectures.cnae as CNAE

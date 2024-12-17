@@ -7,6 +7,7 @@ from .matrix_change import MatrixChange as MatrixChange
 from .constraint_error import ConstraintError as ConstraintError
 from .tensor import Tensor as Tensor
 from .psnr import PSNR as PSNR
+from .separation import Separation as Separation
 
 # task: check these
 # def mse_matrix_db(A0, A_hat):

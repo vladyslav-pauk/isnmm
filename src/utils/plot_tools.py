@@ -128,21 +128,29 @@ def plot_image(tensors, image_dims, show_plot=False, save_plot=False):
         for key, data in data.items():
             data = data.T.reshape(-1, height, width)
             num_components = data.shape[0]
-
-            cols = next(i for i in range(3, 6) if num_components % i == 0)
-            rows = (num_components + cols - 1) // cols
+            if num_components == 1:
+                cols = 1
+                rows = 1
+            else:
+                cols = next(i for i in range(3, 6) if num_components % i == 0)
+                rows = (num_components + cols - 1) // cols
 
             aspect_ratio = 1.0
             fig_width = A4_WIDTH
+            if num_components == 1:
+                fig_width = fig_width / 3
             fig_height = fig_width * rows / cols * aspect_ratio
 
             fig, axs = plt.subplots(rows, cols, figsize=(fig_width, fig_height), dpi=300)
-            axs = np.atleast_1d(axs.flatten())
+            if rows == 1 and cols == 1:
+                axs = np.atleast_1d(axs)
+            else:
+                axs = np.atleast_1d(axs.flatten())
 
             for i in range(num_components):
                 # row, col = divmod(i, cols)
                 component = data[i].cpu().numpy()
-                axs[i].imshow(component, cmap='viridis')#, vmin=global_min, vmax=global_max)
+                axs[i].imshow(component, cmap='gray')#viridis')#, vmin=global_min, vmax=global_max)
                 axs[i].set_title(f'{key.replace("_", " ").capitalize()} {i + 1}')
                 # axs[row, col].axis('off')
 

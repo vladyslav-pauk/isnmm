@@ -1,0 +1,1 @@
+# fixme: implement script to train a set of patient-models, create abundances dataset and train a CNN-Transformer classifier

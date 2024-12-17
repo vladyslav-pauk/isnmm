@@ -1,0 +1,44 @@
+method: grid
+metric:
+  goal: minimize
+  name: validation_loss
+parameters:
+  experiment_name: mri
+  data_model:
+    - DWland
+  nonlinearity:
+  model_name:
+    - nisca
+  trainer.max_epochs:
+    - 2000
+  early_stopping.min_delta:
+    - 1e-3
+  data_loader.batch_size:
+    - 100
+  dataset_size:
+    -
+  observed_dim:
+    - 12
+  model.latent_dim:
+    - 6
+  snr:
+    - 25
+  model.sigma:
+    - 0.01
+  decoder.hidden_layers:
+    - h1: 256
+  encoder.hidden_layers:
+    - h1: 128
+      h2: 64
+      h3: 32
+      h4: 16
+  optimizer.lr.encoder:
+    - 0.001
+  optimizer.lr.decoder:
+    - 0.01
+  model.mc_samples:
+      - 1
+  torch_seed:
+      - 1
+  data_seed:
+      - 12

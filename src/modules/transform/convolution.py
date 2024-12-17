@@ -5,12 +5,13 @@ import torch.nn as nn
 
 
 class HyperspectralTransform(nn.Module):
-    def __init__(self, output_channels=None, normalize=True, dataset_size=None):
+    def __init__(self, output_channels=None, normalize=True, dataset_size=None, slices=False):
         super().__init__()
 
         self.output_channels = output_channels
         self.normalize = normalize
         self.dataset_size = dataset_size
+        self.slice = slices
 
         self.min_val = None
         self.max_val = None
@@ -59,7 +60,11 @@ class HyperspectralTransform(nn.Module):
         k = self.output_channels if self.output_channels else x.shape[0]
         _, selected_indices = torch.topk(band_variances, k, largest=True)
 
-        selected_indices = np.linspace(0, len(band_variances) - 1, k, dtype=int)
+        if self.slice:
+            selected_indices = range(k)
+        else:
+            selected_indices = np.linspace(0, len(band_variances) - 1, k, dtype=int)
+
 
         return x[selected_indices], selected_indices
 

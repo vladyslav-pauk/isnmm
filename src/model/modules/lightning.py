@@ -55,7 +55,7 @@ class Module(LightningModule):
         data_sample = next(iter(datamodule.train_dataloader()))
         self.observed_dim = data_sample["data"].shape[1]
 
-        if data_sample['labels']:
+        if 'labels' in data_sample.keys() and data_sample['labels']:
             print("Labelled data found")
 
             if self.latent_dim is None and "latent_sample" in data_sample["labels"].keys():

@@ -75,7 +75,7 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
     model, _ = predict(
-        "hyperspectral", "u1wxkz3r")
+        "mri", "k5eeivtm")
 
     plot_training_history(model)
 
