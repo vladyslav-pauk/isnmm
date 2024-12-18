@@ -75,7 +75,7 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
     model, _ = predict(
-        "mri", "k5eeivtm")
+        "mri", "4jpn9dh4")
 
     plot_training_history(model)
 

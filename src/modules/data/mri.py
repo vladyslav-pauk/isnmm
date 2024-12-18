@@ -128,7 +128,7 @@ class DataModule(LightningDataModule):
 
         elif self.data_model == 'DWland':
             self.datasets = {}
-            idx = 0
+            idx = 4
             observed_data = self.import_data(idx)
             transformed_data = self.transform(observed_data)
             self.datasets[f"component_{idx}"] = {
