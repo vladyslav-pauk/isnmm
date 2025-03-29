@@ -23,10 +23,15 @@ class SubspaceDistance(torchmetrics.Metric):
 
         estimated_qf, _ = torch.linalg.qr(estimated)
 
-        angles = torch.tensor(subspace_angles(true_qr, estimated_qf))
+        true_qr = true_qr.detach().cpu().numpy()
+        estimated_qf = estimated_qf.detach().cpu().numpy()
+
+        angles = subspace_angles(true_qr, estimated_qf)
+        angles = torch.tensor(angles, device=estimated.device)
+
         subspace_dist = torch.sin(angles)
 
         return torch.sum(subspace_dist.pow(2))
 
-    def plot(self, image_dims, show_plot=False, save_plot=False):
+    def plot(self, image_dims=None, show_plot=False, save_plot=False):
         pass

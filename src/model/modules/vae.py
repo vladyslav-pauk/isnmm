@@ -26,9 +26,9 @@ class Module(AutoEncoder):
         latent_sample = model_output["latent_sample"]
         prior, posterior = self._model(*model_output["posterior_parameterization"])
 
-        neg_entropy_posterior = posterior.log_prob(latent_sample)
+        log_posterior = posterior.log_prob(latent_sample)
         log_prior = prior.log_prob(latent_sample)
-        kl_posterior_prior = neg_entropy_posterior - log_prior
+        kl_posterior_prior = log_posterior - log_prior
 
         return {"kl_posterior_prior": 2 * self.sigma**2 * kl_posterior_prior.mean()}
         # task: add beta
@@ -40,5 +40,7 @@ class Module(AutoEncoder):
         posterior = LocationScale(
             base_distribution(loc, scale), self.transform
         )
-        # fixme: fit with the nth dimension of the encoder w=0, for simplex b=1
         return prior, posterior
+
+# todo: fit with the nth dimension of the encoder w=0, for simplex b=1
+# todo: take expectation of the loss and posterior

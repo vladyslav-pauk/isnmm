@@ -40,6 +40,8 @@ def train_model(experiment_name, model_name, **kwargs):
 
 
 def _setup_data_module(data_config, config, experiment_name):
+    # fixme: if number of dims is 4, then iterate? or save
+    #  a separate file with observed, latent and label for each image in a separate folder
     data_name = experiment_name.split('_')[0]
     datamodule_class = getattr(data_package, data_name).DataModule
     return datamodule_class(data_config, **config)
@@ -80,6 +82,7 @@ def _setup_trainer(config, logger):
         filename=f'{{epoch:02d}}-{{{config["metric"]["name"]}:.2f}}',
         monitor=config['metric']['name'],
         mode=config['metric']['goal'][:3],
+        save_last=True,
         **config['checkpoint']
     )
 

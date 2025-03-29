@@ -27,6 +27,7 @@ if __name__ == '__main__':
     _, data = analyze_sweep(
         experiment, sweep.id, metric='validation_loss', covariate='snr', comparison='model_name', save=True)
 
+    print('Running prediction for the best model ')
     show_plots = True
     if show_plots:
         run_id = data['run_ids'][next(iter(data['run_ids']))][0]

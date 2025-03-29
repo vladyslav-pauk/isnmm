@@ -105,6 +105,16 @@ class Module(LightningModule):
         #     # self.metrics.unmixing = self.model_config["unmixing"]
 
     def on_train_start(self) -> None:
+        # self.metrics.true_model = self.trainer.datamodule
+        # self.metrics.model = self
+        #
+        # self.metrics.log_wandb = True
+        # self.metrics.log_plots = False
+        # self.metrics.show_plots = False
+        # self.metrics.save_plot = False
+        #
+        # self.metrics.setup_metrics(metrics_list=[self.metrics.monitor])
+
         if self.metrics.log_wandb:
             for metric_name in self.metrics:
                 if metric_name == self.metrics.monitor:
@@ -115,7 +125,17 @@ class Module(LightningModule):
         data, idxes = batch["data"], batch["idxes"]
         loss = self._loss_function(data, self(data), idxes)
         self.log_dict(loss)
+
+        if "labels" in batch.keys():
+            labels = batch["labels"]
+        else:
+            labels = None
+
+        # self.metrics.update(data, self(data), labels, idxes, self)
         return sum(loss.values())
+
+    # def on_train_epoch_end(self) -> None:
+    #     self.log_dict({**self.metrics.compute()})
 
     def val_dataloader(self):
         return self.train_dataloader()
@@ -128,7 +148,7 @@ class Module(LightningModule):
         self.metrics.log_plots = False
         self.metrics.show_plots = False
         self.metrics.save_plot = False
-        self.metrics.setup_metrics(metrics_list=[])
+        self.metrics.setup_metrics(metrics_list=[self.metrics.monitor])
 
     def validation_step(self, batch, batch_idx):
         data, idxes = batch["data"], batch["idxes"]
@@ -142,11 +162,10 @@ class Module(LightningModule):
         self.log_dict(validation_loss)
         return validation_loss
 
-    def validation_end(self, batch, outs) -> None:
+    def on_validation_epoch_end(self) -> None:
         self.log_dict({**self.metrics.compute()})
 
     def on_test_start(self):
-        # print("Testing")
         self.metrics.true_model = self.trainer.datamodule
         self.metrics.model = self
 

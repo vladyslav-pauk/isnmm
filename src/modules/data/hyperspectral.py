@@ -231,7 +231,10 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
 
     num_components = kwargs[list(kwargs.keys())[0]][0].shape[-1]
 
-    n_cols = next(i for i in range(3, 6) if num_components % i == 0)
+    current = num_components
+    while not any(current % i == 0 for i in range(3, 7)):
+        current += 1
+    n_cols = next(i for i in range(3, 7) if current % i == 0)
     n_rows = (num_components + n_cols - 1) // n_cols
 
     aspect_ratio = 1.0

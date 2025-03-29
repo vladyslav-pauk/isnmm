@@ -14,11 +14,11 @@ def init_plot():
         "text.usetex": True,
         "font.family": ["Computer Modern Roman"],
         "font.serif": ["Computer Modern Roman"],
-        "axes.labelsize": 10,
-        "font.size": 10,
-        "legend.fontsize": 10,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
+        "axes.labelsize": 12,
+        "font.size": 12,
+        "legend.fontsize": 12,
+        "xtick.labelsize": 12,
+        "ytick.labelsize": 12,
         "figure.dpi": 300,
         "savefig.dpi": 300,
         "text.latex.preamble": r"\usepackage{amsmath}"
@@ -32,13 +32,18 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
 
     import os
     plt = init_plot()
-    A4_WIDTH = 8.27
+
+    A4_WIDTH = 6 # 8.27
 
     first_key = list(kwargs.keys())[0]
     first_pair = kwargs[first_key]
     num_components = first_pair[list(first_pair.keys())[0]].shape[-1]
 
-    n_cols = next(i for i in range(3, 6) if num_components % i == 0)
+    current = num_components
+    while not any(current % i == 0 for i in range(3, 7)):
+        current += 1
+    n_cols = next(i for i in range(3, 7) if current % i == 0)
+
     n_rows = (num_components + n_cols - 1) // n_cols
 
     aspect_ratio = 1.0
@@ -67,6 +72,7 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
                 y_component = y_component[indices]
 
             marker = markers[j % len(markers)]
+
             axes[i].scatter(
                 visual_normalization(torch.tensor(x_component)) if scale else x_component,
                 visual_normalization(torch.tensor(y_component)) if scale else y_component,
@@ -76,13 +82,17 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
             )
 
             axes[i].set_aspect('equal')
+            # axes[i].set_xlim(0, 1)
+            # axes[i].set_ylim(0, 1)
+            # axes[i].set_aspect('equal', adjustable='box')
+
 
         if diagonal:
             min_val = 0 #min(x_component.min(), y_component.min())
             max_val = 1 #max(x_component.max(), y_component.max())
             axes[i].plot([min_val, max_val], [min_val, max_val], color='orange', linestyle='--', linewidth=1, label='Diagonal')
 
-        axes[i].set_title(f"{name} {i + 1}")
+        # axes[i].set_title(f"{name} {i + 1}")
         # axes[i].legend()
         axes[i].grid(True)
 
@@ -109,6 +119,8 @@ def plot_components(labels=None, scale=False, show_plot=False, save_plot=False, 
 
 
 def plot_image(tensors, image_dims, show_plot=False, save_plot=False):
+    if image_dims is None:
+        return None, None
     for key, value in tensors.items():
         data = {key: value}
 

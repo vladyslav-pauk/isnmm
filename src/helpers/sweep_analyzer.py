@@ -61,6 +61,9 @@ class SweepAnalyzer:
 
             for val in unique_covariates:
                 indices = np.where(covariate_values == val)
+
+                if type(metric_values[indices][0]) is dict:
+                    metric_values[indices] = [next(iter(m.values())) for m in metric_values[indices]]
                 averages.append(np.mean(metric_values[indices]))
                 stddevs.append(np.std(metric_values[indices]))
 
@@ -75,21 +78,22 @@ class SweepAnalyzer:
 
     def plot_metric(self, averaged_data, save=True, show=False, save_dir=None):
         init_plot()
-        A4_WIDTH = 8.27
+        A4_WIDTH = 8.27 / 3  # Define a base width for the figure
 
         comparison_name = list(averaged_data[0].keys())[0]
         covariate_name = list(averaged_data[0].keys())[1]
         metric_name = list(averaged_data[0].keys())[2].replace('_avg', '')
 
-        plt.figure(figsize=(A4_WIDTH/2, 3))
+        fig, ax = plt.subplots(figsize=(A4_WIDTH, A4_WIDTH))  # Square figure dimensions
+
         for data in averaged_data:
-            plt.fill_between(
+            ax.fill_between(
                 data[covariate_name],
                 data[f'{metric_name}_avg'] - data[f'{metric_name}_std'],
                 data[f'{metric_name}_avg'] + data[f'{metric_name}_std'],
                 alpha=0.2
             )
-            plt.plot(
+            ax.plot(
                 data[covariate_name],
                 data[f'{metric_name}_avg'],
                 marker='o',
@@ -98,23 +102,29 @@ class SweepAnalyzer:
                 label=f'{format_string(comparison_name)}: {format_string(data["model_name"])}'
             )
 
-        plt.xlabel(format_string(covariate_name))
-        plt.ylabel(format_string(metric_name))
-        plt.title(f'{format_string(metric_name)} vs {format_string(covariate_name)} (averaged over seeds)')
-        plt.legend()
-        plt.grid(True)
+        ax.set_xlabel(format_string(covariate_name))
+        ax.set_ylabel(format_string(metric_name))
+        # ax.set_title(f'{format_string(metric_name)} vs {format_string(covariate_name)}')
+        # ax.legend()
+        ax.grid(True)
+
+        # Ensure the plot area fills the figure while keeping the image square
+        ax.set_box_aspect(1)  # Forces the axes to fill the figure as a square
+        # fig.tight_layout(pad=0.5)  # Adjust layout to leave space for labels
         plt.tight_layout()
+        fig.subplots_adjust(left=0.25, right=0.98, top=1.15, bottom=0)
 
         if save:
             project_root = os.path.dirname(os.path.abspath(__file__)).split("src")[0]
             save_dir = save_dir or f'experiments/{self.experiment}/results/sweep-{self.sweep_id}'
-            plt.savefig(os.path.join(project_root, save_dir, f"{metric_name}-{covariate_name}.png"))
-            print(f"Saved {metric_name} vs {covariate_name} plot to {os.path.join(project_root, save_dir, f'{metric_name}-{covariate_name}.png')}")
+            fig.savefig(os.path.join(project_root, save_dir, f"{metric_name}-{covariate_name}.png"))
+            print(
+                f"Saved {metric_name} vs {covariate_name} plot to {os.path.join(project_root, save_dir, f'{metric_name}-{covariate_name}.png')}")
 
-        if show:
-            plt.show()
+            if show:
+                plt.show()
 
-        plt.close()
+            plt.close(fig)
 
     def _fetch_data(self, wandb=False):
         if wandb:

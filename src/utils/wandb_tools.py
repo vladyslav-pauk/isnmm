@@ -16,7 +16,7 @@ def login_wandb(experiment=None):
     os.environ['WANDB_SILENT'] = 'true'
     # os.environ['WANDB_DISABLE_SERVICE'] = 'True'
 
-    wandb.require("core")
+    # wandb.require("core")
     wandb.login()
 
     import warnings

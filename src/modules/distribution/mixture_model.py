@@ -119,7 +119,7 @@ class GenerativeModel:  # (Distribution)
             'latent_sample': self.latent_sample.cpu().numpy(),
             'noiseless_sample': self.noiseless_sample.cpu().numpy(),
             'linearly_mixed_sample': self.linearly_mixed_sample.cpu().numpy(),
-            'latent_sample_qr': self.latent_sample_qr.cpu().numpy(),
+            'latent_sample_qr': self.latent_sample_qr, #.cpu().numpy(),
             'linear_mixture': self.linear_mixture.matrix.cpu().numpy(),
             'sigma': self.sigma.cpu().numpy()
         })

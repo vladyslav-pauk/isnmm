@@ -1,5 +1,6 @@
 import os
 import torch
+from pytorch_lightning.utilities.types import EVAL_DATALOADERS
 from torch.utils.data import Dataset, DataLoader
 from pytorch_lightning import LightningDataModule
 from collections import defaultdict
@@ -112,6 +113,12 @@ class PthDataModule(LightningDataModule):
         )
 
     def test_dataloader(self):
+        return DataLoader(
+            PthDataset(data=self.datasets[self.current_component]["transformed_data"]),
+            batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers
+        )
+
+    def predict_dataloader(self):
         return DataLoader(
             PthDataset(data=self.datasets[self.current_component]["transformed_data"]),
             batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers

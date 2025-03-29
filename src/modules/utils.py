@@ -29,6 +29,8 @@ def unmix(latent_sample, latent_dim, model=None):
     # unmixing.plot_multiple_abundances(latent_sample, [0,1,2,3,4,5,6,7,8,9])
     # unmixing.plot_mse_image(rows=100, cols=10)
 
+    latent_sample = latent_sample / latent_sample.sum(dim=-1, keepdim=True)
+
     return latent_sample, mixing_matrix
 
 
@@ -211,6 +213,54 @@ def best_permutation_mse(model_A, true_A):
 #                     f"Saved {', '.join(list(plot_data.keys()))} component {comp_idx} image to '{dir}/{key}_component_{comp_idx}.png'")
 #
 #             plt.close()
+
+
+def save_dataset(new_data, new_latents, image_dims):
+    """
+    Appends new data and latents to the existing datasets stored in .pth files.
+
+    Args:
+        new_data (torch.Tensor): The new data tensor to append.
+        new_latents (torch.Tensor): The new latent tensor to append.
+        data_path (str): Path to the .pth file storing data.
+        latents_path (str): Path to the .pth file storing latents.
+
+    Returns:
+        None
+    """
+
+    data_path = "/Users/home/Work/Projects/nisca/datasets/mri/DWland_DCE/dwi_tensordata/dwi_observed_tensordata.pth"
+    latents_path = "/Users/home/Work/Projects/nisca/datasets/mri/DWland_DCE/dwi_tensordata/dwi_latent_tensordata.pth"
+
+    _, height, width = image_dims
+    new_data = new_data.T.reshape(-1, height, width)
+    new_latents = new_latents.T.reshape(-1, height, width)
+    new_data = new_data.unsqueeze(0)
+    new_latents = new_latents.unsqueeze(0)
+
+    # Ensure new_data and new_latents have the same number of samples
+    assert new_data.size(0) == new_latents.size(0), "New data and latents must have the same number of samples."
+
+    # Load existing data
+    if os.path.exists(data_path):
+        existing_data = torch.load(data_path)
+    else:
+        existing_data = torch.empty((0, *new_data.size()[1:]))  # Empty tensor with correct shape
+
+    if os.path.exists(latents_path):
+        existing_latents = torch.load(latents_path)
+    else:
+        existing_latents = torch.empty((0, *new_latents.size()[1:]))  # Empty tensor with correct shape
+
+    # Append new data and latents
+    updated_data = torch.cat([existing_data, new_data], dim=0)
+    updated_latents = torch.cat([existing_latents, new_latents], dim=0)
+
+    # Save back to the .pth files
+    torch.save(updated_data, data_path)
+    torch.save(updated_latents, latents_path)
+
+    print(f"Data and latents successfully saved. Total samples: {updated_data.size(0)}")
 
 
 def save_metrics(metrics, save_dir=None):

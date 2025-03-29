@@ -1,12 +1,12 @@
 import torch
 from torchmetrics import MetricCollection
 
-from src.modules.utils import save_metrics, unmix, permute
+from src.modules.utils import save_metrics, save_dataset, unmix, permute
 import src.modules.metric as metric
 
 
 class ModelMetrics(MetricCollection):
-    def __init__(self, show_plot=False, log_plot=False, save_plot=False, monitor=None):
+    def __init__(self, show_plot=False, log_plot=False, save_plot=False, save_data=True, monitor=None):
         super().__init__([])
         self.plot_metrics = []
         self.metrics_list = [monitor]
@@ -16,6 +16,7 @@ class ModelMetrics(MetricCollection):
         self.log_plot = log_plot
         self.save_plot = save_plot
         self.log_wandb = True
+        self.save_data = save_data
 
         self.model = None
         self.true_model = None
@@ -162,6 +163,12 @@ class ModelMetrics(MetricCollection):
 
     def save(self, metrics, save_dir=None):
         save_metrics(metrics, save_dir)
+        if self.save_data:
+            save_dataset(
+                self['observed_reconstruction'].tensors['true'],
+                self['latent_components'].tensors['estimated'],
+                self.image_dims
+            )
 
 
 # todo: print values of hypermarameters read from data in sweep parameter summary before training (now None)

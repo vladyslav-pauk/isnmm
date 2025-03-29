@@ -10,13 +10,13 @@ parameters:
   model_name:
     - nisca
   trainer.max_epochs:
-    - 2000
+    - 100
   early_stopping.min_delta:
     - 1e-3
   data_loader.batch_size:
     - 100
   dataset_size:
-    -
+    - 10000
   observed_dim:
     - 12
   model.latent_dim:

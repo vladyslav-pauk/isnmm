@@ -30,7 +30,7 @@ class DataMse(torchmetrics.Metric):
 
         return mean_error
 
-    def plot(self, image_dims, show_plot=False, save_plot=False):
+    def plot(self, image_dims=None, show_plot=False, save_plot=False):
         plt, axes = plot_image(
             tensors=self.tensors,
             image_dims=image_dims,

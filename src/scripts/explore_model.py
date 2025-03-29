@@ -75,10 +75,11 @@ def plot_training_history(model):
 
 if __name__ == "__main__":
     model, _ = predict(
-        "mri", "4jpn9dh4")
+        "synthetic", "npbxi3tg")
 
     plot_training_history(model)
 
+# fixme: add latent metric to train, use as stopping criterion for synthetic, synthetic is to analyze conditions of hyperspectral, etc (use same parameters as there)
 # todo: use number of parameters and number of layers as parameters, every architecture can be different
 # todo: latent_dims are not saved to the model, save them when training model, when we get them from data
 # todo: automatically adjust layer dims from config, so it's compatible with CNN

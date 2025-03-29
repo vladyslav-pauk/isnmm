@@ -4,7 +4,7 @@ from math import isnan
 
 
 class EarlyStoppingCallback(Callback):
-    def __init__(self, monitor: str, patience: int = 3, mode: str = 'min', min_delta: float = 0.0, verbose=False, start_epoch=1500):
+    def __init__(self, monitor: str, patience: int = 3, mode: str = 'min', min_delta: float = 0.0, verbose=False, start_epoch=200):
         super().__init__()
 
         stopping_threshold = min_delta

@@ -7,6 +7,7 @@ from torchvision.models import SqueezeNet1_1_Weights
 class SEBlock(nn.Module):
     def __init__(self, channels, reduction=16):
         super(SEBlock, self).__init__()
+        self.channels = channels
         self.fc = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             nn.Flatten(),
@@ -17,6 +18,7 @@ class SEBlock(nn.Module):
         )
 
     def forward(self, x):
+        assert x.size(1) == self.channels, f"Expected {self.channels} channels, but got {x.size(1)}"
         weights = self.fc(x)[:, :, None, None]
         return x * weights
 
@@ -27,7 +29,7 @@ class LocalBranch(nn.Module):
         base_model = squeezenet1_1(weights=None)
         self.features = base_model.features
         self.features[0] = nn.Conv2d(in_channels, 64, kernel_size=3, stride=2, padding=1)
-        self.se = SEBlock(channels=in_channels)
+        self.se = SEBlock(channels=in_channels)  # Match channels with input
         self.pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Linear(512, output_dim)
 
@@ -39,16 +41,41 @@ class LocalBranch(nn.Module):
 
 
 class GlobalBranch(nn.Module):
-    def __init__(self, input_channels=6, output_dim=256, img_size=224, num_heads=8):
+    def __init__(self, input_channels=6, output_dim=256, num_heads=8):
         super(GlobalBranch, self).__init__()
+        self.vit = None  # Placeholder for the Vision Transformer
+        self.input_channels = input_channels
+        self.output_dim = output_dim
+        self.num_heads = num_heads
+
+    def initialize(self, input_shape):
+        """
+        Dynamically initialize the Vision Transformer based on input shape.
+
+        Args:
+            input_shape (tuple): Shape of the input tensor (batch_size, channels, height, width).
+        """
+        _, channels, height, width = input_shape
+
+        assert channels == self.input_channels, f"Expected {self.input_channels} input channels, got {channels}"
+
+        # Dynamically set image size for the Vision Transformer
+        self.img_size = (height, width)
         from timm.models.vision_transformer import VisionTransformer
-        self.vit = VisionTransformer(img_size=img_size, patch_size=16, embed_dim=output_dim, num_heads=num_heads,
-                                     num_classes=0)
+
+        # Initialize the Vision Transformer with the exact input dimensions
+        self.vit = VisionTransformer(img_size=self.img_size, patch_size=16, embed_dim=self.output_dim,
+                                     num_heads=self.num_heads, num_classes=0)
+        # Update the patch embedding projection to match the input channels
         old_proj = self.vit.patch_embed.proj
-        self.vit.patch_embed.proj = nn.Conv2d(input_channels, old_proj.out_channels, kernel_size=old_proj.kernel_size,
-                                              stride=old_proj.stride, padding=old_proj.padding)
+        self.vit.patch_embed.proj = nn.Conv2d(self.input_channels, old_proj.out_channels,
+                                              kernel_size=old_proj.kernel_size, stride=old_proj.stride,
+                                              padding=old_proj.padding)
 
     def forward(self, x):
+        # Initialize the Vision Transformer dynamically on the first forward pass
+        if self.vit is None:
+            self.initialize(x.shape)
         return self.vit(x)
 
 

@@ -10,7 +10,7 @@ import numpy as np
 
 
 class DataModule(LightningDataModule):
-    def __init__(self, data_config, transform=None, **config):
+    def __init__(self, data_config, idx=0, transform=None, **config):
         """
         Unified Data Module for handling both DICOM and tensor datasets.
 
@@ -29,6 +29,7 @@ class DataModule(LightningDataModule):
         self.tensors = {}
         self.metadata = defaultdict(list)  # Store metadata for all files or components
         self.file_paths = []
+        self.idx = idx
 
         # Initialize transform
         self.transform = transform or HyperspectralTransform(
@@ -128,7 +129,7 @@ class DataModule(LightningDataModule):
 
         elif self.data_model == 'DWland':
             self.datasets = {}
-            idx = 4
+            idx = self.idx
             observed_data = self.import_data(idx)
             transformed_data = self.transform(observed_data)
             self.datasets[f"component_{idx}"] = {
@@ -146,6 +147,12 @@ class DataModule(LightningDataModule):
         )
 
     def val_dataloader(self):
+        return DataLoader(
+            UnifiedDataset(data=self.datasets[self.current_key]["transformed_data"]),
+            batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers
+        )
+
+    def test_dataloader(self):
         return DataLoader(
             UnifiedDataset(data=self.datasets[self.current_key]["transformed_data"]),
             batch_size=self.val_batch_size, shuffle=False, num_workers=self.num_workers

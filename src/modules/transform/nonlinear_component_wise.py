@@ -35,8 +35,8 @@ class Network(nn.Module):
         elif self.model == 'sin':
             x = torch.sin(4 * x) + 5 * x
         elif self.model == 'cnae':
-            x -= 0.25
-            x *= 20
+            # x -= 0.25
+            # x *= 20
             x = 5 * torch.sigmoid(x) + 0.3 * x
             # func = lambda x: [
             #     5 * torch.sigmoid(x) + 0.3 * x for _ in range(x.shape[-1])

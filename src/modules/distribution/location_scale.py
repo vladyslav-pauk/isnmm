@@ -12,3 +12,4 @@ class LocationScale(TransformedDistribution):
         log_prob_base = self.base_dist.log_prob(transformed_sample)
         log_det_jacobian = self.transforms[0].log_abs_det_jacobian(sample, transformed_sample)
         return log_prob_base + log_det_jacobian
+        # return log_det_jacobian

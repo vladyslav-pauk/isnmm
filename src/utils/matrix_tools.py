@@ -40,7 +40,7 @@ def match_components(matrix_true, matrix_est, vector_est=None):
     cosine = num / denom
     angle = torch.acos(torch.clamp(cosine, -1.0, 1.0))
 
-    row_ind, col_ind = linear_sum_assignment(angle.cpu().numpy())
+    row_ind, col_ind = linear_sum_assignment(angle.detach().cpu().numpy())
     matrix_est_matched = matrix_est[:, col_ind]
 
     if vector_est is not None:

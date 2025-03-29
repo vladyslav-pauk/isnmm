@@ -7,11 +7,11 @@ parameters:
   data_model:
     - cnae
   model_name:
-    - cnae
+    - nisca
   trainer.max_epochs:
-    - 100
-  early_stopping.min_delta:
-    - 1e-3
+    - 2000
+  early_stopping.patience:
+    - 50
   data_loader.batch_size:
     - 100
   observed_dim:
@@ -21,17 +21,27 @@ parameters:
   latent_dim:
     - 3
   dataset_size:
-    - 10000
+    - 5000
   snr:
     - 30
   decoder.hidden_layers:
     - h1: 128
   encoder.hidden_layers:
-    - h1: 128
-      h2: 128
+    - h1: 64
+      h2: 64
+      h3: 64
   model.mc_samples:
       - 1
   torch_seed:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
       - 9
   data_seed:
-      - 12
+      - 0
