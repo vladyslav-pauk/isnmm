@@ -230,5 +230,3 @@ Pull requests, feedback, and discussions are welcome. Please submit issues or su
 - Miao & Qi, “Spectral Unmixing from Hyperspectral Imagery,” IEEE TGRS 2007
 
 ---
-
-## 🛠️ Technological Stack
