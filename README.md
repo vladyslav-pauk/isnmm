@@ -89,7 +89,7 @@ This repository provides an end-to-end implementation of NISCA, with application
 
 - [Overview](#overview)
 
-- [Getting Started](#getting started)
+- [Getting Started](#getting-started)
 
 - [Usage](#usage)
 
@@ -177,10 +177,6 @@ The repository includes Jupyter notebooks for interactive exploration of the mod
 To run repository locally or in a cloud environment, follow the instructions in the [installation guide](docs/installation.md).
 
 ## Usage
-
-
-
-
 
 ### Run Experiments
 
