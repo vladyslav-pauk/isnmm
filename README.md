@@ -1,6 +1,15 @@
 # NISCA
 
-- [Overview](#overview)
+## Overview
+
+This repository implements NISCA, a deep generative modeling framework for unsupervised latent source separation in spectral imaging data, common in remote sensing, medical imaging, astrophysics, and finance.
+NISCA extends traditional variational autoencoder architecture with the domain-specific inductive bias, by using geometrically constrained simplex priors, enabling interpretable and identifiable latent representations under noisy nonlinear mixing.
+A scalable production-grade implementation is provided, along with exhaustive documentation, and demonstration notebooks.
+The project supports datasets from hyperspectral satellite images, dynamic contrast-enhanced (DCE) MRI scans, and synthetic simulations.
+
+[//]: # (geometric priors &#40;e.g., Dirichlet&#41; and nonlinear decoders, 
+ even in complex post-nonlinear mixtures.)
+[//]: # ( tissue and material separation from high-dimensional imaging data, including hyperspectral satellite images and dynamic contrast-enhanced &#40;DCE&#41; MRI scans)
 
 - [Highlights](#highlights)
 
@@ -23,17 +32,6 @@
 - [Contributing](#contributing)
 
 - [License](#license)
-
-## Overview
-
-This repository implements NISCA, a deep generative modeling framework for unsupervised latent source separation in spectral imaging data, common in remote sensing, medical imaging, astrophysics, and finance.
-NISCA extends traditional variational autoencoder architecture with the domain-specific inductive bias, by using geometrically constrained simplex priors, enabling interpretable and identifiable latent representations under noisy nonlinear mixing.
-A scalable production-grade implementation is provided, along with exhaustive documentation, and demonstration notebooks.
-The project supports datasets from hyperspectral satellite images, dynamic contrast-enhanced (DCE) MRI scans, and synthetic simulations.
-
-[//]: # (geometric priors &#40;e.g., Dirichlet&#41; and nonlinear decoders, 
- even in complex post-nonlinear mixtures.)
-[//]: # ( tissue and material separation from high-dimensional imaging data, including hyperspectral satellite images and dynamic contrast-enhanced &#40;DCE&#41; MRI scans)
 
 ---
 
