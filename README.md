@@ -1,52 +1,35 @@
-# 📁 Contents
+# NISCA
 
 - [Overview](#overview)
 
 - [Highlights](#highlights)
 
-- [Getting Started](#getting-started)
+- [Installation](#getting-started)
 
 - [Usage](#usage)
 
-  - [Notebooks](#notebooks)
-
-  - [Training module](#training-module)
-
-  - [Scripts](#scripts)
-
-  - [Experiments](#experiments)
-
-- [Data](#data)
+- [Datasets](#data)
 
 - [Results](#results)
 
 - [Code](#code)
 
-- [Acknowledgements](#acknowledgements)
+- [Technological Stack](#technological-stack)
 
 - [Publication](#publication)
 
-- [Citation](#citation)
-
-- [License](#license)
+- [Contact](#contact)
 
 - [Contributing](#contributing)
 
-- [Contact](#contact)
-
-- [References](#references)
-
-- [Technological Stack](#technological-stack)
-
-
-# Deep Generative Modeling for Hyperspectral & Medical Imaging
+- [License](#license)
 
 ## Overview
 
-This repository implements **NISCA**, a deep generative modeling framework for unsupervised latent source separation in spectral imaging data, often encountered in remote sensing and medical imaging applications.
-NISCA extends variational autoencoder architecture with the domain-specific inductive bias using geometrically constrained simplex priors, enabling interpretable and identifiable latent representations under noisy nonlinear mixing.
+This repository implements NISCA, a deep generative modeling framework for unsupervised latent source separation in spectral imaging data, common in remote sensing, medical imaging, astrophysics, and finance.
+NISCA extends traditional variational autoencoder architecture with the domain-specific inductive bias, by using geometrically constrained simplex priors, enabling interpretable and identifiable latent representations under noisy nonlinear mixing.
 A scalable production-grade implementation is provided, along with exhaustive documentation, and demonstration notebooks.
-The project supports datasets from **hyperspectral satellite imaging**, **DCE-MRI**, and **synthetic simulations**.
+The project supports datasets from hyperspectral satellite images, dynamic contrast-enhanced (DCE) MRI scans, and synthetic simulations.
 
 [//]: # (geometric priors &#40;e.g., Dirichlet&#41; and nonlinear decoders, 
  even in complex post-nonlinear mixtures.)
@@ -269,9 +252,7 @@ All metrics are computed via `model/metric/*.py` and logged to W&B.
 - [**Master's Thesis**](https://github.com/vladyslav-pauk/isnmm/blob/master/docs/thesis.pdf): *Deep Generative Modeling for Hyperspectral & Medical Imaging*, Vladyslav Pauk, OSU (2024).
 - **IEEE Preprint**: Coming soon, see draft [here](https://github.com/vladyslav-pauk/isnmm/blob/master/docs/preprint.pdf).
 
----
-
-## Citation
+BibTeX citation:
 
 ```bibtex
 @misc{pauk2024generative,
@@ -300,7 +281,7 @@ Pull requests, feedback, and discussions are welcome. Please submit issues or su
 
 ## License
 
-MIT License (see `LICENSE` file)
+MIT License (see [LICENSE](https://github.com/vladyslav-pauk/isnmm/blob/master/LICENSE))
 
 ---
 
