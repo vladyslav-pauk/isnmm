@@ -143,15 +143,16 @@ To enable CUDA support, set the environment variable `CUDA_VISIBLE_DEVICES` to t
 
 ### Jupyter Notebooks
 The repository includes Jupyter notebooks for interactive exploration of the models and datasets and reproducing results from the paper.
+
+- [**Model Training**](notebooks/model_training.ipynb): Walkthrough of training a model with different configurations.
+- [**Training Evaluation**](notebooks/quantitative_evaluation.ipynb): Benchmarking against classic methods and analyzing results.
+- [**Synthetic Data**](notebooks/synthetic_data.ipynb): Generating and visualizing synthetic data for testing.
+
 You can run them in a Jupyter environment or convert them to scripts using `nbconvert`.
 
 ```bash
   jupyter nbconvert --to script notebook.ipynb
 ```
-
-- [**Model Training**](notebooks/model_training.ipynb): Walkthrough of training a model with different configurations.
-- [**Training Evaluation**](notebooks/quantitative_evaluation.ipynb): Benchmarking against classic methods and analyzing results.
-- [**Synthetic Data**](notebooks/synthetic_data.ipynb): Generating and visualizing synthetic data for testing.
 
 ### Containerization
 
@@ -275,7 +276,7 @@ Pull requests, feedback, and discussions are welcome. Please submit issues or su
 
 ## License
 
-MIT License (see [LICENSE](https://github.com/vladyslav-pauk/isnmm/blob/master/LICENSE))
+MIT License (see [LICENSE](LICENSE))
 
 
 
