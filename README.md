@@ -146,7 +146,7 @@ The repository includes Jupyter notebooks for interactive exploration of the mod
 
 - [**Model Training**](notebooks/model_training.ipynb): Walkthrough of training a model with different configurations.
 - [**Training Evaluation**](notebooks/quantitative_evaluation.ipynb): Benchmarking against classic methods and analyzing results.
-- [**Synthetic Data**](notebooks/synthetic_data.ipynb): Generating and visualizing synthetic data for testing.
+- [**Synthetic Data**](notebooks/mixture_model.ipynb): Generating and visualizing synthetic data for testing.
 
 You can run them in a Jupyter environment or convert them to scripts using `nbconvert`.
 
