@@ -54,14 +54,14 @@ The project supports datasets from hyperspectral satellite images, dynamic contr
 
 ### Technological Stack
 
-- **PyTorch Lightning** for training
+- **PyTorch Lightning** for training and evaluation
 - **Weights & Biases (W&B)** for logging
 - **NumPy**, **Matplotlib**, **Scikit-learn**
 - **Docker** + **GCP** compatibility
 - **Configurable JSON experiments**
-- Optional CUDA acceleration
+- Optional **CUDA** acceleration
 
-For more information, see Master thesis manuscript, IEEE preprint, and slides, or jump to:
+For more information, see Master thesis [manuscript](docs/thesis.pdf), IEEE [preprint](docs/preprint.pdf), and [slides](docs/slides.pdf), or jump to:
 
 
 [//]: # (- [Highlights]&#40;#highlights&#41;)
