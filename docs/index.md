@@ -1,6 +1,6 @@
-NISCA Documentation
+# NISCA Documentation
 
-# Contents
+## Contents
 
 - [Overview](overview.md)
 - [Installation](installation.md)
