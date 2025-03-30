@@ -1,7 +1,7 @@
 # NISCA: Nonlinear Identifiable SCA
 
-This repository provides an end-to-end implementation of the Nonlinear Identifiable Simplex Constrained Autoencoder (NISCA).
-NISCA is a deep learning algorithm for estimating categorical latent factor from noisy multivariate data, with applications in hyperspectral remote sensing, medical imaging, and finance.
+The Nonlinear Identifiable Simplex Constrained Autoencoder (NISCA) is a deep learning algorithm for estimating categorical latent factor from noisy multivariate data.
+This repository provides an end-to-end implementation of NISCA, with applications in hyperspectral remote sensing, medical imaging, and finance.
 
 [//]: # (It includes comprehensive [documentation]&#40;docs/index.md&#41;, reproducible experiment [configurations]&#40;docs/configuration.md&#41;, and interactive [notebooks]&#40;#usage&#41; for demonstration and analysis.  )
 
