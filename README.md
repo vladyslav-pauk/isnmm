@@ -141,6 +141,21 @@ To enable CUDA support, set the environment variable `CUDA_VISIBLE_DEVICES` to t
   export CUDA_VISIBLE_DEVICES=0,1
 ```
 
+### Jupyter Notebooks
+The repository includes Jupyter notebooks for interactive exploration of the models and datasets and reproducing results from the paper.
+You can run them in a Jupyter environment or convert them to scripts using `nbconvert`.
+
+```bash
+  jupyter nbconvert --to script notebook.ipynb
+```
+
+- [**Model Training**](notebooks/model_training.ipynb): Walkthrough of training a model with different configurations.
+- [**Training Evaluation**](notebooks/quantitative_evaluation.ipynb): Benchmarking against classic methods and analyzing results.
+- [**Synthetic Data**](notebooks/synthetic_data.ipynb): Generating and visualizing synthetic data for testing.
+
+### Containerization
+
+
 ## Codebase
 
 
