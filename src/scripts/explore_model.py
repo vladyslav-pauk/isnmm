@@ -10,7 +10,7 @@ from src.utils.utils import logging_setup
 
 def load_model(run_id, experiment_name):
 
-    checkpoints_dir = f"../experiments/{experiment_name}/checkpoints/{run_id}/"
+    checkpoints_dir = f"experiments/{experiment_name}/checkpoints/{run_id}/"
     checkpoint_files = [f for f in os.listdir(checkpoints_dir) if f.endswith(".ckpt")]
 
     if not checkpoint_files:
@@ -46,7 +46,10 @@ def load_model(run_id, experiment_name):
     return model, config
 
 
-def predict(experiment, run_id):
+def predict(experiment, run_id=None):
+
+    # if None the latest run_id is used
+
     os.environ["EXPERIMENT"] = experiment
     os.environ["RUN_ID"] = run_id
 

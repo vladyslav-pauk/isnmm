@@ -9,29 +9,7 @@ The project supports datasets from hyperspectral satellite images, dynamic contr
  even in complex post-nonlinear mixtures.)
 [//]: # ( tissue and material separation from high-dimensional imaging data, including hyperspectral satellite images and dynamic contrast-enhanced &#40;DCE&#41; MRI scans)
 
-- [Highlights](#highlights)
-
-- [Installation](#getting-started)
-
-- [Usage](#usage)
-
-- [Datasets](#data)
-
-- [Results](#results)
-
-- [Code](#code)
-
-- [Technological Stack](#technological-stack)
-
-- [Publication](#publication)
-
-- [Contact](#contact)
-
-- [Contributing](#contributing)
-
-- [License](#license)
-
-## Highlights
+### Highlights
 
 [//]: # (- Bayesian inference via deep variational autoencoders)
 
@@ -74,85 +52,110 @@ The project supports datasets from hyperspectral satellite images, dynamic contr
 - **Multi-experiment orchestration**, WandB logging, sweeping, and GCP/Docker compatibility
 - **Metrics for identifiability and recovery**: subspace distance, Amari index, mutual info, etc.
 
+### Technological Stack
 
-For more information, see the Master thesis manuscript, IEEE preprint, or slides.
+- **PyTorch Lightning** for training
+- **Weights & Biases (W&B)** for logging
+- **NumPy**, **Matplotlib**, **Scikit-learn**
+- **Docker** + **GCP** compatibility
+- **Configurable JSON experiments**
+- Optional CUDA acceleration
+
+For more information, see Master thesis manuscript, IEEE preprint, and slides, or jump to:
+
+
+[//]: # (- [Highlights]&#40;#highlights&#41;)
+
+- [Installation](#installation)
+
+- [Usage](#usage)
+
+- [Codebase](#codebase)
+
+- [Publication](#publication)
+
+- [Contact](#contact)
+
+- [Contributing](#contributing)
+
+- [License](#license)
 
 ## Installation
 
-To clone the repository:
+To clone the repository, run:
 
 ```bash
-  ...
+  git clone https://github.com/vladyslav-pauk/nisca.git
 ```
 Install dependencies:
 ```bash
   pip install -r requirements.txt
 ```
 
-and set up W&B credentials:
+Set up W&B credentials:
 ```bash
   wandb login
 ```
 
----
 
 ## Usage
 
-### 1. Train a Model
+### Train a Model
+
+To train a model, run:
+
 
 ```bash
-python helpers/trainer.py --experiment simplex_recovery --model nisca
+  PYTHONPATH=./ python src/scripts/run_sweep.py --experiment synthetic --sweep test_run
 ```
 
 This reads configuration from:
 - `experiments/simplex_recovery/config/data.json`
 - `experiments/simplex_recovery/config/model/nisca.json`
 
-Optional overrides (e.g., batch size):
-```bash
-python helpers/trainer.py --experiment simplex_recovery --model nisca --batch_size 256
-```
+Job results are stored under `experiments/{experiment_name}/config/sweep/`
 
----
+### Model Evaluation
 
-### 2. Run a Sweep
+To analyze the latest sweep, run:
 
 ```bash
-python scripts/run_sweep.py --experiment simplex_recovery --sweep sweep/model-param.json
+  PYTHONPATH=./ python src/scripts/analyze_sweep.py --experiment synthetic
 ```
+or pass with `--sweep <sweep_name>` flag to visualize a specific sweep.
 
-Sweep configs are stored under:
-```
-experiments/{experiment_name}/config/sweep/
-```
-
----
-
-### 3. Visualize Results
+To access the latest run results, use:
 
 ```bash
-python scripts/analyze_sweep.py --experiment simplex_recovery
-python scripts/explore_model.py --experiment simplex_recovery --model nisca
+  PYTHONPATH=./ python src/scripts/explore_model.py --experiment synthetic
 ```
+or pass with `--run_id <id>` flag to visualize a specific run.
 
 Plots and logs will be saved and logged to W&B under the specified experiment name.
 
----
+### CUDA
 
-## Datasets
+To enable CUDA support, set the environment variable `CUDA_VISIBLE_DEVICES` to the desired GPU ID(s):
+
+```bash
+  export CUDA_VISIBLE_DEVICES=0,1
+```
+
+## Codebase
+
+
+### Datasets
 
 The framework supports:
 
-- ✅ Synthetic mixtures with known ground truth
-- ✅ Hyperspectral satellite images (Urban, Cuprite, Samson)
-- ✅ Public DCE-MRI volumes
-- ✅ Financial and astronomical data
+- Synthetic mixtures with known ground truth
+- Hyperspectral satellite images (Urban, Cuprite, Samson)
+- Public DCE-MRI volumes
+- Financial and astronomical data
 
 All datasets are configured using `data.json` with preprocessing and loading logic defined in `data/*.py`.
 
----
-
-## Models
+### Models
 
 Implemented models include:
 
@@ -165,9 +168,8 @@ Implemented models include:
 
 Each model has its own encoder/decoder class under `model/architectures` and a training logic module in `model/modules`.
 
----
 
-## Metrics
+### Metrics
 
 The following metrics are supported:
 
@@ -181,9 +183,8 @@ The following metrics are supported:
 
 All metrics are computed via `model/metric/*.py` and logged to W&B.
 
----
 
-## Repository Structure
+### Directory Structure
 
 ```
 .
@@ -226,18 +227,7 @@ All metrics are computed via `model/metric/*.py` and logged to W&B.
 └── notebooks/                # Optional Jupyter notebooks for visualization
 ```
 
----
 
-## Technological Stack
-
-- **PyTorch Lightning** for training
-- **Weights & Biases (W&B)** for logging
-- **NumPy**, **Matplotlib**, **Scikit-learn**
-- **Docker** + **GCP** compatibility
-- **Configurable JSON experiments**
-- Optional CUDA acceleration
-
----
 
 ## Publication
 
@@ -255,7 +245,6 @@ BibTeX citation:
 }
 ```
 
----
 
 ## Contact
 
@@ -263,19 +252,16 @@ BibTeX citation:
 - **Email**: [paukvp@gmail.com](mailto:paukvp@gmail.com)  
 - **Website**: [linkedin.com/vladyslav-pauk](https://www.linkedin.com/in/vladyslav-pauk)
 
----
 
 ## Contributing
 
 Pull requests, feedback, and discussions are welcome. Please submit issues or suggestions via GitHub.
 
----
 
 ## License
 
 MIT License (see [LICENSE](https://github.com/vladyslav-pauk/isnmm/blob/master/LICENSE))
 
----
 
 
 [//]: # ()

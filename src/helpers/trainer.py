@@ -78,7 +78,7 @@ def _setup_trainer(config, logger):
     )
 
     checkpoint_callback = ModelCheckpoint(
-        dirpath=f'../experiments/{logger._project}/checkpoints/{logger.experiment.id}',
+        dirpath=f'experiments/{logger._project}/checkpoints/{logger.experiment.id}',
         filename=f'{{epoch:02d}}-{{{config["metric"]["name"]}:.2f}}',
         monitor=config['metric']['name'],
         mode=config['metric']['goal'][:3],

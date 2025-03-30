@@ -112,7 +112,7 @@ class GenerativeModel:  # (Distribution)
     def save_data(self):
 
         dataset_name = dict_to_str(self.config)
-        filename = f'../datasets/synthetic/{dataset_name}.mat'
+        filename = f'datasets/synthetic/{dataset_name}.mat'
 
         sio.savemat(filename, {
             'observed_sample': self.observed_sample.cpu().numpy(),

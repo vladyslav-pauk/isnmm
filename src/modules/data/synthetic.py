@@ -32,7 +32,7 @@ class DataModule(LightningDataModule):
 
     def prepare_data(self):
         dataset_name = dict_to_str(self.data_config)
-        data_file = f'../datasets/synthetic/{dataset_name}.mat'
+        data_file = f'datasets/synthetic/{dataset_name}.mat'
 
         data = sio.loadmat(data_file)
 

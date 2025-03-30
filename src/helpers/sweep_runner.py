@@ -43,7 +43,7 @@ class Sweep:
         return sweep_data
 
     def save_data(self, sweep_data):
-        save_dir = f"../experiments/{self.experiment}/results/sweep-{self.id}"
+        save_dir = f"experiments/{self.experiment}/results/sweep-{self.id}"
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
 
