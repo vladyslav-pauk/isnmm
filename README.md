@@ -70,7 +70,7 @@ For more information, see Master thesis [manuscript](docs/thesis.pdf), IEEE [pre
 
 - [Usage](#usage)
 
-- [Implementation](#implementation)
+- [Implementation details](#implementation)
 
 - [Publication](#publication)
 
