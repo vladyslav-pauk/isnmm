@@ -2,9 +2,11 @@
 
 ## Contents
 
-- [Overview](overview.md)
 - [Installation](installation.md)
-- [Model Overview](formalism.md)
-- [Implementation Details](implementation.md)
+- [Model Overview](model.md)
+- [Implementation](implementation.md)
+- [Datasets](datasets.md)
 - [Experiments](experiments.md)
 - [Configuration](configuration.md)
+- [Evaluation Metrics](metrics.md)
+

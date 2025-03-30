@@ -1,9 +1,49 @@
 # NISCA: Nonlinear Identifiable SCA
 
-[//]: # (Welcome to )
-This repository provides a production-grade implementation of NISCA — a deep generative modeling framework for multivariate data with categorical priors.
+This repository provides an end-to-end implementation of the Nonlinear Identifiable Simplex Constrained Autoencoder (NISCA).
+NISCA is a deep learning algorithm for estimating categorical latent factor from noisy multivariate data, with applications in hyperspectral remote sensing, medical imaging, and finance.
 
-Nonlinearly Identifiable Simplex Constrained Autoencoder (NISCA) is a probabilistic model for nonlinear, unsupervised source separation in high-dimensional imaging data, such as spectral and multi-channel images 
+[//]: # (It includes comprehensive [documentation]&#40;docs/index.md&#41;, reproducible experiment [configurations]&#40;docs/configuration.md&#41;, and interactive [notebooks]&#40;#usage&#41; for demonstration and analysis.  )
+
+[//]: # (This codebase delivers a modular, scalable, and production-ready implementation of the NISCA model.  )
+
+
+[//]: # (The model leverages variational inference with simplex-constrained latent priors to enable interpretable and theoretically identifiable representations under nonlinear mixing and observational noise. )
+
+[//]: # (This package provides an end-to-end implementation of the NISCA framework.)
+
+[//]: # (- Provides unsupervised latent source separation under nonlinear mixing and noise.)
+
+[//]: # (- Trains deep generative models with interpretable latent representations using simplex constraints.)
+
+[//]: # (- Enables theoretical identifiability for nonlinear ICA settings.)
+
+[//]: # (- Scalable training pipeline with CUDA acceleration and full experiment tracking.)
+
+[//]: # (Welcome to )
+[//]: # (This repository provides a production-grade implementation of NISCA — a deep generative framework for modeling multivariate data with categorical priors.)
+[//]: # (Designed for unsupervised source separation, if finds most prominent applications in hyperspectral remote sensing, medical imaging &#40;e.g., DCE-MRI&#41;, and financial data modeling.)
+[//]: # (a probabilistic model for spectral and multi-channel images.)
+
+[//]: # (# Project Overview: NISCA)
+
+[//]: # (**NISCA &#40;Nonlinear Identifiable Simplex Component Analysis&#41;** is a deep generative framework for unsupervised latent source separation in high-dimensional imaging data. It is designed to disentangle structured latent sources under nonlinear mixing and observational noise, with applications in:)
+
+[//]: # ()
+[//]: # (- Hyperspectral remote sensing)
+
+[//]: # (- Dynamic contrast-enhanced MRI)
+
+[//]: # (- Financial time series modeling)
+
+[//]: # ()
+[//]: # (The method extends the variational autoencoder &#40;VAE&#41; framework by introducing:)
+
+[//]: # (- Simplex-constrained latent priors &#40;Dirichlet, Logistic-Normal&#41;)
+
+[//]: # (- Invertible nonlinear decoders for post-nonlinear mixtures)
+
+[//]: # (- Identifiability and interpretability under theoretical guarantees)
 
 [//]: # (, aimed at latent source identification.)
 
@@ -23,8 +63,7 @@ Nonlinearly Identifiable Simplex Constrained Autoencoder (NISCA) is a probabilis
 
 [//]: # (Built with scalability and modularity in mind, the codebase supports flexible experimentation with alternative model architectures, training configurations, and datasets.)
 
-[//]: # (This codebase delivers a modular, scalable, and production-ready implementation of the NISCA model.  )
-[//]: # (It includes comprehensive documentation, reproducible experiment configurations, and interactive notebooks for demonstration and analysis.  )
+
 
 [//]: # (The framework is designed to support flexible experimentation across a range of model architectures, training regimes, and datasets.)
 [//]: # (It supports both hyperspectral and medical data formats, includes synthetic simulation pipelines, and uses structured experiment tracking.)
@@ -48,6 +87,8 @@ Nonlinearly Identifiable Simplex Constrained Autoencoder (NISCA) is a probabilis
 
 ## Contents
 
+- [Overview](#overview)
+
 - [Getting Started](#getting started)
 
 - [Usage](#usage)
@@ -60,7 +101,57 @@ Nonlinearly Identifiable Simplex Constrained Autoencoder (NISCA) is a probabilis
 
 - [License](#license)
 
+- [Contact](#contact)
+
 [//]: # (- [Contact]&#40;#contact&#41;)
+
+## Overview
+
+### Architecture Design
+NISCA extends traditional variational autoencoder architecture with domain-specific inductive bias, enabling identifiable latent representations under noisy nonlinear mixing with theoretical guarantees.
+By using geometrically constrained simplex priors, NISCA facilitates unsupervised latent source separation under categorical priors, also known as simplex component analysis (SCA).
+
+Key properties include:
+- **Bayesian** inference via deep variational autoencoders (VAEs)
+- Geometrically constrained latent space (simplex priors) suitable for **categorical** ground truth
+- Trainable **post-nonlinear decoder** supporting arbitrary invertible transforms
+- Theoretical **identifiability** under nonlinear mixing and noise
+
+### Implementation:
+
+This production-grade implementation is built on top of PyTorch Lightning engine and facilitates training orchestration and systematic model evaluation.
+
+Key features include:
+- **Synthetic and real-world** data support (Urban, Cuprite, MRI, financial datasets)
+- Comprehensive **experiment tracking** with Weights & Biases and Tensorboard logs.
+- **Efficient and scalable**: PyTorch Lightning pipeline and high-performance computing using CUDA
+- **Multi-experiment orchestration**, streamlined sweeping, logging, and model serialization
+
+[//]: # (- **Modular and scalable** PyTorch Lightning pipeline, integrated with Docker for cloud deployment)
+[//]: # (- **Metrics for identifiability and parameter recovery**: subspace distance, Amari index, mutual info, etc.)
+
+[//]: # (### Technological Stack)
+[//]: # (- **PyTorch Lightning** for training and evaluation)
+[//]: # (- **Weights & Biases &#40;W&B&#41;** for logging)
+[//]: # (- **NumPy**, **Matplotlib**, **Scikit-learn**)
+[//]: # (- **Docker** + **GCP** compatibility)
+[//]: # (- **Configurable JSON experiments**)
+[//]: # (- Optional **CUDA** acceleration)
+
+### Performance Summary
+
+NISCA is applicable to a range of real-world tasks, including spectral unmixing in hyperspectral remote sensing, tissue segmentation in dynamic contrast-enhanced MRI, and factor modeling in financial portfolios.
+
+Key results include:
+- Achieves **~20% improvement** in latent factor estimation over CNAE/NMF
+- Trains **2× faster** than CNAE benchmark
+- Improved **interpretability** and class **separability**
+- Provides **theoretical identifiability guarantees** for nonlinear mixing
+
+[//]: # (The model achieves:)
+[//]: # (- 2× faster training convergence with constrained latent space)
+[//]: # (- Recovers **interpretable** latent factors)
+[//]: # (- Strong generalization to unseen imaging samples)
 
 ## Getting Started
 
@@ -93,12 +184,6 @@ To run repository locally or in a cloud environment, follow the instructions in 
 
 ### Run Experiments
 
-To train a model with a specific config file, e.g. `experiments/synthetic/config/test_run.yaml`, run:
-
-```bash
-  PYTHONPATH=./ python src/scripts/...
-```
-
 To run a hyperparameter sweep or schedule multiple experiments, execute
 
 ```bash
@@ -111,21 +196,21 @@ Find more information on experiments [here](nisca.wiki/experiments).
 
 ### Explore Results
 
+To access results of the latest training run, use:
+
+```bash
+  PYTHONPATH=./ python src/scripts/explore_model.py --experiment synthetic
+```
+or pass with `--run_id <id>` flag to visualize a specific run.
+Plots and logs will be saved and logged to W&B under the specified experiment name.
+
+
 To analyze the latest sweep, run:
 
 ```bash
   PYTHONPATH=./ python src/scripts/analyze_sweep.py --experiment synthetic
 ```
 or pass with `--sweep <sweep_name>` flag to visualize a specific sweep.
-
-To access the latest run results, use:
-
-```bash
-  PYTHONPATH=./ python src/scripts/explore_model.py --experiment synthetic
-```
-or pass with `--run_id <id>` flag to visualize a specific run.
-
-Plots and logs will be saved and logged to W&B under the specified experiment name.
 
 ### CUDA Support
 
@@ -143,7 +228,17 @@ You can run them in a Jupyter environment or convert them to scripts using `nbco
 
 ## Documentation
 
-For more details refer to [documentation](docs/index.md).
+[//]: # (For more details refer to [documentation]&#40;docs/index.md&#41;.)
+
+Learn more about the NISCA framework, its components, and how to use it effectively by exploring the documentation:
+
+- [Model Overview](docs/model.md)
+- [Evaluation Metrics](docs/metrics.md)
+- [Datasets](docs/datasets.md)
+- [Experiments](docs/experiments.md)
+- [Configuration](docs/configuration.md)
+- [Implementation](docs/implementation.md)
+
 An in-depth account of the theoretical framework and empirical evaluation is provided in the following publications:
 
 - [Master's Thesis](pubs/thesis.pdf): *Deep Generative Modeling for Hyperspectral & Medical Imaging*, Vladyslav Pauk, OSU (2024).
@@ -198,4 +293,8 @@ Pull requests, feedback, and discussions are welcome. Please submit issues or su
 
 ## License
 
-MIT License (see [LICENSE](LICENSE))
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## Contact
+
+For academic or technical questions, please contact Dr. [Vladyslav Pauk](mailto:paukvp@gmail.com).
