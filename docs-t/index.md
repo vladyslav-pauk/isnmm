@@ -41,7 +41,7 @@ It extends traditional variational autoencoder architecture with the domain-spec
 ## Contents
 
 - [Installation](installation.md)
-- [Model Overview](formalism)
-- [Implementation Details](implementation)
-- [Experiments](experiments)
+- [Model Overview](formalism.md)
+- [Implementation Details](implementation.md)
+- [Experiments](experiments.md)
 - [Configuration](configuration.md)

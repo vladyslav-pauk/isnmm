@@ -1,35 +1,26 @@
-## `config`
+# Configuration Guide
 
-Below is an example of experiment configuration for a single training run:
+Experiments are defined via JSON/YAML files under the `experiments/` directory.
+
+## Example Configuration (YAML)
+
 ```yaml
-method: grid                        # Sweep strategy
-metric:                             # Objective to optimize
-  goal: minimize
-  name: validation_loss
+method: grid
 parameters:
-  experiment_name: hyperspectral
-  data_model: PaviaU
-  nonlinearity: [cnae]
   model_name: [nisca]
-  trainer.max_epochs: [2000]
-  early_stopping.min_delta: [1e-3]
-  data_loader.batch_size: [100]
-  dataset_size: [1000]
-  observed_dim: [16]
-  model.latent_dim: [null]
-  snr: [25]
-  model.sigma: [null]
-  decoder.hidden_layers: 
-    - h1: 128
   encoder.hidden_layers:
     - h1: 128
       h2: 64
-      h3: 32
-      h4: 16
+  decoder.hidden_layers:
+    - h1: 128
   optimizer.lr.encoder: [0.001]
   optimizer.lr.decoder: [0.01]
-  model.mc_samples: [1]
-  torch_seed: [1]
-  data_seed: [12]
+  trainer.max_epochs: [2000]
+  snr: [25]
 ```
-To initiate a sweep, provide a list of values to scan, e.g. to compare NISCA and CNAE models, set `model_name: [nisca, cnae]`.
+
+## Supported Keys
+
+- `model_name`: One of `nisca`, `vasca`, `cnae`, `snae`, `aevb`
+- `data_model`: Dataset identifier
+- `latent_dim`, `snr`, `early_stopping.min_delta`

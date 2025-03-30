@@ -46,7 +46,7 @@ Nonlinearly Identifiable Simplex Constrained Autoencoder (NISCA) is a probabilis
 [//]: # (complex post-nonlinear mixtures)
 [//]: # (tissue and material separation from high-dimensional imaging data)
 
-## Table of Contents
+## Contents
 
 - [Getting Started](#getting started)
 
