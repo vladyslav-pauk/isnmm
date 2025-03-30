@@ -70,7 +70,7 @@ For more information, see Master thesis [manuscript](docs/thesis.pdf), IEEE [pre
 
 - [Usage](#usage)
 
-- [Codebase](#codebase)
+- [Implementation](#implementation)
 
 - [Publication](#publication)
 
@@ -157,19 +157,7 @@ You can run them in a Jupyter environment or convert them to scripts using `nbco
 ### Containerization
 
 
-## Codebase
-
-
-### Datasets
-
-The framework supports:
-
-- Synthetic mixtures with known ground truth
-- Hyperspectral satellite images (Urban, Cuprite, Samson)
-- Public DCE-MRI volumes
-- Financial and astronomical data
-
-All datasets are configured using `data.json` with preprocessing and loading logic defined in `data/*.py`.
+## Implementation
 
 ### Models
 
@@ -198,6 +186,17 @@ The following metrics are supported:
 - **Separation & identifiability**
 
 All metrics are computed via `model/metric/*.py` and logged to W&B.
+
+### Datasets
+
+The framework supports:
+
+- Synthetic mixtures with known ground truth
+- Hyperspectral satellite images (Urban, Cuprite, Samson)
+- Public DCE-MRI volumes
+- Financial and astronomical data
+
+All datasets are configured using `data.json` with preprocessing and loading logic defined in `data/*.py`.
 
 
 ### Directory Structure
