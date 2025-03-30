@@ -1,7 +1,7 @@
 # NISCA
 
-This repository implements NISCA, a deep generative modeling framework for unsupervised latent source separation in spectral imaging data, common in remote sensing, medical imaging, astrophysics, and finance.
-NISCA extends traditional variational autoencoder architecture with the domain-specific inductive bias, by using geometrically constrained simplex priors, enabling interpretable and identifiable latent representations under noisy nonlinear mixing.
+NISCA is a deep generative modeling framework for unsupervised latent source separation in spectral imaging data, common in remote sensing, medical imaging, astrophysics, and finance.
+It extends traditional variational autoencoder architecture with the domain-specific inductive bias, by using geometrically constrained simplex priors, enabling interpretable and identifiable latent representations under noisy nonlinear mixing.
 A scalable production-grade implementation is provided, along with exhaustive documentation, and demonstration notebooks.
 The project supports datasets from hyperspectral satellite images, dynamic contrast-enhanced (DCE) MRI scans, and synthetic simulations.
 
