@@ -1,7 +1,7 @@
 # NISCA: Nonlinear Identifiable SCA
 
 The Nonlinear Identifiable Simplex Constrained Autoencoder (NISCA) is a deep learning algorithm for estimating categorical latent factor from noisy multivariate data.
-This repository provides an end-to-end implementation of NISCA, with applications in hyperspectral remote sensing, medical imaging, and finance.
+This repository provides an end-to-end inference pipeline for NISCA, with applications in hyperspectral remote sensing, medical imaging, and finance.
 
 [//]: # (It includes comprehensive [documentation]&#40;docs/index.md&#41;, reproducible experiment [configurations]&#40;docs/configuration.md&#41;, and interactive [notebooks]&#40;#usage&#41; for demonstration and analysis.  )
 
@@ -108,8 +108,10 @@ This repository provides an end-to-end implementation of NISCA, with application
 ## Overview
 
 ### Architecture Design
-NISCA extends traditional variational autoencoder architecture with domain-specific inductive bias, enabling identifiable latent representations under noisy nonlinear mixing with theoretical guarantees.
-By using geometrically constrained simplex priors, NISCA facilitates unsupervised latent source separation under categorical priors, also known as simplex component analysis (SCA).
+NISCA extends the traditional variational autoencoder architecture with a structured prior, enabling identifiable latent representations under noisy, nonlinear mixing.
+By imposing categorical priors through geometric constraints on the latent space, NISCA facilitates provable latent source separation.
+This approach generalizes simplex component analysis (SCA) to the nonlinear regime using deep generative models.
+
 
 Key properties include:
 - **Bayesian** inference via deep variational autoencoders (VAEs)
