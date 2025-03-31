@@ -1,5 +1,14 @@
 # NISCA: Nonlinear Identifiable SCA
 
+[Overview](#overview) | 
+[Getting Started](#getting-started) |
+[Usage](#usage) |
+[Documentation](#documentation) |
+[Citing](#citing) |
+[Contributing](#contributing) |
+[License](#license) |
+[Contact](#contact)
+
 The Nonlinear Identifiable Simplex Constrained Autoencoder (NISCA) is a deep learning algorithm for estimating categorical latent factor from noisy multivariate data.
 This repository provides an end-to-end inference pipeline for NISCA, with applications in hyperspectral remote sensing, medical imaging, and finance.
 
@@ -85,35 +94,17 @@ This repository provides an end-to-end inference pipeline for NISCA, with applic
 [//]: # (complex post-nonlinear mixtures)
 [//]: # (tissue and material separation from high-dimensional imaging data)
 
-## Contents
-
-- [Overview](#overview)
-
-- [Getting Started](#getting-started)
-
-- [Usage](#usage)
-
-- [Documentation](#documentation)
-
-- [Citing](#citing)
-
-- [Contributing](#contributing)
-
-- [License](#license)
-
-- [Contact](#contact)
 
 [//]: # (- [Contact]&#40;#contact&#41;)
 
 ## Overview
 
 ### Architecture Design
-NISCA extends the traditional variational autoencoder architecture with a structured prior, enabling identifiable latent representations under noisy, nonlinear mixing.
-By imposing categorical priors through geometric constraints on the latent space, NISCA facilitates provable latent source separation.
-This approach generalizes simplex component analysis (SCA) to the nonlinear regime using deep generative models.
+NISCA extends the traditional variational autoencoder architecture by incorporating a categorical prior, which enables identifiable latent representations under noisy, nonlinear mixing.
+By imposing structured priors through geometric constraints on the latent space, NISCA facilitates provable latent source separation, and generalizes simplex component analysis (SCA) to the nonlinear regime using deep generative models.
 
 
-Key properties include:
+Key properties:
 - **Bayesian** inference via deep variational autoencoders (VAEs)
 - Geometrically constrained latent space (simplex priors) suitable for **categorical** ground truth
 - Trainable **post-nonlinear decoder** supporting arbitrary invertible transforms
@@ -123,7 +114,7 @@ Key properties include:
 
 This production-grade implementation is built on top of PyTorch Lightning engine and facilitates training orchestration and systematic model evaluation.
 
-Key features include:
+Key features:
 - **Synthetic and real-world** data support (Urban, Cuprite, MRI, financial datasets)
 - Comprehensive **experiment tracking** with Weights & Biases and Tensorboard logs.
 - **Efficient and scalable**: PyTorch Lightning pipeline and high-performance computing using CUDA
@@ -144,7 +135,7 @@ Key features include:
 
 NISCA is applicable to a range of real-world tasks, including spectral unmixing in hyperspectral remote sensing, tissue segmentation in dynamic contrast-enhanced MRI, and factor modeling in financial portfolios.
 
-Key results include:
+Key results:
 - Achieves **~20% improvement** in latent factor estimation over CNAE/NMF
 - Trains **2× faster** than CNAE benchmark
 - Improved **interpretability** and class **separability**
