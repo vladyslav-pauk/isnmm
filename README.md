@@ -179,8 +179,6 @@ To run repository locally or in a cloud environment, follow the instructions in 
 
 ## Usage
 
-
-
 ### Run Experiments
 
 To run a hyperparameter sweep or schedule multiple experiments, execute
@@ -191,8 +189,7 @@ To run a hyperparameter sweep or schedule multiple experiments, execute
 
 All outputs, including checkpoints, logs, and evaluation results, will be stored under `experiments/{experiment_name}/config/sweep/`.
 
-Find more information on experiments [here](nisca.wiki/experiments).
-
+Find more information on experiments [here](nisca.wiki/experiments), and see examples [here](docs/examples.md).
 ### Explore Results
 
 To access results of the latest training run, use:
@@ -217,12 +214,14 @@ or pass with `--sweep <sweep_name>` flag to visualize a specific sweep.
 
 Learn more about the NISCA framework, its components, and how to use it effectively by exploring the documentation:
 
-- [Model Overview](docs/model.md)
-- [Evaluation Metrics](docs/metrics.md)
-- [Datasets](docs/datasets.md)
-- [Experiments](docs/experiments.md)
-- [Configuration](docs/configuration.md)
-- [Implementation](docs/implementation.md)
+- [Installation](installation.md)
+- [Model](model.md)
+- [Implementation](implementation.md)
+- [Experiments](experiments.md)
+- [Datasets](datasets.md)
+- [Benchmarks](benchmarks.md)
+- [Evaluation Metrics](metrics.md)
+- [Examples](examples.md)
 
 An in-depth account of the theoretical framework and empirical evaluation is provided in the following publications:
 
