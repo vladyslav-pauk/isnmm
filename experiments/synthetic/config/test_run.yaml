@@ -27,9 +27,9 @@ parameters:
   decoder.hidden_layers:
     - h1: 128
   encoder.hidden_layers:
-    - h1: 64
-      h2: 64
-      h3: 64
+    - h1: 10000
+      h2: 10000
+      h3: 10000
   model.mc_samples:
       - 1
   torch_seed:

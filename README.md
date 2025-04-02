@@ -1,4 +1,4 @@
-# NISCA: Nonlinear Identifiable SCA
+# NISCA: Identifiable Nonlinear SCA
 
 [Overview](#overview) | 
 [Getting Started](#getting-started) |
@@ -101,24 +101,28 @@ This repository provides an end-to-end inference pipeline for NISCA, with applic
 
 ### Architecture Design
 NISCA extends the traditional variational autoencoder architecture by incorporating a categorical prior, which enables identifiable latent representations under noisy, nonlinear mixing.
-By imposing structured priors through geometric constraints on the latent space, NISCA facilitates provable latent source separation, and generalizes simplex component analysis (SCA) to the nonlinear regime using deep generative models.
+By imposing structured priors through geometric constraints on the latent space, NISCA facilitates provable latent source separation, and generalizes simplex component analysis (SCA) to the noisy nonlinear regime using deep generative models.
 
 
 Key properties:
 - **Bayesian** inference via deep variational autoencoders (VAEs)
 - Geometrically constrained latent space (simplex priors) suitable for **categorical** ground truth
-- Trainable **post-nonlinear decoder** supporting arbitrary invertible transforms
+- Trainable **post-nonlinear decoder** supporting arbitrary invertible component-wise transforms
 - Theoretical **identifiability** under nonlinear mixing and noise
+
+See more details in the [model overview](docs/model.md).
 
 ### Implementation:
 
 This production-grade implementation is built on top of PyTorch Lightning engine and facilitates training orchestration and systematic model evaluation.
 
 Key features:
-- **Synthetic and real-world** data support (Urban, Cuprite, MRI, financial datasets)
+- **Synthetic and real-world** [data support](docs/datasets.md) (Urban, Cuprite, MRI, financial datasets)
 - Comprehensive **experiment tracking** with Weights & Biases and Tensorboard logs.
 - **Efficient and scalable**: PyTorch Lightning pipeline and high-performance computing using CUDA
 - **Multi-experiment orchestration**, streamlined sweeping, logging, and model serialization
+
+See more details in the [implementation](docs/implementation.md).
 
 [//]: # (- **Modular and scalable** PyTorch Lightning pipeline, integrated with Docker for cloud deployment)
 [//]: # (- **Metrics for identifiability and parameter recovery**: subspace distance, Amari index, mutual info, etc.)
@@ -133,7 +137,11 @@ Key features:
 
 ### Performance Summary
 
-NISCA is applicable to a range of real-world tasks, including spectral unmixing in hyperspectral remote sensing, tissue segmentation in dynamic contrast-enhanced MRI, and factor modeling in financial portfolios.
+NISCA is applicable to a range of real-world tasks, including spectral unmixing in hyperspectral remote sensing, tissue segmentation in dynamic contrast-enhanced MRI, and factor modeling in financial portfolios. 
+
+The model is evaluated against state-of-the-art [methods](docs/benchmarks.md) such as Constrained Nonlinear Autoencoder (CNAE) and Non-negative Matrix Factorization (NMF) using a variety of [metrics](docs/metrics.md), including reconstruction error, subspace distance, and identifiability indices.
+
+[//]: # (Model evaluation is performed on synthetic and real-world datasets, including hyperspectral images &#40;Urban, Cuprite&#41; and DCE-MRI scans, and )
 
 Key results:
 - Achieves **~20% improvement** in latent factor estimation over CNAE/NMF
@@ -171,6 +179,8 @@ To run repository locally or in a cloud environment, follow the instructions in 
 
 ## Usage
 
+
+
 ### Run Experiments
 
 To run a hyperparameter sweep or schedule multiple experiments, execute
@@ -200,20 +210,6 @@ To analyze the latest sweep, run:
   PYTHONPATH=./ python src/scripts/analyze_sweep.py --experiment synthetic
 ```
 or pass with `--sweep <sweep_name>` flag to visualize a specific sweep.
-
-### CUDA Support
-
-To enable CUDA support, set the environment variable `CUDA_VISIBLE_DEVICES` to the desired GPU ID(s):
-
-```bash
-  export CUDA_VISIBLE_DEVICES=0,1
-```
-
-You can run them in a Jupyter environment or convert them to scripts using `nbconvert`.
-
-```bash
-  jupyter nbconvert --to script notebook.ipynb
-```
 
 ## Documentation
 

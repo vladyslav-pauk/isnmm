@@ -3,10 +3,10 @@
 ## Contents
 
 - [Installation](installation.md)
-- [Model Overview](model.md)
+- [Model](model.md)
 - [Implementation](implementation.md)
-- [Datasets](datasets.md)
 - [Experiments](experiments.md)
-- [Configuration](configuration.md)
+- [Datasets](datasets.md)
+- [Benchmarks](benchmarks.md)
 - [Evaluation Metrics](metrics.md)
 

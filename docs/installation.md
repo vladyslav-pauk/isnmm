@@ -1,4 +1,3 @@
-# Installation
 
 [//]: # (## Prerequisites)
 
@@ -86,4 +85,18 @@ Build and run the project in an isolated Docker environment.
 ```bash
   cd /app
   PYTHONPATH=./ python src/scripts/run_sweep.py --experiment synthetic --sweep test_run
+```
+
+## CUDA Support
+
+To enable CUDA support, set the environment variable `CUDA_VISIBLE_DEVICES` to the desired GPU ID(s):
+
+```bash
+  export CUDA_VISIBLE_DEVICES=0,1
+```
+
+You can run them in a Jupyter environment or convert them to scripts using `nbconvert`.
+
+```bash
+  jupyter nbconvert --to script notebook.ipynb
 ```
